@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="web" pattern="file[metrics]:metrics/studio/web//*" />
+</component>

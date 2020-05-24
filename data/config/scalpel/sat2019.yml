@@ -1,0 +1,75 @@
+name: SAT19
+date: July 12th, 2019
+setup:
+  timeout: 5000
+  memout: 128000
+experiment-wares:
+  - CCAnrSim default
+  - COMiniSatPS_Pulsar_drup drup
+  - CaDiCaL default
+  - CaDiCaL sat
+  - CaDiCaL unsat
+  - Candy default
+  - MLDChronoBT_GCBump default
+  - MapleCOMSPS_CHB_VSIDS_drup CHB_VSIDS_drup
+  - MapleCOMSPS_LRB_VSIDS_2_drup LRB_VSIDS_2_drup
+  - MapleCOMSPS_LRB_VSIDS_drup LRB_VSIDS_drup
+  - MapleLCMChronoBT_DEL default
+  - MapleLCMChronoBT_Scavel_EWMA default
+  - MapleLCMChronoBT_ldcr default
+  - MapleLCMDISTChronoBT_Scavel_EWMA_08ALL default
+  - MapleLCMDiscChronoBT-DL-v3 default
+  - MapleLCMDistChronoBT-DL-v2.1 default
+  - MapleLCMDistChronoBT-DL-v2.2 default
+  - MapleLCMDistChronoBTVariableReindexing default
+  - MapleLCMdistCBTcoreFirst default
+  - Maple_CM_OnlineDel_19b default
+  - Maple_LCM_BTL default
+  - Maple_LCM_OnlineDel_19a default
+  - Maple_LCM_Scavel_155 default
+  - MergeSAT simp_proof
+  - Minisat-v2.2.0-106-ge2dd095 simp_proof
+  - PADC_MapleLCMDistChronoBT default
+  - PADC_MapleLCMDistChronoBT nbIncRedDB_5_CT_0
+  - PADC_Maple_LCM_Dist default
+  - PSIDS_MapleLCMDistChronoBT default
+  - Relaxed_LCMDistChronoBT default
+  - Relaxed_LCMDistChronoBT_Scavel default
+  - Relaxed_LCMDistChronoBT_p9 default
+  - Relaxed_LCM_Dist default
+  - Riss7.1 NOUNSAT_proof
+  - Riss7.1 default_proof
+  - SLIME default
+  - SparrowToMergeSAT Sparrow2MergeSAT_proof
+  - Topk3.2_Glucose3.0 default
+  - Topk3_Glucose3.0 default
+  - Topk6.2_Glucose3.0 default
+  - Topk6_Glucose3.0 default
+  - ZIB_Glucose default
+  - cmsatv56-walksat default
+  - cmsatv56-walksat-chronobt default
+  - cmsatv56-yalsat default
+  - cmsatv56-yalsat-chronobt default
+  - expMaple_CM _GCBump default
+  - expMaple_CM _GCBumpOnlyLRB default
+  - expMaple_CM default
+  - glucose-4.2.1 default
+  - glucose3.0 proofs
+  - glucose_421_del default
+  - glucose_BTL default
+  - optsat default
+  - smallsat default
+input-set:
+  name: sat-race-2019
+  type: hierarchy
+  path-list:
+    - /Users/romainwallon/Recherche/Expérimentations/Benchmarks/SAT/Competitions/2019/
+source:
+  path: /Users/romainwallon/Recherche/Logiciels/Outils/metrics/metrics/data/sat2019.csv
+data:
+  mapping:
+    input: benchmark
+    experiment_ware:
+        - solver
+        - configuration
+    cpu_time: solver time

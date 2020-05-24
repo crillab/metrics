@@ -1,0 +1,16 @@
+test:
+
+    script:
+        - make test
+
+    tags:
+        - pytest
+
+sonar:
+
+    script:
+        - make sonar
+
+    tags:
+        - pylint
+        - sonar

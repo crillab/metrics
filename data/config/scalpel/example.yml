@@ -1,0 +1,39 @@
+name:
+date:
+
+setup:
+  os:
+  cpu:
+  ram:
+  timeout:
+  memout:
+
+experiment-wares:
+  - identifier:
+
+input-set:
+  name:
+  type:
+  family:
+  file-extensions:
+    -
+  path-list:
+      -
+
+data:
+  mapping:
+    experiment_ware:
+    cpu_time:
+    input:
+  log-variables:
+    - file:
+        name:
+        variables:
+          - name:
+            pattern:
+            pattern-type:
+            group-id:
+
+source:
+  format:
+  path:

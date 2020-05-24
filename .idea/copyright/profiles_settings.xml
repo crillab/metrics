@@ -1,0 +1,18 @@
+<component name="CopyrightManager">
+  <settings>
+    <module2copyright>
+      <element module="cli" copyright="EN CRIL STUDIO" />
+      <element module="web" copyright="EN CRIL STUDIO WEB" />
+      <element module="wallet" copyright="EN CRIL Wallet" />
+      <element module="scalpel" copyright="EN CRIL SCALPEL" />
+    </module2copyright>
+    <LanguageOptions name="Python">
+      <option name="fileTypeOverride" value="3" />
+      <option name="block" value="false" />
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="box" value="true" />
+      <option name="filler" value="#" />
+    </LanguageOptions>
+  </settings>
+</component>

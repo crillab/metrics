@@ -1,0 +1,22 @@
+# PyCharm files
+.idea/workspace.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/metrics.iml
+.idea/shelf/
+venv
+
+# Build folders
+build
+dist
+.scannerwork
+
+# Python egg metadata
+*.egg
+*.egg-info
+
+# Compiled Python modules
+*.pyc
+
+# Miscellaneous
+.DS_Store
