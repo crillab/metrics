@@ -63,6 +63,7 @@ Each experiment (corresponding to the execution of a solver on a particular
 instance) has a timeout set to 5000 seconds and a memory limit set to 128GB.
 
 ```python
+from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
 campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
 ```
 
