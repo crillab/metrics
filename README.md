@@ -1,6 +1,10 @@
 # mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity
 
-[![License](https://img.shields.io/badge/licence-LGPL3-green)](LICENSE.md)
+[![License](https://img.shields.io/pypi/l/crillab-metrics)](LICENSE.md)
+
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/crillab-metrics)
+
+![PyPI - Status](https://img.shields.io/pypi/status/crillab-metrics)
 
 ## Authors 
 
