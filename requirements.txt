@@ -1,5 +1,6 @@
 certifi==2019.11.28
 chardet==3.0.4
+coverage==5.1
 cycler==0.10.0
 idna==2.9
 kiwisolver==1.1.0
