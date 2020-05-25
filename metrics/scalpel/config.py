@@ -307,7 +307,6 @@ class ScalpelConfigurationBuilder:
 
     def read_input_set(self) -> None:
         raise NotImplementedError('Method "read_input_data()" is abstract!')
-        pass
 
     def read_log_data(self) -> None:
         raise NotImplementedError('Method "read_experiment_data()" is abstract!')
