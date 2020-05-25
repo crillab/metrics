@@ -11,6 +11,7 @@
 # The name of the package to build.
 PACKAGE_NAME = crillab-metrics
 
+MODULE_NAME = metrics
 
 # The version of the package to build.
 VERSION = 0.1.0
@@ -43,8 +44,8 @@ test: $(OUTDIR)/nosetests.xml $(OUTDIR)/coverage.xml
 
 
 # Stores unit tests and code coverage results into files.
-$(OUTDIR)/nosetests.xml $(OUTDIR)/coverage.xml: $(OUTDIR) $(PACKAGE_NAME)/*.py $(TESTS)/*/test*.py
-	nosetests --with-xunit --with-coverage --cover-package $(PACKAGE_NAME) --cover-xml $(TESTS)/*/test*.py
+$(OUTDIR)/nosetests.xml $(OUTDIR)/coverage.xml: $(OUTDIR) $(MODULE_NAME)/*.py $(TESTS)/*/test*.py
+	nosetests --with-xunit --with-coverage --cover-package $(MODULE_NAME) --cover-xml $(TESTS)/*/test*.py
 	mv nosetests.xml .coverage coverage.xml $(OUTDIR)
 
 
@@ -58,8 +59,8 @@ pylint: $(OUTDIR)/pylint.out
 
 
 # Stores the result of the Pylint analysis into a file.
-$(OUTDIR)/pylint.out: $(OUTDIR) $(PACKAGE_NAME)/*.py $(TESTS)/*/*.py
-	pylint $(PACKAGE_NAME) $(TESTS) -r n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" | tee $(OUTDIR)/pylint.out
+$(OUTDIR)/pylint.out: $(OUTDIR) $(MODULE_NAME)/*.py $(TESTS)/*/*.py
+	pylint $(MODULE_NAME) $(TESTS) -r n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" | tee $(OUTDIR)/pylint.out
 
 
 # Executes the SonarQube static analysis.
