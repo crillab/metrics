@@ -1,10 +1,7 @@
 # mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity
 
-[![License](https://img.shields.io/pypi/l/crillab-metrics)](LICENSE.md)
+[![License](https://img.shields.io/pypi/l/crillab-metrics)](LICENSE.md) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/crillab-metrics) ![PyPI - Status](https://img.shields.io/pypi/status/crillab-metrics) ![Travis (.org)](https://img.shields.io/travis/crillab/metrics?style=plastic) ![Sonar Quality Gate](https://img.shields.io/sonar/quality_gate/crillab_metrics?server=https%3A%2F%2Fsonarcloud.io)
 
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/crillab-metrics)
-
-![PyPI - Status](https://img.shields.io/pypi/status/crillab-metrics)
 
 ## Authors 
 
