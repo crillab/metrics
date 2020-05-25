@@ -9,7 +9,7 @@
 
 
 # The name of the package to build.
-PACKAGE_NAME = metrics
+PACKAGE_NAME = crillab-metrics
 
 
 # The version of the package to build.

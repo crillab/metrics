@@ -31,7 +31,7 @@ __all__ = [
     '__copyright__',
 ]
 
-__title__ = 'crillab-metrics'
+__title__ = 'metrics'
 __summary__ = 'rEproducible sofTware peRformance analysIs in perfeCt Simplicity'
 __keywords__ = 'reproducible software performance analysis'
 __uri__ = 'https://github.com/crillab/metrics'

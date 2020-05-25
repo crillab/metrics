@@ -41,7 +41,7 @@ def readme() -> str:
 
 
 setup(
-    name=metrics.__name__,
+    name='crillab-metrics',
     version=metrics.__version__,
     packages=[
         'metrics.core',
