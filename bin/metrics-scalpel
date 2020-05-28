@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+from sys import argv
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
+
+header = None
+
+def readcsv(inputfile):
+    global header
+    xpware = inputfile.split("/")[-1][:-4]
+    with open(inputfile) as f:
+        if header is None:
+            header = "xpware," + next(f)
+            print(header, end="")
+        else:
+            next(f)
+        for line in  f:
+            print(xpware, line, sep=',', end="")
+
+for csv in argv[1:]:
+    assert len(csv) - csv.rfind(".csv") == 4
+    readcsv(csv)
