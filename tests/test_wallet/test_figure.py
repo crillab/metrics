@@ -155,21 +155,25 @@ class MyTestCase(unittest.TestCase):
             'CHS': DEFAULT_COLORS[0],
             'WDegCAxCD': DEFAULT_COLORS[1],
             'ExplorationLuby': DEFAULT_COLORS[2],
+            'vbew': DEFAULT_COLORS[3],
         }
 
         style_map = {
             'CHS': LINE_STYLES[0],
             'WDegCAxCD': LINE_STYLES[1],
             'ExplorationLuby': LINE_STYLES[2],
+            'vbew': LINE_STYLES[3],
         }
 
         xp_ware_name_map = {
             'CHS': 'ChS',
             'WDegCAxCD': 'ca.cd',
             'ExplorationLuby': 'expLuby',
+            'vbew': 'vbew',
         }
 
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
+        cdfb = cdfb.add_vbew({'CHS', 'WDegCAxCD'}, opti_col='cpu_time')
         cactus = CactusMPL(cdfb, min_solved_inputs=300, cumulated=True, color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map)
         cactus.get_figure()
 

@@ -29,7 +29,7 @@ This module uses the DataFrame object pandas library.
 from __future__ import annotations
 
 from enum import Enum
-from typing import List
+from typing import List, Set
 
 import pandas as pd
 
@@ -70,7 +70,7 @@ class CampaignDataFrame:
     This encapsulation permits to apply many operations.
     """
 
-    def __init__(self, campaign_df_builder: CampaignDataFrameBuilder, data_frame: pd.DataFrame, name: str):
+    def __init__(self, campaign_df_builder: CampaignDataFrameBuilder, data_frame: pd.DataFrame, name: str, vbew_names: Set[str]):
         """
         Creates a CampaignDataFrame.
         @param campaign_df_builder: the builder used to build this campaign.
@@ -82,6 +82,7 @@ class CampaignDataFrame:
         self._data_frame = data_frame
         self._xp_ware_names = list(data_frame.experiment_ware.unique())
         self._name = name
+        self._vbew_names = vbew_names
 
     @property
     def data_frame(self) -> pd.DataFrame:
@@ -115,6 +116,14 @@ class CampaignDataFrame:
         """
         return self._xp_ware_names
 
+    @property
+    def vbew_names(self) -> Set[str]:
+        """
+
+        @return: the vbew names of the dataframe.
+        """
+        return self._vbew_names
+
     def filter_by(self, filters: List[CampaignDFFilter]):
         """
         Permits to filter the current dataframe by the list of provided filters.
@@ -139,7 +148,7 @@ class CampaignDataFrame:
         df = self._data_frame[self._data_frame[column].isin(sub_set)]
         return self.build_data_frame(df)
 
-    def add_vbew(self, xp_ware_set, opti_col, minimize=True, vbew_name='vbew') -> CampaignDataFrame:
+    def add_vbew(self, xp_ware_set, opti_col='cpu_time', minimize=True, vbew_name='vbew') -> CampaignDataFrame:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -158,6 +167,8 @@ class CampaignDataFrame:
         df_vbs = df_vbs.sort_values(by=opti_col, ascending=minimize).drop_duplicates(['input'])\
             .assign(experiment_ware=lambda x: vbew_name)
         df = pd.concat([df, df_vbs], ignore_index=True)
+
+        self._vbew_names.add(vbew_name)
 
         return self.build_data_frame(df)
 
@@ -180,4 +191,4 @@ class CampaignDataFrame:
         @param name: name of the campaign dataframe.
         @return: a new instance of CampaignDataFrame with the filtered dataframe.
         """
-        return self._campaign_df_builder.build_from_data_frame(df, name=name)
+        return self._campaign_df_builder.build_from_data_frame(df, name=name, vbew_names=self._vbew_names)

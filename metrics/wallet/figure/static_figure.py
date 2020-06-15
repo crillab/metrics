@@ -96,7 +96,8 @@ class CactusMPL(CactusPlot):
         color = [self.color_map.get(x) for x in df.columns] if self.color_map else None
         style = [self.style_map.get(x) for x in df.columns] if self.style_map else None
 
-        df.plot(ax=ax, color=color, style=style)
+        for i, col in enumerate(df.columns):
+            ax.plot(df.index, df[col], style[i], color=color[i], linewidth=3 if col in self.campaign_df.vbew_names else 1)
 
         if self.xp_ware_name_map is None:
             ax.legend(self.get_data_frame().columns)

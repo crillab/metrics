@@ -24,6 +24,7 @@
 """
 This module provides a simple class corresponding to the builder of the dataframe linked to a campaign.
 """
+from typing import Set
 
 from pandas import DataFrame
 
@@ -68,7 +69,7 @@ class CampaignDataFrameBuilder:
 
         return self.build_from_data_frame(campaign_df, self._campaign.name)
 
-    def build_from_data_frame(self, campaign_df: DataFrame, name: str = None) -> CampaignDataFrame:
+    def build_from_data_frame(self, campaign_df: DataFrame, name: str = None, vbew_names: Set[str] = None) -> CampaignDataFrame:
         """
         Builds a campaign dataframe directly from a pandas dataframe. It must corresponds to the original dataframe
         with some modifications but with necessary columns.
@@ -76,7 +77,7 @@ class CampaignDataFrameBuilder:
         @param name: the name corresponding to the current dataframe.
         @return: the builded campaign dataframe.
         """
-        return CampaignDataFrame(self, campaign_df, name or self._campaign.name)
+        return CampaignDataFrame(self, campaign_df, name or self._campaign.name, vbew_names or set())
 
     def _make_experiment_wares_df(self) -> DataFrame:
         """
