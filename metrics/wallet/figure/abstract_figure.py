@@ -214,7 +214,7 @@ class BoxPlot(Plot):
 
         @return: the pandas dataframe used by this figure.
         """
-        df_by_ware = self.campaign_df.data_frame
+        df_by_ware = self.campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
         df_by_ware = df_by_ware.pivot(columns='experiment_ware', values='cpu_time')
         return df_by_ware
 

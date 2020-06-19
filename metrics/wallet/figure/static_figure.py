@@ -20,11 +20,12 @@
 #  along with this program.                                                    #
 #  If not, see <https://www.gnu.org/licenses/>.                                #
 # ##############################################################################
+from typing import List
 
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from metrics.wallet.dataframe.dataframe import CampaignDFFilter
+from metrics.wallet.dataframe.dataframe import CampaignDFFilter, CampaignDataFrame
 from metrics.wallet.figure.abstract_figure import Figure, CactusPlot, BoxPlot, ScatterPlot
 
 LINE_STYLES = ['-', ':', '-.', '--']
@@ -74,6 +75,47 @@ class StatTable(Figure):
         df_stat = df_stat.sort_values(['count', 'sum'], ascending=[False, True])
 
         return df_stat.fillna(0).astype(int)
+
+
+def contribution_agg(slice: pd.DataFrame, to: float):
+    slice = slice.sort_values(by='cpu_time')
+    first = slice.iloc[0]
+    second = slice.iloc[1]
+
+    if first['cpu_time'] < to:
+        return pd.Series([first['experiment_ware'], first['cpu_time'], second['cpu_time'] >= to], index=['first', 'cpu_time', 'unique'])
+
+    return pd.Series([None, None, False], index=['first', 'cpu_time', 'unique'])
+
+class ContributionTable(Figure):
+    """
+    Creation of a table representing the different contributions of each solver.
+    """
+
+    def __init__(self, campaign_df: CampaignDataFrame, vbew_deltas: List[float]):
+        super().__init__(campaign_df)
+        self.vbew_deltas = vbew_deltas
+
+    def get_figure(self):
+        """
+
+        @return: the figure.
+        """
+        return self.get_data_frame()
+
+    def get_data_frame(self):
+        contrib_raw = self.campaign_df.data_frame.groupby('input').apply(lambda x: contribution_agg(x, self.campaign_df.campaign.timeout))
+        contrib = pd.DataFrame()
+
+        contrib['contribution'] = contrib_raw.groupby('first').unique.sum()
+        contrib['vbew_simple'] = contrib_raw.groupby('first').cpu_time.count()
+
+        for delta in self.vbew_deltas:
+            sub = contrib_raw[contrib_raw.cpu_time > delta]
+            contrib[f'vbew > {delta}'] = sub.groupby('first').cpu_time.count()
+
+        return contrib.fillna(0).astype(int).sort_values(['contribution', 'vbew_simple'], ascending=[False, False])
+
 
 
 class CactusMPL(CactusPlot):

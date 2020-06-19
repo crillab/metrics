@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from tests.test_core.json_reader import JsonReader
 from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
 from metrics.wallet.figure.abstract_figure import DEFAULT_COLORS
-from metrics.wallet.figure.static_figure import StatTable, CactusMPL, BoxMPL, ScatterMPL, LINE_STYLES
+from metrics.wallet.figure.static_figure import StatTable, CactusMPL, BoxMPL, ScatterMPL, LINE_STYLES, ContributionTable
 
 
 class MyTestCase(unittest.TestCase):
@@ -149,6 +149,10 @@ class MyTestCase(unittest.TestCase):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().sub_data_frame('experiment_ware', self.SUB_XP_WARE_SET)
         stat = StatTable(cdfb)
         self.assertEqual(stat.get_figure().to_dict(), self.STAT_TABLE_RESULT_SUB_XP_WARE_SET)
+
+    def test_contribution_table(self):
+        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
+        contrib = ContributionTable(cdfb, [0, 10, 100])
 
     def test_static_cactus(self):
         color_map = {
