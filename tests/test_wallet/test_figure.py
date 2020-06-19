@@ -153,6 +153,8 @@ class MyTestCase(unittest.TestCase):
     def test_contribution_table(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
         contrib = ContributionTable(cdfb, [0, 10, 100])
+        self.assertEqual('WDegCAxCD', contrib.get_figure().iloc[0].name)
+        self.assertEqual(168, contrib.get_figure().iloc[0].vbew_simple)
 
     def test_static_cactus(self):
         color_map = {

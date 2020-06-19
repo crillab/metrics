@@ -92,7 +92,7 @@ class CactusPlot(Plot):
     Creation of a cactus plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, cumulated=False, min_solved_inputs=0, show_marker=True, color_map=None, style_map=None, xp_ware_name_map=None):
+    def __init__(self, campaign_df: CampaignDataFrame, cumulated=False, min_solved_inputs=0, show_marker=True, color_map=None, style_map=None, xp_ware_name_map=None, cactus_col='cpu_time'):
         """
         Creates a cactus plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -110,6 +110,7 @@ class CactusPlot(Plot):
         self.color_map = color_map
         self.style_map = style_map
         self.xp_ware_name_map = xp_ware_name_map
+        self.cactus_col = cactus_col
 
     def get_data_frame(self):
         """
@@ -118,7 +119,7 @@ class CactusPlot(Plot):
         """
         solvers = self.campaign_df.xp_ware_names
         df_solved = self.campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
-        df_cactus = df_solved.pivot(columns='experiment_ware', values='cpu_time')
+        df_cactus = df_solved.pivot(columns='experiment_ware', values=self.cactus_col)
         for col in solvers:
             df_cactus[col] = df_cactus[col].sort_values().values
         df_cactus = df_cactus.dropna(how='all').reset_index(drop=True)
@@ -156,7 +157,7 @@ class ScatterPlot(Plot):
     Creation of a scatter plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None):
+    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col='cpu_time'):
         """
         Creates a scatter plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -168,6 +169,7 @@ class ScatterPlot(Plot):
         self.xp_ware_i = xp_ware_x
         self.xp_ware_j = xp_ware_y
         self.sample = sample
+        self.scatter_col = scatter_col
         self.df_scatter = self.get_data_frame()
         self.min = self.df_scatter[[self.xp_ware_i, self.xp_ware_j]].min(skipna=True).min()
 
@@ -177,7 +179,7 @@ class ScatterPlot(Plot):
         @return: the pandas dataframe used by this figure.
         """
         df_solved = self.campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
-        df_scatter = df_solved.pivot_table(index=['input'], columns='experiment_ware', values='cpu_time',
+        df_scatter = df_solved.pivot_table(index=['input'], columns='experiment_ware', values=self.scatter_col,
                                            fill_value=self.campaign_df.campaign.timeout)
 
         return df_scatter.sample(n=self.sample) if self.sample else df_scatter
@@ -209,13 +211,17 @@ class BoxPlot(Plot):
     Creation of a box plot.
     """
 
+    def __init__(self, campaign_df: CampaignDataFrame, box_col='cpu_time'):
+        super().__init__(campaign_df)
+        self.box_col = box_col
+
     def get_data_frame(self):
         """
 
         @return: the pandas dataframe used by this figure.
         """
         df_by_ware = self.campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
-        df_by_ware = df_by_ware.pivot(columns='experiment_ware', values='cpu_time')
+        df_by_ware = df_by_ware.pivot(columns='experiment_ware', values=self.box_col)
         return df_by_ware
 
     def get_x_axis_name(self):

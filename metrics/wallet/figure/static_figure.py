@@ -107,14 +107,15 @@ class ContributionTable(Figure):
         contrib_raw = self.campaign_df.data_frame.groupby('input').apply(lambda x: contribution_agg(x, self.campaign_df.campaign.timeout))
         contrib = pd.DataFrame()
 
-        contrib['contribution'] = contrib_raw.groupby('first').unique.sum()
         contrib['vbew_simple'] = contrib_raw.groupby('first').cpu_time.count()
 
         for delta in self.vbew_deltas:
             sub = contrib_raw[contrib_raw.cpu_time > delta]
             contrib[f'vbew > {delta}'] = sub.groupby('first').cpu_time.count()
 
-        return contrib.fillna(0).astype(int).sort_values(['contribution', 'vbew_simple'], ascending=[False, False])
+        contrib['contribution'] = contrib_raw.groupby('first').unique.sum()
+
+        return contrib.fillna(0).astype(int).sort_values(['vbew_simple', 'contribution'], ascending=[False, False])
 
 
 

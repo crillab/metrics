@@ -51,7 +51,7 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
 
     def test_data_frame(self):
         self.assertEqual(list(self.campaign_df.data_frame.columns),
-                         ['input', 'experiment_ware', 'cpu_time', 'start_time', 'family', 'date'])
+                         ['input', 'experiment_ware', 'cpu_time', 'start_time', 'status', 'Constraints_arities', 'Constraints_distribution', 'Variables_degrees', 'family', 'date'])
         self.assertEqual(1500, len(self.campaign_df.data_frame))
 
     def test_delete_common_timeout(self):
