@@ -33,6 +33,7 @@ LINE_STYLES = ['-', ':', '-.', '--']
 Corresponds to a sample of existing line styles for matplotlib.
 """
 
+
 class StatTable(Figure):
     """
     Creation of a stat table representing main statistics for a campaign.
@@ -83,9 +84,11 @@ def contribution_agg(slice: pd.DataFrame, to: float):
     second = slice.iloc[1]
 
     if first['cpu_time'] < to:
-        return pd.Series([first['experiment_ware'], first['cpu_time'], second['cpu_time'] >= to], index=['first', 'cpu_time', 'unique'])
+        return pd.Series([first['experiment_ware'], first['cpu_time'], second['cpu_time'] >= to],
+                         index=['first', 'cpu_time', 'unique'])
 
     return pd.Series([None, None, False], index=['first', 'cpu_time', 'unique'])
+
 
 class ContributionTable(Figure):
     """
@@ -104,7 +107,8 @@ class ContributionTable(Figure):
         return self.get_data_frame()
 
     def get_data_frame(self):
-        contrib_raw = self.campaign_df.data_frame.groupby('input').apply(lambda x: contribution_agg(x, self.campaign_df.campaign.timeout))
+        contrib_raw = self.campaign_df.data_frame.groupby('input').apply(
+            lambda x: contribution_agg(x, self.campaign_df.campaign.timeout))
         contrib = pd.DataFrame()
 
         contrib['vbew_simple'] = contrib_raw.groupby('first').cpu_time.count()
@@ -116,7 +120,6 @@ class ContributionTable(Figure):
         contrib['contribution'] = contrib_raw.groupby('first').unique.sum()
 
         return contrib.fillna(0).astype(int).sort_values(['vbew_simple', 'contribution'], ascending=[False, False])
-
 
 
 class CactusMPL(CactusPlot):
@@ -132,15 +135,21 @@ class CactusMPL(CactusPlot):
         df = self.get_data_frame()
 
         fig, ax = plt.subplots()
-        ax.set_title(self.get_title())
-        ax.set_xlabel(self.get_x_axis_name())
-        ax.set_ylabel(self.get_y_axis_name())
+        ax.set_title(self.get_title(), **self._font)
+        ax.set_xlabel(self.get_x_axis_name(), **self._font)
+        ax.set_ylabel(self.get_y_axis_name(), **self._font)
 
-        color = [self.color_map.get(x) for x in df.columns] if self.color_map else None
-        style = [self.style_map.get(x) for x in df.columns] if self.style_map else None
+        styles = [self.style_map.get(x) for x in df.columns] if self.style_map else None
+
+        kwargs = [
+            {
+                'color': self.color_map.get(x) if self.color_map else None,
+                'linewidth': 3 if x in self.campaign_df.vbew_names else 1
+            } for x in df.columns
+        ]
 
         for i, col in enumerate(df.columns):
-            ax.plot(df.index, df[col], style[i], color=color[i], linewidth=3 if col in self.campaign_df.vbew_names else 1)
+            ax.plot(df.index, df[col])#, styles[i], **(kwargs[i]))
 
         if self.xp_ware_name_map is None:
             ax.legend(self.get_data_frame().columns)
@@ -196,4 +205,3 @@ class ScatterMPL(ScatterPlot):
         plt.ylim(limits)
 
         return df.plot.scatter(x=self.xp_ware_i, y=self.xp_ware_j, ax=ax)
-

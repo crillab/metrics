@@ -65,6 +65,14 @@ class Plot(Figure):
     A plot is a figure print in 2d with axis and title.
     """
 
+    def __init__(self, campaign_df: CampaignDataFrame, font_name='DejaVu Sans', font_size=12):
+        super().__init__(campaign_df)
+
+        self._font = {
+            'fontname': 'DejaVu Sans',
+            'fontsize': font_size
+        }
+
     def get_x_axis_name(self):
         """
 
@@ -92,7 +100,7 @@ class CactusPlot(Plot):
     Creation of a cactus plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, cumulated=False, min_solved_inputs=0, show_marker=True, color_map=None, style_map=None, xp_ware_name_map=None, cactus_col='cpu_time'):
+    def __init__(self, campaign_df: CampaignDataFrame, cumulated=False, min_solved_inputs=0, show_marker=True, color_map=None, style_map=None, xp_ware_name_map=None, cactus_col='cpu_time', **kwargs):
         """
         Creates a cactus plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -103,7 +111,7 @@ class CactusPlot(Plot):
         @param style_map: a style map to personalise each plot line by a given style (dotted...).
         @param xp_ware_name_map: a mapping of experimentware names.
         """
-        super().__init__(campaign_df)
+        super().__init__(campaign_df, **kwargs)
         self.cumulated = cumulated
         self.min_solved_inputs = min_solved_inputs
         self.show_marker = show_marker
@@ -157,7 +165,7 @@ class ScatterPlot(Plot):
     Creation of a scatter plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col='cpu_time'):
+    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col='cpu_time', **kwargs):
         """
         Creates a scatter plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -165,7 +173,7 @@ class ScatterPlot(Plot):
         @param xp_ware_y: the experimentware name to associate to y-axis.
         @param sample: if there is too much datas, a sample can choose "sample" number of inputs to show.
         """
-        super().__init__(campaign_df)
+        super().__init__(campaign_df, **kwargs)
         self.xp_ware_i = xp_ware_x
         self.xp_ware_j = xp_ware_y
         self.sample = sample
@@ -211,8 +219,8 @@ class BoxPlot(Plot):
     Creation of a box plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, box_col='cpu_time'):
-        super().__init__(campaign_df)
+    def __init__(self, campaign_df: CampaignDataFrame, box_col='cpu_time', **kwargs):
+        super().__init__(campaign_df, **kwargs)
         self.box_col = box_col
 
     def get_data_frame(self):
