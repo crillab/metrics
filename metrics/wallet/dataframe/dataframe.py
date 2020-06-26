@@ -80,7 +80,6 @@ class CampaignDataFrame:
         self._campaign_df_builder = campaign_df_builder
         self._campaign = campaign_df_builder.campaign
         self._data_frame = data_frame
-        self._xp_ware_names = list(data_frame.experiment_ware.unique())
         self._name = name
         self._vbew_names = vbew_names
 
@@ -114,7 +113,7 @@ class CampaignDataFrame:
 
         @return: the experimentware names of the dataframe.
         """
-        return self._xp_ware_names
+        return self._data_frame.experiment_ware.unique()
 
     @property
     def vbew_names(self) -> Set[str]:

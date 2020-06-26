@@ -146,7 +146,7 @@ class FileListInputSetReader(InputSetReader):
         """
         for file in self._file_list:
             self._start_input()
-            self._extract_data(file)
+            self._extract_data(file.strip())
             self._end_input()
 
     def _extract_data(self, file: str) -> None:

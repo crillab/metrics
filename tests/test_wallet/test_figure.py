@@ -133,22 +133,22 @@ class MyTestCase(unittest.TestCase):
     def test_stat_table_no_vbs(self):
         campaign_df = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
         stat = StatTable(campaign_df)
-        self.assertEqual(self.STAT_TABLE_RESULT_NO_VBS, stat.get_figure().to_dict())
+        self.assertEqual(self.STAT_TABLE_RESULT_NO_VBS, stat.get_figure().T.to_dict())
 
     def test_stat_table_vbs(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().add_vbew(['CHS', 'WDegCAxCD'], 'cpu_time')
         stat = StatTable(cdfb)
-        self.assertEqual(self.STAT_TABLE_RESULT_VBS, stat.get_figure().to_dict())
+        self.assertEqual(self.STAT_TABLE_RESULT_VBS, stat.get_figure().T.to_dict())
 
     def test_stat_table_sub_set_inputs(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().sub_data_frame('input', self.SUB_INPUT_SET)
         stat = StatTable(cdfb)
-        self.assertEqual(self.STAT_TABLE_RESULT_SUB_INPUT_SET,stat.get_figure().to_dict())
+        self.assertEqual(self.STAT_TABLE_RESULT_SUB_INPUT_SET,stat.get_figure().T.to_dict())
 
     def test_stat_table_sub_set_xpware(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().sub_data_frame('experiment_ware', self.SUB_XP_WARE_SET)
         stat = StatTable(cdfb)
-        self.assertEqual(stat.get_figure().to_dict(), self.STAT_TABLE_RESULT_SUB_XP_WARE_SET)
+        self.assertEqual(stat.get_figure().T.to_dict(), self.STAT_TABLE_RESULT_SUB_XP_WARE_SET)
 
     def test_contribution_table(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
@@ -180,7 +180,7 @@ class MyTestCase(unittest.TestCase):
 
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
         cdfb = cdfb.add_vbew({'CHS', 'WDegCAxCD'}, opti_col='cpu_time')
-        cactus = CactusMPL(cdfb, min_solved_inputs=300, cumulated=True, color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map)
+        cactus = CactusMPL(cdfb, x_min=300, cumulated=True, color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map)
         cactus.get_figure()
 
         #plt.savefig('cactus.pdf', transparent=True, bbox_inches='tight', figsize=(7, 2))

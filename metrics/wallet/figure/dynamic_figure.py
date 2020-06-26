@@ -92,7 +92,7 @@ class ScatterPlotly(ScatterPlot):
         }]
 
     def _get_layout(self):
-        timeout = self.campaign_df.campaign.timeout
+        timeout = self._campaign_df.campaign.timeout
         shapes = [{
             'x0': opt[0],
             'y0': opt[1],
