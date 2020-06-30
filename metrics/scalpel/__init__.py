@@ -35,7 +35,7 @@ from metrics.core.model import Model
 
 from metrics.scalpel.config import read_configuration
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.parser import create_parser, JsonCampaignParser
+from metrics.scalpel.parser import create_parser, GenericJsonCampaignParser
 
 
 def read_campaign(input_file: str, from_json: bool = True) -> Model:
@@ -78,6 +78,6 @@ def read_json(json_file: str) -> Model:
     :return: The read campaign.
     """
     campaign_parser_listener = CampaignParserListener()
-    campaign_parser = JsonCampaignParser(campaign_parser_listener)
+    campaign_parser = GenericJsonCampaignParser(campaign_parser_listener)
     campaign_parser.parse_file(json_file)
     return campaign_parser_listener.get_campaign()

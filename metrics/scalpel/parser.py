@@ -31,9 +31,10 @@ containing the output of a campaign, so as to build its representation.
 
 
 from csv import reader as read_csv
+from json import load as read_json
 from os import path, scandir
 from pydoc import locate
-from typing import List, Optional, TextIO, Iterable
+from typing import Any, Iterable, List, Optional, TextIO
 
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration, CampaignFormat
@@ -204,7 +205,7 @@ class EvaluationCampaignParser(CsvCampaignParser):
         return line
 
 
-class JsonCampaignParser(CampaignParser):
+class GenericJsonCampaignParser(CampaignParser):
     """
     The JsonCampaignParser is a parser that reads the output of a campaign from
     a JSON file, which has been previously produced by Metrics.
@@ -216,7 +217,44 @@ class JsonCampaignParser(CampaignParser):
 
         :param stream: The stream to read.
         """
-        raise NotImplementedError('Not implemented yet!')
+        self._read_json(read_json(stream))
+
+    def _read_json(self, json: Any, prefix: Optional[str] = None) -> None:
+        """
+
+        :param json:
+        :param prefix:
+        """
+        if isinstance(json, list):
+            self._read_array(json, prefix)
+        elif isinstance(json, dict):
+            self._read_object(json, prefix)
+        else:
+            self._listener.log_data(prefix, str(json))
+
+    def _read_object(self, obj: dict, prefix: Optional[str]) -> None:
+        """
+
+        :param obj:
+        :param prefix: The prefix of the fields to log.
+        """
+        for key, value in obj.items():
+            self._read_json(value, GenericJsonCampaignParser._create_prefix(prefix, key))
+
+    def _read_array(self, array: list, prefix: Optional[str]) -> None:
+        """
+
+        :param array: The array to read.
+        :param prefix: The prefix of the fields to log.
+        """
+        for index, elt in enumerate(array):
+            self._read_json(elt, GenericJsonCampaignParser._create_prefix(prefix, index))
+
+    @staticmethod
+    def _create_prefix(prefix: Optional[str], field: Any) -> str:
+        if prefix is None:
+            return str(field)
+        return f'{prefix}.{field}'
 
 
 class LineBasedCampaignParser(CampaignParser):

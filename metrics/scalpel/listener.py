@@ -28,6 +28,8 @@
 This module provides a listener which listens to the events triggered while
 a campaign is being parsed, so as to build its representation.
 """
+
+
 from collections import defaultdict
 from typing import Union, List, Tuple
 
@@ -65,8 +67,9 @@ class KeyMapping:
 
         :param campaign_key: The key defined in the campaign.
 
-        :return: The key expected by Scalpel, or the given key if no mapping is
-                 set for this key.
+        :return: A tuple having, as first element, the key expected by Scalpel or the given
+                 key if no mapping is set for this key and, as second element, the number of
+                 values expected for this key.
         """
         for k, v in self._dict.items():
             if campaign_key in v:

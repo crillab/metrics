@@ -25,8 +25,8 @@
 
 
 """
-This module provides a convenient way to read the input-set used in a campaign
-from different formats.
+This module provides a convenient way to read the input-set(s) used in a
+campaign from different formats.
 """
 
 

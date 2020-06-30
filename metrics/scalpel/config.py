@@ -35,7 +35,7 @@ from __future__ import annotations
 from os import path, walk
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-from yaml import safe_load
+from yaml import safe_load as read_yaml
 
 from metrics.scalpel.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.inputset import create_input_set_reader
@@ -437,6 +437,6 @@ def read_configuration(yaml_file: str, listener: CampaignParserListener) -> Scal
     :return: The read configuration.
     """
     with open(yaml_file, 'r') as yaml_stream:
-        yaml = safe_load(yaml_stream)
+        yaml = read_yaml(yaml_stream)
         builder = DictionaryScalpelConfigurationBuilder(yaml, listener)
         return builder.build()
