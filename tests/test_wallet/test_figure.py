@@ -132,26 +132,31 @@ class MyTestCase(unittest.TestCase):
 
     def test_stat_table_no_vbs(self):
         campaign_df = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
+        campaign_df.data_frame['success'] = campaign_df.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         stat = StatTable(campaign_df)
         self.assertEqual(self.STAT_TABLE_RESULT_NO_VBS, stat.get_figure().T.to_dict())
 
     def test_stat_table_vbs(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().add_vbew(['CHS', 'WDegCAxCD'], 'cpu_time')
+        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         stat = StatTable(cdfb)
         self.assertEqual(self.STAT_TABLE_RESULT_VBS, stat.get_figure().T.to_dict())
 
     def test_stat_table_sub_set_inputs(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().sub_data_frame('input', self.SUB_INPUT_SET)
+        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         stat = StatTable(cdfb)
         self.assertEqual(self.STAT_TABLE_RESULT_SUB_INPUT_SET,stat.get_figure().T.to_dict())
 
     def test_stat_table_sub_set_xpware(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().sub_data_frame('experiment_ware', self.SUB_XP_WARE_SET)
+        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         stat = StatTable(cdfb)
         self.assertEqual(stat.get_figure().T.to_dict(), self.STAT_TABLE_RESULT_SUB_XP_WARE_SET)
 
     def test_contribution_table(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
+        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         contrib = ContributionTable(cdfb, [0, 10, 100])
         self.assertEqual('WDegCAxCD', contrib.get_figure().iloc[0].name)
         self.assertEqual(168, contrib.get_figure().iloc[0].vbew_simple)
@@ -179,6 +184,7 @@ class MyTestCase(unittest.TestCase):
         }
 
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
+        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         cdfb = cdfb.add_vbew({'CHS', 'WDegCAxCD'}, opti_col='cpu_time')
         cactus = CactusMPL(cdfb, x_min=300, cumulated=True, color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map)
         cactus.get_figure()
@@ -188,12 +194,14 @@ class MyTestCase(unittest.TestCase):
 
     def test_box(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
+        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         box = BoxMPL(cdfb)
         box.get_figure()
         plt.show()
 
     def test_scatter(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
+        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         scatter = ScatterMPL(cdfb, 'CHS', 'WDegCAxCD')
         scatter.get_figure()
         plt.show()

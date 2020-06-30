@@ -31,14 +31,14 @@ to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
 """
 
 
-from metrics.core.model import Model
+from metrics.core.model import Campaign
 
 from metrics.scalpel.config import read_configuration
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.parser import create_parser, JsonCampaignParser
 
 
-def read_campaign(input_file: str, from_json: bool = True) -> Model:
+def read_campaign(input_file: str, from_json: bool = True) -> Campaign:
     """
     Reads the data about a campaign from the given input file.
 
@@ -50,7 +50,7 @@ def read_campaign(input_file: str, from_json: bool = True) -> Model:
     return read_json(input_file) if from_json else read_yaml(input_file)
 
 
-def read_yaml(yaml_configuration: str) -> Model:
+def read_yaml(yaml_configuration: str) -> Campaign:
     """
     Reads the data about a campaign following the configuration described in
     the given YAML file.
@@ -67,7 +67,7 @@ def read_yaml(yaml_configuration: str) -> Model:
     return campaign_parser_listener.get_campaign()
 
 
-def read_json(json_file: str) -> Model:
+def read_json(json_file: str) -> Campaign:
     """
     Reads the data about a campaign from the given JSON file.
     This file is supposed to be the serialized form of a campaign (reading

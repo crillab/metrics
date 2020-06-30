@@ -24,6 +24,7 @@
 """
 This module provides abstraction of each figures.
 """
+import matplotlib
 
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame, CampaignDFFilter
 
@@ -177,7 +178,6 @@ class CactusPlot(Plot):
 
         @return: the pandas dataframe used by this figure.
         """
-        solvers = self._campaign_df.xp_ware_names
         df_solved = self._campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
         df_cactus = df_solved.pivot(columns='experiment_ware', values=self.cactus_col)
         for col in df_cactus.columns:
@@ -210,6 +210,20 @@ class CactusPlot(Plot):
         @return: the title of the plot.
         """
         return 'Comparison of experimentwares'
+
+    def _set_font(self):
+        font = {
+            'family': self._font_name,
+            'size': self._font_size,
+        }
+
+        matplotlib.rc('font', **font)
+        matplotlib.rc('axes', titlesize=self._font_size)
+        matplotlib.rc('text', usetex=self._latex_writing)
+        matplotlib.rc('text', color=self._font_color)
+        matplotlib.rc('axes', labelcolor=self._font_color)
+        matplotlib.rc('xtick', color=self._font_color)
+        matplotlib.rc('ytick', color=self._font_color)
 
 
 class ScatterPlot(Plot):
@@ -281,7 +295,7 @@ class BoxPlot(Plot):
 
         @return: the pandas dataframe used by this figure.
         """
-        df_by_ware = self._campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
+        df_by_ware = self._campaign_df.data_frame
         df_by_ware = df_by_ware.pivot(columns='experiment_ware', values=self.box_col)
         return df_by_ware
 

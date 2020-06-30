@@ -40,8 +40,8 @@ class CampaignDFFilter(Enum):
     """
     This enumeration provides all the needed operations that we can apply to our dataframe.
     """
-    ONLY_TIMEOUT = (lambda c, df:   df[df['cpu_time'] >= c.timeout])
-    ONLY_SOLVED = (lambda c, df:    df[df['cpu_time'] < c.timeout])
+    ONLY_TIMEOUT = (lambda c, df:   df[~df['success']])
+    ONLY_SOLVED = (lambda c, df:    df[df['success']])
     ONLY_COMMON_TIMEOUT = (lambda c, df:    df[~df.input.isin(CampaignDFFilter.ONLY_SOLVED(c, df).input)])
     ONLY_COMMON_SOLVED = (lambda c, df:     df[~df.input.isin(CampaignDFFilter.ONLY_TIMEOUT(c, df).input)])
     DELETE_COMMON_TIMEOUT = (lambda c, df:  df[df.input.isin(CampaignDFFilter.ONLY_SOLVED(c, df).input)])

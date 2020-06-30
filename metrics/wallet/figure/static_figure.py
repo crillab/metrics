@@ -118,12 +118,7 @@ class CactusMPL(CactusPlot):
         @return: the figure.
         """
         df = self.get_data_frame()
-
-        matplotlib.rc('font', size=self._font_size)
-        matplotlib.rc('axes', titlesize=self._font_size)
-
-        matplotlib.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
-        matplotlib.rc('text', usetex=True)
+        self._set_font()
 
         fig, ax = plt.subplots(figsize=self._figsize)
         ax.set_title(self.get_title())
@@ -132,6 +127,22 @@ class CactusMPL(CactusPlot):
         ax.set_xscale('log' if self._logx else 'linear')
         ax.set_yscale('log' if self._logy else 'linear')
 
+        self._set_plot(df, ax)
+        self._set_legend(ax)
+
+        ax.set_xlim(self._get_x_lim(ax))
+        ax.set_ylim(self._get_y_lim(ax))
+
+        if self._output is not None:
+            fig.savefig(self._output, bbox_inches='tight', transparent=True)
+
+        return ax
+
+    def _get_final_xpware_name(self, col):
+        mapped = self._xp_ware_name_map is not None and col in self._xp_ware_name_map
+        return self._xp_ware_name_map[col] if mapped else col
+
+    def _set_plot(self, df, ax):
         styles = [self.style_map.get(x) for x in df.columns] if self.style_map else None
 
         kwargs = [
@@ -144,19 +155,29 @@ class CactusMPL(CactusPlot):
 
         for i, col in enumerate(df.columns):
             if styles is None:
-                ax.plot(df.index, df[col], **(kwargs[i]))
+                ax.plot(df.index, df[col], label=self._get_final_xpware_name(col), **(kwargs[i]))
             else:
-                ax.plot(df.index, df[col], styles[i], **(kwargs[i]))
+                ax.plot(df.index, df[col], styles[i], label=self._get_final_xpware_name(col), **(kwargs[i]))
 
+    def _set_legend(self, ax):
         if self._xp_ware_name_map is None:
-            ax.legend(self.get_data_frame().columns, loc=self._legend_location, bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
+            ax.legend(self.get_data_frame().columns, loc=self._legend_location, bbox_to_anchor=self._bbox_to_anchor,
+                      ncol=self._ncol_legend)
         else:
-            ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns], loc=self._legend_location, bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
+            ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns], loc=self._legend_location,
+                      bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
 
-        if self._output is not None:
-            fig.savefig(self._output, bbox_inches='tight', transparent=True)
+    def _get_x_lim(self, ax):
+        min, max = ax.get_xlim()
+        min = self._x_min if self._x_min != -1 else min
+        max = self._x_max if self._x_max != -1 else max
+        return [min, max]
 
-        return ax
+    def _get_y_lim(self, ax):
+        min, max = ax.get_ylim()
+        min = self._y_min if self._y_min != -1 else min
+        max = self._y_max if self._y_max != -1 else max
+        return [min, max]
 
 
 class BoxMPL(BoxPlot):

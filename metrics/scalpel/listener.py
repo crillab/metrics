@@ -32,7 +32,7 @@ from collections import defaultdict
 from typing import Union, List, Tuple
 
 from metrics.core.builder import CampaignBuilder
-from metrics.core.model import Model
+from metrics.core.model import Campaign
 
 
 class KeyMapping:
@@ -176,7 +176,7 @@ class CampaignParserListener:
             self._current_builder[scalpel_key] = ' '.join(values)
             del self._pending_keys[scalpel_key]
 
-    def get_campaign(self) -> Model:
+    def get_campaign(self) -> Campaign:
         """
         Gives the campaign that has been read.
 
