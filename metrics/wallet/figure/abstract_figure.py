@@ -146,6 +146,36 @@ class Plot(Figure):
         """
         raise NotImplementedError('Method "get_data_frame()" needs to be implemented!')
 
+    def _set_font(self):
+        font = {
+            'family': self._font_name,
+            'size': self._font_size,
+        }
+
+        matplotlib.rc('font', **font)
+        matplotlib.rc('axes', titlesize=self._font_size)
+        matplotlib.rc('text', usetex=self._latex_writing)
+        matplotlib.rc('text', color=self._font_color)
+        matplotlib.rc('axes', labelcolor=self._font_color)
+        matplotlib.rc('xtick', color=self._font_color)
+        matplotlib.rc('ytick', color=self._font_color)
+
+    def _get_x_lim(self, ax):
+        min, max = ax.get_xlim()
+        min = self._x_min if self._x_min != -1 else min
+        max = self._x_max if self._x_max != -1 else max
+        return [min, max]
+
+    def _get_y_lim(self, ax):
+        min, max = ax.get_ylim()
+        min = self._y_min if self._y_min != -1 else min
+        max = self._y_max if self._y_max != -1 else max
+        return [min, max]
+
+    def _get_final_xpware_name(self, col):
+        mapped = self._xp_ware_name_map is not None and col in self._xp_ware_name_map
+        return self._xp_ware_name_map[col] if mapped else col
+
 
 class CactusPlot(Plot):
     """
@@ -210,20 +240,6 @@ class CactusPlot(Plot):
         @return: the title of the plot.
         """
         return 'Comparison of experimentwares'
-
-    def _set_font(self):
-        font = {
-            'family': self._font_name,
-            'size': self._font_size,
-        }
-
-        matplotlib.rc('font', **font)
-        matplotlib.rc('axes', titlesize=self._font_size)
-        matplotlib.rc('text', usetex=self._latex_writing)
-        matplotlib.rc('text', color=self._font_color)
-        matplotlib.rc('axes', labelcolor=self._font_color)
-        matplotlib.rc('xtick', color=self._font_color)
-        matplotlib.rc('ytick', color=self._font_color)
 
 
 class ScatterPlot(Plot):

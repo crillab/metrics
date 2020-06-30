@@ -22,7 +22,6 @@
 # ##############################################################################
 from typing import List
 
-import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -138,10 +137,6 @@ class CactusMPL(CactusPlot):
 
         return ax
 
-    def _get_final_xpware_name(self, col):
-        mapped = self._xp_ware_name_map is not None and col in self._xp_ware_name_map
-        return self._xp_ware_name_map[col] if mapped else col
-
     def _set_plot(self, df, ax):
         styles = [self.style_map.get(x) for x in df.columns] if self.style_map else None
 
@@ -167,18 +162,6 @@ class CactusMPL(CactusPlot):
             ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns], loc=self._legend_location,
                       bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
 
-    def _get_x_lim(self, ax):
-        min, max = ax.get_xlim()
-        min = self._x_min if self._x_min != -1 else min
-        max = self._x_max if self._x_max != -1 else max
-        return [min, max]
-
-    def _get_y_lim(self, ax):
-        min, max = ax.get_ylim()
-        min = self._y_min if self._y_min != -1 else min
-        max = self._y_max if self._y_max != -1 else max
-        return [min, max]
-
 
 class BoxMPL(BoxPlot):
     """
@@ -191,14 +174,23 @@ class BoxMPL(BoxPlot):
         @return: the figure.
         """
         df = self.get_data_frame()
+        self._set_font()
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=self._figsize)
         ax.set_title(self.get_title())
-        ax.set_xlabel(self.get_x_axis_name())
-        ax.set_ylabel(self.get_y_axis_name())
-        ax.set_yscale('log')
+        ax.set_yscale('log' if self._logy else 'linear')
 
-        return df.boxplot(ax=ax)
+        if self._xp_ware_name_map is not None:
+            df = df.rename(columns=self._xp_ware_name_map)
+
+        df.boxplot(ax=ax, rot=15, meanline=True, showmeans=True)
+
+        if self._output is not None:
+            fig.savefig(self._output, bbox_inches='tight', transparent=True)
+
+        return ax
+
+
 
 
 class ScatterMPL(ScatterPlot):
@@ -212,17 +204,47 @@ class ScatterMPL(ScatterPlot):
         @return: the figure.
         """
         df = self.get_data_frame()
+        self._set_font()
         limits = [self.min, self._campaign_df.campaign.timeout]
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=self._figsize)
         ax.set_title(self.get_title())
-        ax.set_xlabel(self.get_x_axis_name())
-        ax.set_ylabel(self.get_y_axis_name())
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+        ax.set_xscale('log' if self._logx else 'linear')
+        ax.set_yscale('log' if self._logy else 'linear')
         ax.plot(limits, limits, ls="--", c=".3")
 
         plt.xlim(limits)
         plt.ylim(limits)
 
-        return df.plot.scatter(x=self.xp_ware_i, y=self.xp_ware_j, ax=ax)
+        ax.set_xlim(self._get_x_lim(ax))
+        ax.set_ylim(self._get_y_lim(ax))
+
+        df.plot.scatter(x=self.xp_ware_i, y=self.xp_ware_j, ax=ax)
+        ax.set_xlabel(self.get_x_axis_name())
+        ax.set_ylabel(self.get_y_axis_name())
+
+        if self._output is not None:
+            fig.savefig(self._output, bbox_inches='tight', transparent=True)
+
+        return ax
+
+    def get_x_axis_name(self):
+        """
+
+        @return: the x axis name.
+        """
+        return self._get_final_xpware_name(self.xp_ware_i)
+
+    def get_y_axis_name(self):
+        """
+
+        @return: the y axis name.
+        """
+        return self._get_final_xpware_name(self.xp_ware_j)
+
+    def get_title(self):
+        """
+
+        @return: the title of the plot.
+        """
+        return f'Comparison of {self._get_final_xpware_name(self.xp_ware_i)} and {self._get_final_xpware_name(self.xp_ware_j)}'
