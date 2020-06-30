@@ -31,26 +31,33 @@ to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
 """
 
 
-from metrics.core.model import Model
+from metrics.core.model import Campaign
 
 from metrics.scalpel.config import read_configuration
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.parser import create_parser, GenericJsonCampaignParser
+from metrics.scalpel.parser import create_parser, JsonCampaignParser
 
 
-def read_campaign(input_file: str, from_json: bool = True) -> Model:
+def read_campaign(input_file: str) -> Campaign:
     """
     Reads the data about a campaign from the given input file.
 
     :param input_file: The input file describing the campaign.
-    :param from_json: Whether the input file is JSON.
 
     :return: The read campaign.
+
+    :raises ValueError: If the input file does not have a recognized format.
     """
-    return read_json(input_file) if from_json else read_yaml(input_file)
+    if input_file.endswith('.yml') or input_file.endswith('.yaml'):
+        return read_yaml(input_file)
+
+    if input_file.endswith('.json'):
+        return read_json(input_file)
+
+    raise ValueError(f'Unrecognized campaign format for file {input_file}')
 
 
-def read_yaml(yaml_configuration: str) -> Model:
+def read_yaml(yaml_configuration: str) -> Campaign:
     """
     Reads the data about a campaign following the configuration described in
     the given YAML file.
@@ -67,17 +74,17 @@ def read_yaml(yaml_configuration: str) -> Model:
     return campaign_parser_listener.get_campaign()
 
 
-def read_json(json_file: str) -> Model:
+def read_json(json_file: str) -> Campaign:
     """
     Reads the data about a campaign from the given JSON file.
     This file is supposed to be the serialized form of a campaign (reading
-    any JSON file is not supported).
+    any JSON file is not supported here).
 
     :param json_file: The path of the JSON file to read the campaign from.
 
     :return: The read campaign.
     """
     campaign_parser_listener = CampaignParserListener()
-    campaign_parser = GenericJsonCampaignParser(campaign_parser_listener)
+    campaign_parser = JsonCampaignParser(campaign_parser_listener)
     campaign_parser.parse_file(json_file)
     return campaign_parser_listener.get_campaign()

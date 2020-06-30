@@ -106,12 +106,3 @@ class CampaignFormat(FormatEnum):
     RAW_LOG = 'raw', 'raw-log'
     FLAT_LOG_DIRECTORY = 'flat-dir'
     DEEP_LOG_DIRECTORY = 'deep-dir'
-
-
-def guess_file_format(file: str):
-    """
-
-    :param file:
-    :return:
-    """
-    CampaignFormat.value_of(file.split('.')[-1])

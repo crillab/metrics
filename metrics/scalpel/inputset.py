@@ -146,7 +146,7 @@ class FileListInputSetReader(InputSetReader):
         """
         for file in self._file_list:
             self._start_input()
-            self._extract_data(file)
+            self._extract_data(file.strip())
             self._end_input()
 
     def _extract_data(self, file: str) -> None:
@@ -242,11 +242,12 @@ class HierarchyInputSetReader:
                 yield path.join(directory, file)
 
 
-def create_input_set_reader(fmt: InputSetFormat) -> Callable[[CampaignParserListener, Any], None]:
+def create_input_set_reader(fmt: InputSetFormat, **kwargs) -> Callable[[CampaignParserListener, Any], None]:
     """
     Creates a reader for an input-set in the given format.
 
     :param fmt: The format of the input-set to read.
+    :param kwargs: The options for the input set reader.
 
     :return: The function to use to read the input-set.
     """
@@ -254,16 +255,15 @@ def create_input_set_reader(fmt: InputSetFormat) -> Callable[[CampaignParserList
         return lambda l, s: _str_reader(ListInputSetReader, l, s)
 
     if fmt == InputSetFormat.FILE_LIST:
-        return lambda l, s: _str_reader(FileListInputSetReader, l, s)
+        return lambda l, s: _str_reader(FileListInputSetReader, l, s, **kwargs)
 
     if fmt == InputSetFormat.FILE:
-        return lambda l, s: _file_reader(l, s)
+        return lambda l, s: _file_reader(l, s, **kwargs)
 
-    return lambda l, s: _str_reader(HierarchyInputSetReader, l, s)
+    return lambda l, s: _str_reader(HierarchyInputSetReader, l, s, **kwargs)
 
 
-def _str_reader(factory: Callable[[CampaignParserListener, Any], Any],
-                listener: CampaignParserListener, source: Any) -> None:
+def _str_reader(factory: Callable, listener: CampaignParserListener, source: Any, **kwargs) -> None:
     """
     Reads an input-set from a list containing the description of the inputs.
 
@@ -271,11 +271,11 @@ def _str_reader(factory: Callable[[CampaignParserListener, Any], Any],
     :param listener: The listener to notify while reading.
     :param source: The source from which to read the input.
     """
-    reader = factory(listener, source)
+    reader = factory(listener, source, **kwargs)
     reader.read()
 
 
-def _file_reader(listener, source):
+def _file_reader(listener: CampaignParserListener, source: Any, **kwargs):
     """
     Reads an input-set from a file containing the list of the inputs to consider.
 
@@ -283,5 +283,5 @@ def _file_reader(listener, source):
     :param source: The source from which to read the input.
     """
     with open(source, 'r') as file:
-        reader = FileListInputSetReader(listener, file)
+        reader = FileListInputSetReader(listener, file, **kwargs)
         reader.read()

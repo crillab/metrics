@@ -44,6 +44,7 @@ class JsonReader:
         eb['input'] = xp['instance']
         eb['start_time'] = datetime.strptime(xp['date'], '%Y-%m-%d')
         eb['experiment_ware'] = xp['configuration']
+        eb['status'] = xp['Global_Stop']
         eb['cpu_time'] = xp['Global_cpu'] if xp['Global_Stop'] not in {'TODO', 'EXCEEDED_TIME'} else 3600.
 
         if 'arm_res' in xp:
@@ -58,4 +59,7 @@ class JsonReader:
     def _create_input(self, input):
         ib = self.esb.add_input_builder()
         ib['path'] = input['path']
+        ib['Constraints_arities'] = input['Constraints_arities']
+        ib['Constraints_distribution'] = input['Constraints_distribution']
+        ib['Variables_degrees'] = input['Variables_degrees']
         ib['family'] = re.search('XCSP.*?/(.+?)/', input['path'], flags=re.IGNORECASE).group(1)

@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+import sys
+from argparse import Namespace
+
+from pyfiglet import Figlet
+
+from metrics.studio.cli.parser import parse_args
+from metrics.studio.cli.report import ReportBuilder
+
+
+def close(arguments: Namespace) -> None:
+    """
+
+    @param arguments:
+    """
+    if arguments.plot_config:
+        arguments.plot_config.close()
+
+
+def welcome():
+    """
+    This function shows a welcome message.
+    """
+    f = Figlet(font='slant')
+    print(''.join(['#' * 80]))
+    print(f.renderText('Metrics Studio'))
+    print(''.join(['#' * 80]))
+    print("A beautiful CLI made with \N{green heart} in Python \N{snake}")
+    print("\n\n\n")
+
+
+welcome()
+
+args = parse_args(sys.argv[1:])
+
+ReportBuilder(args).load().build().generate_report()
+
+close(args)

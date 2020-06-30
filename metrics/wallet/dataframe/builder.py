@@ -24,11 +24,34 @@
 """
 This module provides a simple class corresponding to the builder of the dataframe linked to a campaign.
 """
+from typing import Set, Callable, Any
 
 from pandas import DataFrame
 
 from metrics.core.model import Campaign
+from metrics.scalpel import read_yaml
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
+
+
+class Analysis:
+
+    def __init__(self, input_file: str, is_success: Callable[[Any], bool] = None):
+        self._input_file = input_file
+        self._campaign = self._make_campaign()
+        self._is_success = (lambda x: x['cpu_time'] < self._campaign.timeout) if is_success is None else is_success
+        self._campaign_df = self._make_campaign_df()
+
+    @property
+    def campaign_df(self):
+        return self._campaign_df
+
+    def _make_campaign(self) -> Campaign:
+        return read_yaml(self._input_file)
+
+    def _make_campaign_df(self):
+        campaign_df = CampaignDataFrameBuilder(self._campaign).build_from_campaign()
+        campaign_df.data_frame['success'] = campaign_df.data_frame.apply(self._is_success, axis=1)
+        return campaign_df
 
 
 class CampaignDataFrameBuilder:
@@ -68,7 +91,7 @@ class CampaignDataFrameBuilder:
 
         return self.build_from_data_frame(campaign_df, self._campaign.name)
 
-    def build_from_data_frame(self, campaign_df: DataFrame, name: str = None) -> CampaignDataFrame:
+    def build_from_data_frame(self, campaign_df: DataFrame, name: str = None, vbew_names: Set[str] = None) -> CampaignDataFrame:
         """
         Builds a campaign dataframe directly from a pandas dataframe. It must corresponds to the original dataframe
         with some modifications but with necessary columns.
@@ -76,7 +99,7 @@ class CampaignDataFrameBuilder:
         @param name: the name corresponding to the current dataframe.
         @return: the builded campaign dataframe.
         """
-        return CampaignDataFrame(self, campaign_df, name or self._campaign.name)
+        return CampaignDataFrame(self, campaign_df, name or self._campaign.name, vbew_names or set())
 
     def _make_experiment_wares_df(self) -> DataFrame:
         """

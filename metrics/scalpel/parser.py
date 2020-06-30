@@ -30,8 +30,8 @@ containing the output of a campaign, so as to build its representation.
 """
 
 
-from csv import reader as read_csv
-from json import load as read_json
+from csv import reader as load_csv
+from json import load as load_json
 from os import path, scandir
 from pydoc import locate
 from typing import Any, Iterable, List, Optional, TextIO
@@ -132,8 +132,8 @@ class CsvCampaignParser(CampaignParser):
         :return: The lines of the read CSV file.
         """
         if self._quotechar is None:
-            return read_csv(stream, delimiter=self._separator)
-        return read_csv(stream, delimiter=self._separator, quotechar=self._quotechar)
+            return load_csv(stream, delimiter=self._separator)
+        return load_csv(stream, delimiter=self._separator, quotechar=self._quotechar)
 
     def _parse_line(self, line: List[str]) -> None:
         """
@@ -205,6 +205,10 @@ class EvaluationCampaignParser(CsvCampaignParser):
         return line
 
 
+class JsonCampaignParser(CampaignParser):
+    pass
+
+
 class GenericJsonCampaignParser(CampaignParser):
     """
     The JsonCampaignParser is a parser that reads the output of a campaign from
@@ -217,7 +221,7 @@ class GenericJsonCampaignParser(CampaignParser):
 
         :param stream: The stream to read.
         """
-        self._read_json(read_json(stream))
+        self._read_json(load_json(stream))
 
     def _read_json(self, json: Any, prefix: Optional[str] = None) -> None:
         """
@@ -388,10 +392,12 @@ class DirectoryCampaignParser(CampaignParser):
 
         :param directory: The directory of the experiment.
         """
-        self._parser.start_experiment()
-        for file in self._configuration.get_files():
-            self._parse_file(directory, file)
-        self._parser.end_experiment()
+        with scandir(directory) as experiment:
+            self._parser.start_experiment()
+            for file in experiment:
+                if self._configuration.is_to_be_parsed(file):
+                    self._parse_file(directory, file)
+            self._parser.end_experiment()
 
     def _parse_file(self, directory: str, file: str) -> None:
         """
