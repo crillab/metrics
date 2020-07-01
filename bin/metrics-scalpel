@@ -1,23 +1,98 @@
 #!/usr/bin/env python3
 
-from sys import argv
 from signal import signal, SIGPIPE, SIG_DFL
+from typing import Union, List, Optional, Iterable
+
+from metrics.scalpel.config import MappingConfiguration, RawDataConfiguration, ScalpelConfigurationBuilder
+from metrics.scalpel.format import CampaignFormat
+from PyInquirer import prompt
+
 signal(SIGPIPE, SIG_DFL)
 
-header = None
 
-def readcsv(inputfile):
-    global header
-    xpware = inputfile.split("/")[-1][:-4]
-    with open(inputfile) as f:
-        if header is None:
-            header = "xpware," + next(f)
-            print(header, end="")
-        else:
-            next(f)
-        for line in  f:
-            print(xpware, line, sep=',', end="")
+class CLIMappingConfiguration(MappingConfiguration):
+    def get_scalpel_key(self) -> str:
+        pass
 
-for csv in argv[1:]:
-    assert len(csv) - csv.rfind(".csv") == 4
-    readcsv(csv)
+    def get_campaign_key(self) -> Union[str, List[str]]:
+        pass
+
+    def has_next(self) -> bool:
+        pass
+
+
+class CLIRawDataConfiguration(RawDataConfiguration):
+    def get_name(self) -> str:
+        pass
+
+    def get_file(self) -> str:
+        pass
+
+    def get_regex_pattern(self) -> Optional[str]:
+        pass
+
+    def get_regex_group(self) -> Optional[int]:
+        pass
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        pass
+
+    def has_next(self) -> bool:
+        pass
+
+
+class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
+    def _get_mapping(self) -> MappingConfiguration:
+        pass
+
+    def _get_campaign_name(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'name',
+                'message': 'What\'s the campaign name ?'
+            }
+        ]
+        answers = prompt(questions)
+        return answers['name'] if answers['name'] != '' else None
+
+    def _get_campaign_date(self) -> Optional[str]:
+        pass
+
+    def _get_os_description(self) -> Optional[str]:
+        pass
+
+    def _get_cpu_description(self) -> Optional[str]:
+        pass
+
+    def _get_total_memory(self) -> Optional[str]:
+        pass
+
+    def _get_time_out(self) -> Optional[str]:
+        pass
+
+    def _get_memory_out(self) -> Optional[str]:
+        pass
+
+    def read_experiment_wares(self) -> None:
+        pass
+
+    def read_input_set(self) -> None:
+        pass
+
+    def _get_format(self) -> Optional[CampaignFormat]:
+        pass
+
+    def _get_campaign_path(self) -> str:
+        pass
+
+    def _get_raw_data(self) -> RawDataConfiguration:
+        pass
+
+    def _get_data_files(self) -> Iterable[str]:
+        pass
+
+
+if __name__ == 'main':
+    pass
+    # scalpel_configuration_builder = ScalpelConfigurationBuilder().build()
