@@ -61,7 +61,7 @@ class ReportBuilder:
         @return: The current report object
         """
 
-        self._campaign = read_campaign(self._args.input, self._args.from_json)
+        self._campaign = read_campaign(self._args.input)
         return self
 
     def _load_plot_config(self) -> 'ReportBuilder':
