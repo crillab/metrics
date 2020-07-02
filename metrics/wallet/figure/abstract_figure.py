@@ -242,6 +242,62 @@ class CactusPlot(Plot):
         return 'Comparison of experimentwares'
 
 
+class CDFPlot(Plot):
+    """
+    Creation of a Cumulative Distribution Function to compare the performance of several solvers.
+    """
+
+    def __init__(self, campaign_df: CampaignDataFrame, color_map=None, style_map=None, cdf_col='cpu_time', legend_location: str = 'best', ncol_legend: int = 1, bbox_to_anchor=None, **kwargs):
+        """
+        Creates a cactus plot.
+        @param campaign_df: the campaign dataframe to plot.
+        @param color_map: a color map to personalise each plot line by a given color.
+        @param style_map: a style map to personalise each plot line by a given style (dotted...).
+        @param xp_ware_name_map: a mapping of experimentware names.
+        """
+        super().__init__(campaign_df, **kwargs)
+        self.color_map = color_map
+        self.style_map = style_map
+        self.cdf_col = cdf_col
+        self._legend_location = legend_location
+        self._bbox_to_anchor = bbox_to_anchor
+        self._ncol_legend = ncol_legend
+
+    def get_data_frame(self):
+        """
+
+        @return: the pandas dataframe used by this figure.
+        """
+        df_solved = self._campaign_df.data_frame
+        df_cdf = df_solved.pivot(columns='experiment_ware', values=self.cdf_col)
+
+        order = list(df_cdf.count().sort_values(ascending=False).index)
+        df_cdf = df_cdf[order]
+
+        return df_cdf
+
+    def get_x_axis_name(self):
+        """
+
+        @return: the x axis name.
+        """
+        return 'Time'
+
+    def get_y_axis_name(self):
+        """
+
+        @return: the y axis name.
+        """
+        return 'Solved inputs'
+
+    def get_title(self):
+        """
+
+        @return: the title of the plot.
+        """
+        return 'Comparison of experimentwares'
+
+
 class ScatterPlot(Plot):
     """
     Creation of a scatter plot.

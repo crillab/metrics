@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from metrics.wallet.dataframe.dataframe import CampaignDFFilter, CampaignDataFrame
-from metrics.wallet.figure.abstract_figure import CactusPlot, BoxPlot, ScatterPlot, Table
+from metrics.wallet.figure.abstract_figure import CactusPlot, BoxPlot, ScatterPlot, Table, CDFPlot
 
 LINE_STYLES = ['-', ':', '-.', '--']
 """
@@ -153,6 +153,62 @@ class CactusMPL(CactusPlot):
                 ax.plot(df.index, df[col], label=self._get_final_xpware_name(col), **(kwargs[i]))
             else:
                 ax.plot(df.index, df[col], styles[i], label=self._get_final_xpware_name(col), **(kwargs[i]))
+
+    def _set_legend(self, ax):
+        if self._xp_ware_name_map is None:
+            ax.legend(self.get_data_frame().columns, loc=self._legend_location, bbox_to_anchor=self._bbox_to_anchor,
+                      ncol=self._ncol_legend)
+        else:
+            ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns], loc=self._legend_location,
+                      bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
+
+
+class CDFMPL(CDFPlot):
+    """
+    Creation of a static cactus plot.
+    """
+
+    def get_figure(self):
+        """
+
+        @return: the figure.
+        """
+        df = self.get_data_frame()
+        self._set_font()
+
+        fig, ax = plt.subplots(figsize=self._figsize)
+        ax.set_title(self.get_title())
+        ax.set_xlabel(self.get_x_axis_name())
+        ax.set_ylabel(self.get_y_axis_name())
+        ax.set_xscale('log' if self._logx else 'linear')
+        ax.set_yscale('log' if self._logy else 'linear')
+
+        self._set_plot(df, ax)
+        self._set_legend(ax)
+
+        ax.set_xlim(self._get_x_lim(ax))
+        ax.set_ylim(self._get_y_lim(ax))
+
+        if self._output is not None:
+            fig.savefig(self._output, bbox_inches='tight', transparent=True)
+
+        return ax
+
+    def _set_plot(self, df, ax):
+        styles = [self.style_map.get(x) for x in df.columns] if self.style_map else None
+
+        kwargs = [
+            {
+                'color': self.color_map.get(x) if self.color_map else None,
+                'linewidth': 3 if x in self._campaign_df.vbew_names else 1,
+            } for x in df.columns
+        ]
+
+        for i, col in enumerate(df.columns):
+            if styles is None:
+                ax.hist(df[col].dropna(), int(self._campaign_df.campaign.timeout), label=self._get_final_xpware_name(col), density=True, histtype='step', cumulative=True, **(kwargs[i]))
+            else:
+                ax.hist(df[col].dropna(), int(self._campaign_df.campaign.timeout), label=self._get_final_xpware_name(col), density=True, histtype='step', cumulative=True, **(kwargs[i]))
 
     def _set_legend(self, ax):
         if self._xp_ware_name_map is None:
