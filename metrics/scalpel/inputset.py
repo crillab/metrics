@@ -260,7 +260,7 @@ def create_input_set_reader(fmt: InputSetFormat, **kwargs) -> Callable[[Campaign
     if fmt == InputSetFormat.FILE:
         return lambda l, s: _file_reader(l, s, **kwargs)
 
-    return lambda l, s: _str_reader(HierarchyInputSetReader, l, s, **kwargs)
+    return lambda l, s: _str_reader(HierarchyInputSetReader, l, s[0], **kwargs)
 
 
 def _str_reader(factory: Callable, listener: CampaignParserListener, source: Any, **kwargs) -> None:

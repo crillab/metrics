@@ -371,7 +371,7 @@ class DirectoryCampaignParser(CampaignParser):
         with scandir(directory) as campaign:
             for experiment_ware in campaign:
                 xp_ware_path = path.join(directory, experiment_ware.name)
-                self._explore_experiment_ware(xp_ware_path)
+                self._explore_experiment(xp_ware_path)
 
     def _explore_experiment_ware(self, directory: str) -> None:
         """
@@ -395,8 +395,8 @@ class DirectoryCampaignParser(CampaignParser):
         with scandir(directory) as experiment:
             self._parser.start_experiment()
             for file in experiment:
-                if self._configuration.is_to_be_parsed(file):
-                    self._parse_file(directory, file)
+                if self._configuration.is_to_be_parsed(file.name):
+                    self._parse_file(directory, file.name)
             self._parser.end_experiment()
 
     def _parse_file(self, directory: str, file: str) -> None:
