@@ -304,7 +304,7 @@ class ExperimentWareOutputCampaignParser(LineBasedCampaignParser):
         self._configuration = configuration
         self._current_file = None
 
-    def now_parsing(self, current_file: str) -> None:
+    def now_parsing(self, current_file: Optional[str]) -> None:
         """
         Notifies this parser that it is now parsing the file with the given
         name.
@@ -353,37 +353,50 @@ class DirectoryCampaignParser(CampaignParser):
 
         :param file_path: The path of the directory to explore.
         """
-        self.explore_campaign(file_path)
+        self.explore(file_path)
 
     def parse_stream(self, stream: TextIO) -> None:
         """
+        DirectoryCampaignParser does not support stream parsing.
 
-        :param stream:
+        :param stream: The stream to parse.
         """
         raise TypeError('DirectoryCampaignParser does not support stream parsing!')
 
-    def explore_campaign(self, directory: str) -> None:
+    def explore(self, root: str) -> None:
         """
-        Explores the given directory as the root directory of the campaign.
+        Explores the file hierarchy rooted at the given directory.
 
-        :param directory: The directory to explore.
+        :param root:  The root directory of the file hierarchy to explore.
         """
-        with scandir(directory) as campaign:
-            for experiment_ware in campaign:
-                xp_ware_path = path.join(directory, experiment_ware.name)
-                self._explore_experiment(xp_ware_path)
+        raise NotImplementedError('Method "explore()" is abstract!')
 
-    def _explore_experiment_ware(self, directory: str) -> None:
-        """
-        Explores the given directory as a set of experiments performed with the
-        same experiment-ware during the campaign.
 
-        :param directory: The directory to explore.
+class DeepDirectoryCampaignParser(DirectoryCampaignParser):
+
+    def __init__(self, configuration: ScalpelConfiguration,
+                 listener: CampaignParserListener,
+                 depth: int = 1) -> None:
+        super().__init__(configuration, listener)
+        self._depth = depth
+
+    def explore(self, root: str) -> None:
         """
-        with scandir(directory) as experiment_ware:
-            for experiment in experiment_ware:
-                xp_path = path.join(directory, experiment.name)
-                self._explore_experiment(xp_path)
+        Explores the file hierarchy rooted at the given directory.
+
+        :param root:  The root directory of the file hierarchy to explore.
+        """
+        self.recursive_explore(root, 0)
+
+    def recursive_explore(self, directory, depth):
+        if depth == self._depth:
+            self._explore_experiment(directory)
+
+        else:
+            with scandir(directory) as current_dir:
+                for subdir in current_dir:
+                    subdir_path = path.join(directory, subdir.name)
+                    self.recursive_explore(subdir_path, depth + 1)
 
     def _explore_experiment(self, directory: str) -> None:
         """
@@ -410,6 +423,25 @@ class DirectoryCampaignParser(CampaignParser):
         if path.exists(file_path):
             self._parser.now_parsing(file)
             self._parser.parse_file(file_path)
+
+
+class FlatDirectoryCampaignParser(DirectoryCampaignParser):
+
+    def __init__(self, configuration: ScalpelConfiguration,
+                 listener: CampaignParserListener) -> None:
+        super().__init__(configuration, listener)
+
+    def explore(self, root: str) -> None:
+        """
+        Explores the file hierarchy rooted at the given directory.
+
+        :param root:  The root directory of the file hierarchy to explore.
+        """
+        with scandir(root) as root_dir:
+            for file in root_dir:
+                self._parser.start_experiment()
+                self._parser.parse_file(path.join(root, file.name))
+                self._parser.end_experiment()
 
 
 def create_parser(config: ScalpelConfiguration, listener: CampaignParserListener) -> CampaignParser:
@@ -446,9 +478,9 @@ def create_parser(config: ScalpelConfiguration, listener: CampaignParserListener
         return ExperimentWareOutputCampaignParser(config, listener)
 
     if campaign_format == CampaignFormat.FLAT_LOG_DIRECTORY:
-        return DirectoryCampaignParser(config, listener)
+        return FlatDirectoryCampaignParser(config, listener)
 
     if campaign_format == CampaignFormat.DEEP_LOG_DIRECTORY:
-        return DirectoryCampaignParser(config, listener)
+        return DeepDirectoryCampaignParser(config, listener)
 
     raise ValueError(f'Unrecognized input format: {campaign_format}')
