@@ -1,12 +1,16 @@
 # mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity
 
-[![License](https://img.shields.io/pypi/l/crillab-metrics)](LICENSE.md) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/crillab-metrics) ![PyPI - Status](https://img.shields.io/pypi/status/crillab-metrics) ![Travis (.org)](https://img.shields.io/travis/crillab/metrics?style=plastic) ![Sonar Quality Gate](https://img.shields.io/sonar/quality_gate/crillab_metrics?server=https%3A%2F%2Fsonarcloud.io) ![Sonar Coverage](https://img.shields.io/sonar/coverage/crillab_metrics?server=https%3A%2F%2Fsonarcloud.io)
-
+[![License](https://img.shields.io/pypi/l/crillab-metrics)](LICENSE.md)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/crillab-metrics)
+![PyPI - Status](https://img.shields.io/pypi/status/crillab-metrics)
+![Travis (.org)](https://img.shields.io/travis/crillab/metrics?style=plastic)
+![Sonar Quality Gate](https://img.shields.io/sonar/quality_gate/crillab_metrics?server=https%3A%2F%2Fsonarcloud.io)
+![Sonar Coverage](https://img.shields.io/sonar/coverage/crillab_metrics?server=https%3A%2F%2Fsonarcloud.io)
 
 ## Authors 
 
 - Thibault Falque - Exakis Nelite
-- [Romain Wallon - CRIL, Univ Artois & CNRS ](https://www.cril.univ-artois.fr/~wallon/en) 
+- [Romain Wallon - CRIL, Univ Artois & CNRS](https://www.cril.univ-artois.fr/~wallon/en) 
 - [Hugues Wattez - CRIL, Univ Artois & CNRS](https://www.cril.univ-artois.fr/~wattez)
 
 ## Why Metrics? 
