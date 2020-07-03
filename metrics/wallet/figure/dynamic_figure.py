@@ -28,6 +28,8 @@ This module provides classes for dynamic plots.
 import plotly.graph_objects as go
 
 from metrics.wallet.figure.abstract_figure import CactusPlot, ScatterPlot, BoxPlot
+import plotly.io as pio
+pio.templates.default = 'none'
 
 
 class CactusPlotly(CactusPlot):
@@ -63,8 +65,6 @@ class CactusPlotly(CactusPlot):
             'title.text': self.get_title(),
             'xaxis.title.text': self.get_x_axis_name(),
             'yaxis.title.text': self.get_y_axis_name(),
-            'width': 1000,
-            'height': 600,
         }
 
 
@@ -92,7 +92,7 @@ class ScatterPlotly(ScatterPlot):
         }]
 
     def _get_layout(self):
-        timeout = self.campaign_df.campaign.timeout
+        timeout = self._campaign_df.campaign.timeout
         shapes = [{
             'x0': opt[0],
             'y0': opt[1],

@@ -29,7 +29,7 @@ This module uses the DataFrame object pandas library.
 from __future__ import annotations
 
 from enum import Enum
-from typing import List
+from typing import List, Set
 
 import pandas as pd
 
@@ -40,8 +40,8 @@ class CampaignDFFilter(Enum):
     """
     This enumeration provides all the needed operations that we can apply to our dataframe.
     """
-    ONLY_TIMEOUT = (lambda c, df:   df[df['cpu_time'] >= c.timeout])
-    ONLY_SOLVED = (lambda c, df:    df[df['cpu_time'] < c.timeout])
+    ONLY_TIMEOUT = (lambda c, df:   df[~df['success']])
+    ONLY_SOLVED = (lambda c, df:    df[df['success']])
     ONLY_COMMON_TIMEOUT = (lambda c, df:    df[~df.input.isin(CampaignDFFilter.ONLY_SOLVED(c, df).input)])
     ONLY_COMMON_SOLVED = (lambda c, df:     df[~df.input.isin(CampaignDFFilter.ONLY_TIMEOUT(c, df).input)])
     DELETE_COMMON_TIMEOUT = (lambda c, df:  df[df.input.isin(CampaignDFFilter.ONLY_SOLVED(c, df).input)])
@@ -70,7 +70,7 @@ class CampaignDataFrame:
     This encapsulation permits to apply many operations.
     """
 
-    def __init__(self, campaign_df_builder: CampaignDataFrameBuilder, data_frame: pd.DataFrame, name: str):
+    def __init__(self, campaign_df_builder: CampaignDataFrameBuilder, data_frame: pd.DataFrame, name: str, vbew_names: Set[str]):
         """
         Creates a CampaignDataFrame.
         @param campaign_df_builder: the builder used to build this campaign.
@@ -80,8 +80,8 @@ class CampaignDataFrame:
         self._campaign_df_builder = campaign_df_builder
         self._campaign = campaign_df_builder.campaign
         self._data_frame = data_frame
-        self._xp_ware_names = list(data_frame.experiment_ware.unique())
         self._name = name
+        self._vbew_names = vbew_names
 
     @property
     def data_frame(self) -> pd.DataFrame:
@@ -113,7 +113,15 @@ class CampaignDataFrame:
 
         @return: the experimentware names of the dataframe.
         """
-        return self._xp_ware_names
+        return self._data_frame.experiment_ware.unique()
+
+    @property
+    def vbew_names(self) -> Set[str]:
+        """
+
+        @return: the vbew names of the dataframe.
+        """
+        return self._vbew_names
 
     def filter_by(self, filters: List[CampaignDFFilter]):
         """
@@ -139,7 +147,7 @@ class CampaignDataFrame:
         df = self._data_frame[self._data_frame[column].isin(sub_set)]
         return self.build_data_frame(df)
 
-    def add_vbew(self, xp_ware_set, opti_col, minimize=True, vbew_name='vbew') -> CampaignDataFrame:
+    def add_vbew(self, xp_ware_set, opti_col='cpu_time', minimize=True, vbew_name='vbew') -> CampaignDataFrame:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -158,6 +166,8 @@ class CampaignDataFrame:
         df_vbs = df_vbs.sort_values(by=opti_col, ascending=minimize).drop_duplicates(['input'])\
             .assign(experiment_ware=lambda x: vbew_name)
         df = pd.concat([df, df_vbs], ignore_index=True)
+
+        self._vbew_names.add(vbew_name)
 
         return self.build_data_frame(df)
 
@@ -180,4 +190,4 @@ class CampaignDataFrame:
         @param name: name of the campaign dataframe.
         @return: a new instance of CampaignDataFrame with the filtered dataframe.
         """
-        return self._campaign_df_builder.build_from_data_frame(df, name=name)
+        return self._campaign_df_builder.build_from_data_frame(df, name=name, vbew_names=self._vbew_names)

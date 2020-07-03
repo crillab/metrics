@@ -48,10 +48,11 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
         jr = JsonReader(filename)
         cls.campaign = jr.campaign
         cls.campaign_df = CampaignDataFrameBuilder(cls.campaign).build_from_campaign()
+        cls.campaign_df.data_frame['success'] = cls.campaign_df.data_frame.apply((lambda x: x['cpu_time'] < cls.campaign.timeout), axis=1)
 
     def test_data_frame(self):
         self.assertEqual(list(self.campaign_df.data_frame.columns),
-                         ['input', 'experiment_ware', 'cpu_time', 'start_time', 'family', 'date'])
+                         ['input', 'experiment_ware', 'cpu_time', 'start_time', 'status', 'Constraints_arities', 'Constraints_distribution', 'Variables_degrees', 'family', 'date', 'success'])
         self.assertEqual(1500, len(self.campaign_df.data_frame))
 
     def test_delete_common_timeout(self):
@@ -129,6 +130,7 @@ class TestCampaignDataFrameBuilderVBS(unittest.TestCase):
         cls.campaign = jr.campaign
         cls.campaign_df = CampaignDataFrameBuilder(cls.campaign).build_from_campaign()\
             .add_vbew({'CHS', 'WDegCAxCD'}, 'cpu_time')
+        cls.campaign_df.data_frame['success'] = cls.campaign_df.data_frame.apply((lambda x: x['cpu_time'] < cls.campaign.timeout), axis=1)
 
     def test_get_xpware_name_list(self):
         self.assertCountEqual(self.campaign_df.xp_ware_names, ['ExplorationLuby', 'vbew', 'WDegCAxCD', 'CHS'])
@@ -171,6 +173,7 @@ class TestCampaignDataFrameBuilderSubWare(unittest.TestCase):
             'experiment_ware',
             {'CHS', 'WDegCAxCD'}
         )
+        cls.campaign_df.data_frame['success'] = cls.campaign_df.data_frame.apply((lambda x: x['cpu_time'] < cls.campaign.timeout), axis=1)
 
     def test_get_xpware_name_list(self):
         self.assertCountEqual(self.campaign_df.xp_ware_names, ['WDegCAxCD', 'CHS'])

@@ -61,6 +61,11 @@ setup(
     test_suite='nose.collector',
     tests_require=['nose'],
 
+    scripts=[
+        'bin/metrics-cli',
+        'bin/metrics-scalpel',
+    ],
+
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
@@ -72,3 +77,4 @@ setup(
     include_package_data=True,
     zip_safe=False
 )
+

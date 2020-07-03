@@ -28,11 +28,13 @@
 This module provides a listener which listens to the events triggered while
 a campaign is being parsed, so as to build its representation.
 """
+
+
 from collections import defaultdict
-from typing import Union, List, Tuple
+from typing import List, Tuple, Union
 
 from metrics.core.builder import CampaignBuilder
-from metrics.core.model import Model
+from metrics.core.model import Campaign
 
 
 class KeyMapping:
@@ -51,8 +53,8 @@ class KeyMapping:
         """
         Maps a key as defined in the campaign to that expected by Scalpel.
 
-        :param campaign_key: The key defined in the campaign.
         :param scalpel_key: The key expected by Scalpel.
+        :param campaign_key: The key defined in the campaign.
         """
         if isinstance(campaign_key, str):
             self._dict[scalpel_key] = [campaign_key]
@@ -65,8 +67,9 @@ class KeyMapping:
 
         :param campaign_key: The key defined in the campaign.
 
-        :return: The key expected by Scalpel, or the given key if no mapping is
-                 set for this key.
+        :return: A tuple having, as first element, the key expected by Scalpel or the given
+                 key if no mapping is set for this key and, as second element, the number of
+                 values expected for this key.
         """
         for k, v in self._dict.items():
             if campaign_key in v:
@@ -93,8 +96,8 @@ class CampaignParserListener:
         """
         Maps a key as defined in the campaign to that expected by Scalpel.
 
-        :param campaign_key: The key defined in the campaign.
         :param scalpel_key: The key expected by Scalpel.
+        :param campaign_key: The key defined in the campaign.
         """
         self._key_mapping[scalpel_key] = campaign_key
 
@@ -176,7 +179,7 @@ class CampaignParserListener:
             self._current_builder[scalpel_key] = ' '.join(values)
             del self._pending_keys[scalpel_key]
 
-    def get_campaign(self) -> Model:
+    def get_campaign(self) -> Campaign:
         """
         Gives the campaign that has been read.
 
