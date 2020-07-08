@@ -25,47 +25,12 @@
 
 
 """
-Metrics-Scalpel (sCAlPEL - extraCting dAta of exPeriments from softwarE Logs)
-provides tools for extracting data produced during software experiments so as
-to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
+This package provides the modules for setting up Scalpel and describing how
+it can extract relevant data from the files of the campaign.
 """
 
+from metrics.scalpel.config.config import MappingConfiguration, \
+    RawDataConfiguration, ScalpelConfigurationBuilder, \
+    EmptyRawDataConfiguration, read_configuration, ScalpelConfiguration
 
-from metrics.core.model import Campaign
-
-from metrics.scalpel.config import read_configuration
-from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.parser import create_parser
-
-
-def read_campaign(input_file: str) -> Campaign:
-    """
-    Reads the data about a campaign from the given input file.
-
-    :param input_file: The input file describing the campaign.
-
-    :return: The read campaign.
-
-    :raises ValueError: If the input file does not have a recognized format.
-    """
-    if input_file.endswith('.yml') or input_file.endswith('.yaml'):
-        return read_yaml(input_file)
-
-    raise ValueError(f'Unrecognized campaign format for file {input_file}')
-
-
-def read_yaml(yaml_configuration: str) -> Campaign:
-    """
-    Reads the data about a campaign following the configuration described in
-    the given YAML file.
-
-    :param yaml_configuration: The path of the YAML file describing Scalpel's
-           configuration.
-
-    :return: The read campaign.
-    """
-    campaign_parser_listener = CampaignParserListener()
-    configuration = read_configuration(yaml_configuration, campaign_parser_listener)
-    campaign_parser = create_parser(configuration, campaign_parser_listener)
-    campaign_parser.parse_file(configuration.get_main_file())
-    return campaign_parser_listener.get_campaign()
+from metrics.scalpel.config.format import CampaignFormat

@@ -26,24 +26,25 @@
 
 """
 This module provides various classes for parsing different types of files
-containing the output of a campaign, so as to build its representation.
+containing the results of a campaign, so as to build its representation.
 """
 
 
 from csv import reader as load_csv
-from json import load as load_json
 from os import path, scandir
-from pydoc import locate
-from typing import Any, Iterable, List, Optional, TextIO
+from typing import Iterable, List, Optional, TextIO
 
+from metrics.scalpel.config import ScalpelConfiguration
+from metrics.scalpel.config.format import OutputFormat
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.config import ScalpelConfiguration, CampaignFormat
+from metrics.scalpel.parser.output import CampaignOutputParser, \
+    CsvCampaignOutputParser, JsonCampaignOutputParser, RawCampaignOutputParser
 
 
 class CampaignParser:
     """
     The CampaignParser is the parent class of all the parsers allowing to read
-    the output files of a campaign.
+    the results of a campaign.
     """
 
     def __init__(self, listener: CampaignParserListener) -> None:
@@ -60,16 +61,7 @@ class CampaignParser:
 
         :param file_path: The path of the file to read.
         """
-        with open(file_path) as file:
-            self.parse_stream(file)
-
-    def parse_stream(self, stream: TextIO) -> None:
-        """
-        Parses the given stream to extract data about the campaign.
-
-        :param stream: The stream to read.
-        """
-        raise NotImplementedError('Method "parse_stream()" is abstract!')
+        raise NotImplementedError('Method "parse_file()" is abstract!')
 
     def start_experiment(self) -> None:
         """
@@ -93,24 +85,49 @@ class CampaignParser:
         self._listener.end_experiment()
 
 
-class CsvCampaignParser(CampaignParser):
+class FileCampaignParser(CampaignParser):
+    """
+    The FileCampaignParser is the parent class of all the parsers allowing to
+    read the results of a campaign from a (regular) file.
+    """
+
+    def parse_file(self, file_path: str) -> None:
+        """
+        Parses the file at the given path to extract data about the campaign.
+
+        :param file_path: The path of the file to read.
+        """
+        with open(file_path) as file:
+            self.parse_stream(file)
+
+    def parse_stream(self, stream: TextIO) -> None:
+        """
+        Parses the given stream to extract data about the campaign.
+
+        :param stream: The stream to read.
+        """
+        raise NotImplementedError('Method "parse_stream()" is abstract!')
+
+
+class CsvCampaignParser(FileCampaignParser):
     """
     The CsvCampaignParser is a parser that reads the output of a campaign from
     a CSV file.
     """
 
     def __init__(self, listener: CampaignParserListener, separator: str = ',',
-                 quotechar: Optional[str] = None) -> None:
+                 quote_char: Optional[str] = None) -> None:
         """
         Creates a new CsvCampaignParser.
 
         :param listener: The listener to notify while parsing.
         :param separator: The value separator, which is ',' by default.
-        :param quotechar: The character used to quote the fields in the CSV file.
+        :param quote_char: The character used to quote the fields in the
+                           CSV file.
         """
         super().__init__(listener)
         self._separator = separator
-        self._quotechar = quotechar
+        self._quote_char = quote_char
         self._keys = []
 
     def parse_stream(self, stream: TextIO) -> None:
@@ -119,11 +136,11 @@ class CsvCampaignParser(CampaignParser):
 
         :param stream: The stream to read.
         """
-        for line in self._read_csv(stream):
+        for line in self._parse_csv(stream):
             line = list(map(str.strip, line))
             self._parse_line(line)
 
-    def _read_csv(self, stream: TextIO) -> Iterable[List[str]]:
+    def _parse_csv(self, stream: TextIO) -> Iterable[List[str]]:
         """
         Reads the given stream as a CSV file.
 
@@ -131,9 +148,11 @@ class CsvCampaignParser(CampaignParser):
 
         :return: The lines of the read CSV file.
         """
-        if self._quotechar is None:
+        if self._quote_char is None:
             return load_csv(stream, delimiter=self._separator)
-        return load_csv(stream, delimiter=self._separator, quotechar=self._quotechar)
+
+        return load_csv(stream, delimiter=self._separator,
+                        quotechar=self._quote_char)
 
     def _parse_line(self, line: List[str]) -> None:
         """
@@ -144,13 +163,14 @@ class CsvCampaignParser(CampaignParser):
         if not self._keys:
             # The header has not been read yet.
             self._keys = self.parse_header(line)
+
         else:
             # Reading the values of this line.
             values = self.parse_xp_line(line)
             if values:
                 self.start_experiment()
-                for key_value in zip(self._keys, values):
-                    self.log_data(key_value[0], key_value[1])
+                for key, value in zip(self._keys, values):
+                    self.log_data(key, value)
                 self.end_experiment()
 
     def parse_header(self, line: List[str]) -> List[str]:
@@ -205,128 +225,6 @@ class EvaluationCampaignParser(CsvCampaignParser):
         return line
 
 
-class JsonCampaignParser(CampaignParser):
-    pass
-
-
-class GenericJsonCampaignParser(CampaignParser):
-    """
-    The JsonCampaignParser is a parser that reads the output of a campaign from
-    a JSON file, which has been previously produced by Metrics.
-    """
-
-    def parse_stream(self, stream: TextIO) -> None:
-        """
-        Parses the given stream to extract data about the campaign.
-
-        :param stream: The stream to read.
-        """
-        self._read_json(load_json(stream))
-
-    def _read_json(self, json: Any, prefix: Optional[str] = None) -> None:
-        """
-
-        :param json:
-        :param prefix:
-        """
-        if isinstance(json, list):
-            self._read_array(json, prefix)
-        elif isinstance(json, dict):
-            self._read_object(json, prefix)
-        else:
-            self._listener.log_data(prefix, str(json))
-
-    def _read_object(self, obj: dict, prefix: Optional[str]) -> None:
-        """
-
-        :param obj:
-        :param prefix: The prefix of the fields to log.
-        """
-        for key, value in obj.items():
-            self._read_json(value, GenericJsonCampaignParser._create_prefix(prefix, key))
-
-    def _read_array(self, array: list, prefix: Optional[str]) -> None:
-        """
-
-        :param array: The array to read.
-        :param prefix: The prefix of the fields to log.
-        """
-        for index, elt in enumerate(array):
-            self._read_json(elt, GenericJsonCampaignParser._create_prefix(prefix, index))
-
-    @staticmethod
-    def _create_prefix(prefix: Optional[str], field: Any) -> str:
-        if prefix is None:
-            return str(field)
-        return f'{prefix}.{field}'
-
-
-class LineBasedCampaignParser(CampaignParser):
-    """
-    The LineBasedCampaignParser is the parent class of the parsers that read
-    files line by line.
-    """
-
-    def parse_stream(self, stream: TextIO) -> None:
-        """
-        Parses the given stream to extract data about the campaign.
-
-        :param stream: The stream to read.
-        """
-        for line in stream:
-            self.parse_line(line)
-
-    def parse_line(self, line: str) -> None:
-        """
-        Parses the given line to extract data about the campaign.
-
-        :param line: The line to read.
-        """
-        raise NotImplementedError('Method "parse_line()" is abstract!')
-
-
-class ExperimentWareOutputCampaignParser(LineBasedCampaignParser):
-    """
-    The ExperimentWareOutputCampaignParser is a parser that reads the raw
-    output of an experiment-ware.
-    """
-
-    def __init__(self, configuration: ScalpelConfiguration,
-                 listener: CampaignParserListener) -> None:
-        """
-        Creates a new ExperimentWareOutputCampaignParser.
-
-        :param configuration: The configuration describing how to extract
-               data from the output file.
-        :param listener: The listener to notify while parsing.
-        """
-        super().__init__(listener)
-        self._configuration = configuration
-        self._current_file = None
-
-    def now_parsing(self, current_file: Optional[str]) -> None:
-        """
-        Notifies this parser that it is now parsing the file with the given
-        name.
-        Note that only the name of the file is considered (not the path of
-        the file).
-
-        :param current_file: The name of the file that is currently parsed.
-        """
-        self._current_file = current_file
-
-    def parse_line(self, line: str) -> None:
-        """
-        Parses the given line to extract data about the campaign.
-
-        :param line: The line to read.
-        """
-        for log_data in self._configuration.get_data_in(self._current_file):
-            value = log_data.extract_value_from(line)
-            if value is not None:
-                self.log_data(log_data.get_name(), value)
-
-
 class DirectoryCampaignParser(CampaignParser):
     """
     The DirectoryCampaignParser explores a file hierarchy containing all the
@@ -344,39 +242,83 @@ class DirectoryCampaignParser(CampaignParser):
         """
         super().__init__(listener)
         self._configuration = configuration
-        self._parser = ExperimentWareOutputCampaignParser(configuration, listener)
 
     def parse_file(self, file_path: str) -> None:
         """
-        Explores the directory at the given path, considered as the root directory of
-        the campaign.
+        Explores the directory at the given path, considered as the root
+        directory of the campaign.
 
         :param file_path: The path of the directory to explore.
         """
         self.explore(file_path)
 
-    def parse_stream(self, stream: TextIO) -> None:
-        """
-        DirectoryCampaignParser does not support stream parsing.
-
-        :param stream: The stream to parse.
-        """
-        raise TypeError('DirectoryCampaignParser does not support stream parsing!')
-
     def explore(self, root: str) -> None:
         """
         Explores the file hierarchy rooted at the given directory.
 
-        :param root:  The root directory of the file hierarchy to explore.
+        :param root: The root directory of the file hierarchy to explore.
         """
         raise NotImplementedError('Method "explore()" is abstract!')
 
+    def _get_parser_for(self, file: str, file_path: str) -> CampaignOutputParser:
+        """
+        Gives the parser to use to extract data from the given file.
+
+        :param file: The name of the file to get the parser for.
+        :param file_path: The path of the file to get the parser for.
+
+        :return: The parser to use.
+        """
+        fmt = DirectoryCampaignParser._guess_format(file)
+
+        if fmt == OutputFormat.CSV:
+            return CsvCampaignOutputParser(self._listener, file_path)
+
+        if fmt == OutputFormat.CSV2:
+            return CsvCampaignOutputParser(self._listener, file_path, ';')
+
+        if fmt == OutputFormat.TSV:
+            return CsvCampaignOutputParser(self._listener, file_path, '\t')
+
+        if fmt == OutputFormat.JSON:
+            return JsonCampaignOutputParser(self._listener, file_path)
+
+        return RawCampaignOutputParser(self._configuration, self._listener,
+                                       file, file_path)
+
+    @staticmethod
+    def _guess_format(file: str) -> OutputFormat:
+        """
+        Guesses the format of the given file.
+
+        :param file: The file to guess the format of.
+
+        :return: The format of the file.
+        """
+        try:
+            index = file.rindex('.')
+            return OutputFormat.value_of(file[index + 1:])
+        except ValueError:
+            return OutputFormat.RAW_LOG
+
 
 class DeepDirectoryCampaignParser(DirectoryCampaignParser):
+    """
+    The DeepDirectoryCampaignParser allows to extract the data collected during
+    a campaign by recursively exploring an entire file hierarchy.
+    """
 
     def __init__(self, configuration: ScalpelConfiguration,
                  listener: CampaignParserListener,
                  depth: int = 1) -> None:
+        """
+        Creates a new DeepDirectoryCampaignParser.
+
+        :param configuration: The configuration describing how to extract
+               data from the output file.
+        :param listener: The listener to notify while parsing.
+        :param depth: The depth to explore in the file hierarchy.
+        """
         super().__init__(configuration, listener)
         self._depth = depth
 
@@ -388,11 +330,17 @@ class DeepDirectoryCampaignParser(DirectoryCampaignParser):
         """
         self.recursive_explore(root, 0)
 
-    def recursive_explore(self, directory, depth):
+    def recursive_explore(self, directory: str, depth: int) -> None:
+        """
+        Recursively explores the file hierarchy rooted at the given directory.
+
+        :param directory: The directory to explore
+        :param depth: The depth to explore starting from the directory.
+        """
         if depth == self._depth:
             self._explore_experiment(directory)
 
-        else:
+        elif path.isdir(directory):
             with scandir(directory) as current_dir:
                 for subdir in current_dir:
                     subdir_path = path.join(directory, subdir.name)
@@ -406,11 +354,11 @@ class DeepDirectoryCampaignParser(DirectoryCampaignParser):
         :param directory: The directory of the experiment.
         """
         with scandir(directory) as experiment:
-            self._parser.start_experiment()
+            self.start_experiment()
             for file in experiment:
                 if self._configuration.is_to_be_parsed(file.name):
                     self._parse_file(directory, file.name)
-            self._parser.end_experiment()
+            self.end_experiment()
 
     def _parse_file(self, directory: str, file: str) -> None:
         """
@@ -421,14 +369,26 @@ class DeepDirectoryCampaignParser(DirectoryCampaignParser):
         """
         file_path = path.join(directory, file)
         if path.exists(file_path):
-            self._parser.now_parsing(file)
-            self._parser.parse_file(file_path)
+            parser = self._get_parser_for(file, file_path)
+            parser.parse()
 
 
 class FlatDirectoryCampaignParser(DirectoryCampaignParser):
+    """
+    The FlatDirectoryCampaignParser allows to extract the data collected during
+    a campaign when they are stored in a single directory, in which all files
+    correspond to exactly one experiment.
+    """
 
     def __init__(self, configuration: ScalpelConfiguration,
                  listener: CampaignParserListener) -> None:
+        """
+        Creates a new FlatDirectoryCampaignParser.
+
+        :param configuration: The configuration describing how to extract
+               data from the output file.
+        :param listener: The listener to notify while parsing.
+        """
         super().__init__(configuration, listener)
 
     def explore(self, root: str) -> None:
@@ -439,48 +399,7 @@ class FlatDirectoryCampaignParser(DirectoryCampaignParser):
         """
         with scandir(root) as root_dir:
             for file in root_dir:
-                self._parser.start_experiment()
-                self._parser.parse_file(path.join(root, file.name))
-                self._parser.end_experiment()
-
-
-def create_parser(config: ScalpelConfiguration, listener: CampaignParserListener) -> CampaignParser:
-    """
-    Creates the most appropriate parser to use to parse the campaign described
-    in the given configuration.
-
-    :param config: The configuration describing the campaign to parse.
-    :param listener: The listener to notify while parsing.
-
-    :return: The parser to use to parse the campaign.
-    """
-    # If the user has written their own parser, we use it.
-    custom_parser = config.get_custom_parser()
-    if custom_parser is not None:
-        return locate(custom_parser)(config, listener)
-
-    # Otherwise, we use one of the default parsers.
-    campaign_format = config.get_format()
-
-    if campaign_format == CampaignFormat.CSV:
-        return CsvCampaignParser(listener)
-
-    if campaign_format == CampaignFormat.CSV2:
-        return CsvCampaignParser(listener, separator=';')
-
-    if campaign_format == CampaignFormat.TSV:
-        return CsvCampaignParser(listener, separator='\t')
-
-    if campaign_format == CampaignFormat.EVALUATION:
-        return EvaluationCampaignParser(listener)
-
-    if campaign_format == CampaignFormat.RAW_LOG:
-        return ExperimentWareOutputCampaignParser(config, listener)
-
-    if campaign_format == CampaignFormat.FLAT_LOG_DIRECTORY:
-        return FlatDirectoryCampaignParser(config, listener)
-
-    if campaign_format == CampaignFormat.DEEP_LOG_DIRECTORY:
-        return DeepDirectoryCampaignParser(config, listener)
-
-    raise ValueError(f'Unrecognized input format: {campaign_format}')
+                self.start_experiment()
+                parser = self._get_parser_for(file.name, path.join(root, file.name))
+                parser.parse()
+                self.end_experiment()

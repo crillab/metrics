@@ -36,14 +36,14 @@ from abc import ABC
 from collections import defaultdict
 from fnmatch import fnmatch
 from os import path, walk
-from typing import Dict, Iterable, List, Optional, Tuple, Union, Any
+from typing import Dict, Iterable, List, Optional, Union, Any
 
 from yaml import safe_load as load_yaml
 
-from metrics.scalpel.format import CampaignFormat, InputSetFormat
-from metrics.scalpel.inputset import create_input_set_reader
+from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
+from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.pattern import UserDefinedPattern, compile_named_pattern, compile_regex
+from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex
 
 
 class LogData:
@@ -169,6 +169,8 @@ class ScalpelConfiguration:
 
         :return: The description of the data to extract from the file.
         """
+        if None in self._log_datas:
+            return self._log_datas[None]
         return self._log_datas[filename]
 
     def get_custom_parser(self) -> Optional[str]:

@@ -106,3 +106,17 @@ class CampaignFormat(FormatEnum):
     RAW_LOG = 'raw', 'raw-log'
     FLAT_LOG_DIRECTORY = 'flat-dir'
     DEEP_LOG_DIRECTORY = 'deep-dir'
+
+
+class OutputFormat(FormatEnum):
+    """
+    The OutputFormat defines the different formats that can be parsed by
+    Scalpel to retrieve the data about an experiment from the experiment-ware's
+    output.
+    """
+
+    CSV = 'csv'
+    CSV2 = 'csv2', 'csv-2'
+    TSV = 'tsv', 'table'
+    JSON = 'json'
+    RAW_LOG = 'out', 'log'

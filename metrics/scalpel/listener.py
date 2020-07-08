@@ -67,9 +67,9 @@ class KeyMapping:
 
         :param campaign_key: The key defined in the campaign.
 
-        :return: A tuple having, as first element, the key expected by Scalpel or the given
-                 key if no mapping is set for this key and, as second element, the number of
-                 values expected for this key.
+        :return: A tuple having, as first element, the key expected by Scalpel
+                 or the given key if no mapping is set for this key and, as
+                 second element, the number of values expected for this key.
         """
         for k, v in self._dict.items():
             if campaign_key in v:

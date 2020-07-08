@@ -33,7 +33,7 @@ campaign from different formats.
 from os import path, sep, walk
 from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Union
 
-from metrics.scalpel.format import InputSetFormat
+from metrics.scalpel.config.format import InputSetFormat
 from metrics.scalpel.listener import CampaignParserListener
 
 

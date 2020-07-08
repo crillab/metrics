@@ -4,8 +4,8 @@ from signal import signal, SIGPIPE, SIG_DFL
 from typing import Union, List, Optional, Iterable, Generator
 
 from metrics.scalpel import CampaignParserListener
-from metrics.scalpel.config import MappingConfiguration, RawDataConfiguration, ScalpelConfigurationBuilder
-from metrics.scalpel.format import CampaignFormat
+from metrics.scalpel.config import CampaignFormat, ScalpelConfigurationBuilder,\
+     MappingConfiguration, RawDataConfiguration, EmptyRawDataConfiguration
 from PyInquirer import prompt
 
 signal(SIGPIPE, SIG_DFL)
@@ -240,8 +240,7 @@ class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
     def _get_raw_data(self) -> RawDataConfiguration:
         if self._format in (CampaignFormat.DEEP_LOG_DIRECTORY, CampaignFormat.FLAT_LOG_DIRECTORY):
             return CLIRawDataConfiguration()
-        return None
-        # return EmptyRawDataConfiguration()
+        return EmptyRawDataConfiguration()
 
     def _data_file_generator(self) -> Generator[str, None, None]:
         questions = [
