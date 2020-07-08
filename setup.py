@@ -46,9 +46,6 @@ setup(
     packages=[
         'metrics.core',
         'metrics.scalpel',
-        'metrics.studio',
-        #'metrics.studio.cli',
-        #'metrics.studio.web',
         'metrics.wallet',
     ],
 
@@ -67,7 +64,6 @@ setup(
     scripts=[
         'bin/metrics-cli',
         'bin/metrics-scalpel',
-        #'bin/metrics-web',
     ],
 
     classifiers=[
