@@ -91,7 +91,9 @@ class ScalpelConfiguration:
     def __init__(self, fmt: Optional[CampaignFormat], main_file: str,
                  data_files: Optional[List[str]] = None,
                  log_datas: Optional[Dict[str, List[LogData]]] = None,
-                 custom_parser: Optional[str] = None) -> None:
+                 hierarchy_depth: Optional[int] = None,
+                 experiment_ware_depth: Optional[int] = None,
+                 custom_parser: Optional[str] = None,) -> None:
         """
         Creates a new ScalpelConfiguration.
 
@@ -111,6 +113,8 @@ class ScalpelConfiguration:
         self._data_files = data_files
         self._log_datas = log_datas
         self._custom_parser = custom_parser
+        self._hierarchy_depth = hierarchy_depth
+        self._experiment_ware_depth = experiment_ware_depth
 
     def get_main_file(self) -> str:
         """
@@ -172,6 +176,18 @@ class ScalpelConfiguration:
         if None in self._log_datas:
             return self._log_datas[None]
         return self._log_datas[filename]
+
+    def get_hierarchy_depth(self):
+        depth = self._hierarchy_depth
+        if depth is None:
+            return 1
+        return int(depth)
+
+    def get_experiment_ware_depth(self):
+        depth = self._experiment_ware_depth
+        if depth is None:
+            return None
+        return int(depth)
 
     def get_custom_parser(self) -> Optional[str]:
         """
@@ -510,8 +526,10 @@ class ScalpelConfigurationBuilder:
                          configuration file.
         """
         self._listener = listener
-        self._format = None
         self._main_file = None
+        self._format = None
+        self._hierarchy_depth = None
+        self._experiment_ware_depth = None
         self._data_files = None
         self._log_datas = defaultdict(list)
         self._custom_parser = None
@@ -532,6 +550,8 @@ class ScalpelConfigurationBuilder:
         self.read_data_files()
         return ScalpelConfiguration(self._format, self._main_file,
                                     self._data_files, self._log_datas,
+                                    self._hierarchy_depth,
+                                    self._experiment_ware_depth,
                                     self._custom_parser)
 
     def read_mapping(self) -> None:
@@ -652,6 +672,8 @@ class ScalpelConfigurationBuilder:
         self._main_file = self._get_campaign_path()
         self._format = self._guess_format()
         self._format = self._get_format()
+        self._hierarchy_depth = self._get_hierarchy_depth()
+        self._experiment_ware_depth = self._get_experiment_ware_depth()
         self._custom_parser = self._get_custom_parser()
 
     def _get_campaign_path(self) -> str:
@@ -709,6 +731,24 @@ class ScalpelConfigurationBuilder:
             return CampaignFormat.value_of(self._main_file[index + 1:])
         except ValueError:
             return None
+
+    def _get_hierarchy_depth(self) -> Optional[int]:
+        """
+        Gives the depth of the hierarchy to explore, when the campaign is
+        in the deep log hierarchy format.
+
+        :return: The depth of the hierarchy, if specified.
+        """
+        raise NotImplementedError('Method "_get_hierarchy_depth()" is abstract!')
+
+    def _get_experiment_ware_depth(self) -> Optional[int]:
+        """
+        Gives the depth of the directory corresponding to the experiment-ware
+        being executed, when the campaign is in the deep log hierarchy format.
+
+        :return: The depth of the experiment-ware directory, if any.
+        """
+        raise NotImplementedError('Method "_get_experiment_ware_depth()" is abstract!')
 
     def _get_custom_parser(self) -> Optional[str]:
         """
@@ -778,16 +818,6 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
     def __init__(self, dict_config: dict, listener) -> None:
         super().__init__(listener)
         self._dict_config = dict_config
-
-    def _get(self, key: str) -> dict:
-        """
-        Gives the dictionary containing the configuration for the specified key.
-
-        :return: The configuration for the specified key, or an empty dictionary
-                 if the configuration is not specified.
-        """
-        config = self._dict_config.get(key)
-        return {} if config is None else config
 
     def _get_mapping(self) -> MappingConfiguration:
         """
@@ -875,7 +905,20 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         fmt = InputSetFormat.value_of(self._dict_config['input-set']['type'])
         name = self._dict_config['input-set']['name']
         self._listener.log_data('name', name)
-        create_input_set_reader(fmt)(self._listener, self._dict_config['input-set']['path-list'])
+        paths = DictionaryScalpelConfigurationBuilder._as_list(self._dict_config['input-set']['path-list'])
+        kwargs = {}
+
+        if 'family' in self._get('input-set'):
+            kwargs['family'] = self._get('input-set').get('family')
+
+        if 'input-name' in self._get('input-set'):
+            kwargs['name'] = self._get('input-set').get('input-name')
+
+        extensions = self._get('input-set').get('extensions')
+        if extensions is not None:
+            kwargs['extensions'] = extensions
+
+        create_input_set_reader(fmt, **kwargs)(self._listener, paths)
         self._listener.end_input_set()
 
     def _get_campaign_path(self) -> str:
@@ -899,6 +942,24 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
             return self._format
         return CampaignFormat.value_of(fmt)
 
+    def _get_hierarchy_depth(self) -> Optional[int]:
+        """
+        Gives the depth of the hierarchy to explore, when the campaign is
+        in the deep log hierarchy format.
+
+        :return: The depth of the hierarchy, if specified.
+        """
+        return self._get('source').get('hierarchy-depth')
+
+    def _get_experiment_ware_depth(self) -> Optional[int]:
+        """
+        Gives the depth of the directory corresponding to the experiment-ware
+        being executed, when the campaign is in the deep log hierarchy format.
+
+        :return: The depth of the experiment-ware directory, if any.
+        """
+        return self._get('source').get('experiment-ware')
+
     def _get_custom_parser(self) -> Optional[str]:
         """
         Gives the (completely specified) class of the custom parser to use to parse
@@ -918,7 +979,8 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: The raw data configuration.
         """
         data = self._get('data').get('raw-data')
-        return EmptyRawDataConfiguration() if data is None else DictionaryRawDataConfiguration(data)
+        data_list = DictionaryScalpelConfigurationBuilder._as_list(data)
+        return DictionaryRawDataConfiguration(data_list)
 
     def _get_data_files(self) -> Iterable[str]:
         """
@@ -930,7 +992,28 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: The raw data configuration.
         """
         files = self._get('data').get('data-files')
-        return [] if files is None else files
+        return DictionaryScalpelConfigurationBuilder._as_list(files)
+
+    def _get(self, key: str) -> dict:
+        """
+        Gives the dictionary containing the configuration for the specified key.
+
+        :return: The configuration for the specified key, or an empty dictionary
+                 if the configuration is not specified.
+        """
+        config = self._dict_config.get(key)
+        return {} if config is None else config
+
+    @staticmethod
+    def _as_list(obj: Any) -> list:
+        if obj is None:
+            return []
+
+        elif isinstance(obj, list):
+            return obj
+
+        else:
+            return [obj]
 
 
 def read_configuration(yaml_file: str, listener: CampaignParserListener) -> ScalpelConfiguration:

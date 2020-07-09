@@ -31,12 +31,12 @@ as to extract the data it contains.
 """
 
 
-from csv import reader as load_csv
 from json import load as load_json
-from typing import Any, Iterable, List, Optional, TextIO
+from typing import Any, Optional, TextIO
 
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration
+from metrics.scalpel.parser.utils import CsvReader
 
 
 class CampaignOutputParser:
@@ -108,37 +108,9 @@ class CsvCampaignOutputParser(CampaignOutputParser):
 
         :param stream: The stream to read.
         """
-        for line in self._read_csv(stream):
-            line = list(map(str.strip, line))
-            self._parse_line(line)
-
-    def _read_csv(self, stream: TextIO) -> Iterable[List[str]]:
-        """
-        Reads the given stream as a CSV file.
-
-        :param stream: The stream to read.
-
-        :return: The lines of the read CSV file.
-        """
-        if self._quote_char is None:
-            return load_csv(stream, delimiter=self._separator)
-
-        return load_csv(stream, delimiter=self._separator,
-                        quotechar=self._quote_char)
-
-    def _parse_line(self, line: List[str]) -> None:
-        """
-        Parses the given line to extract data about an experiment.
-
-        :param line: The line to parse.
-        """
-        if not self._keys:
-            # The header has not been read yet.
-            self._keys = line
-
-        else:
-            # Reading the values of this line.
-            for key, value in zip(self._keys, line):
+        reader = CsvReader(stream, self._separator, self._quote_char)
+        for line in reader.read():
+            for key, value in line:
                 self.log_data(key, value)
 
 

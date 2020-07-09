@@ -9,31 +9,35 @@ setup:
   memout:
 
 experiment-wares:
-  - identifier:
+  -
 
 input-set:
   name:
   type:
   family:
-  file-extensions:
+  input-name:
+  extensions:
     -
   path-list:
       -
+
+source:
+  path:
+  format:
+  hierarchy-depth:
+  experiment-ware:
+  parser:
 
 data:
   mapping:
     experiment_ware:
     cpu_time:
     input:
-  log-variables:
+  raw-data:
     - file:
-        name:
-        variables:
-          - name:
-            pattern:
-            pattern-type:
-            group-id:
-
-source:
-  format:
-  path:
+      name:
+      pattern:
+      regex:
+      group:
+  data-files:
+    -

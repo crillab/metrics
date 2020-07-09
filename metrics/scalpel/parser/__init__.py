@@ -74,6 +74,9 @@ def create_parser(config: ScalpelConfiguration,
         return FlatDirectoryCampaignParser(config, listener)
 
     if campaign_format == CampaignFormat.DEEP_LOG_DIRECTORY:
-        return DeepDirectoryCampaignParser(config, listener)
+        depth = config.get_hierarchy_depth()
+        xp_ware_depth = config.get_experiment_ware_depth()
+        return DeepDirectoryCampaignParser(config, listener, int(depth),
+                                           xp_ware_depth)
 
     raise ValueError(f'Unrecognized input format: {campaign_format}')
