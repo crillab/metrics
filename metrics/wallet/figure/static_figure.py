@@ -22,8 +22,8 @@
 # ##############################################################################
 from typing import List
 
-import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib import pyplot as plt
 
 from metrics.wallet.dataframe.dataframe import CampaignDFFilter, CampaignDataFrame
 from metrics.wallet.figure.abstract_figure import CactusPlot, BoxPlot, ScatterPlot, Table, CDFPlot
@@ -32,6 +32,8 @@ LINE_STYLES = ['-', ':', '-.', '--']
 """
 Corresponds to a sample of existing line styles for matplotlib.
 """
+
+DEFAULT_COLORS = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
 class StatTable(Table):
@@ -61,9 +63,9 @@ class StatTable(Table):
 
         df_stat['count'] = only_solved_df.groupby('experiment_ware')['cpu_time'].count()
         df_stat['sum'] = no_common_failed.groupby('experiment_ware')['cpu_time'].sum()
-        df_stat['common_count'] = common_inputs.groupby('experiment_ware')['cpu_time'].count()
-        df_stat['common_sum'] = common_inputs.groupby('experiment_ware')['cpu_time'].sum()
-        df_stat['uncommon_count'] = no_common_solved_no_out.groupby('experiment_ware')['cpu_time'].count()
+        df_stat['common count'] = common_inputs.groupby('experiment_ware')['cpu_time'].count()
+        df_stat['common sum'] = common_inputs.groupby('experiment_ware')['cpu_time'].sum()
+        df_stat['uncommon count'] = no_common_solved_no_out.groupby('experiment_ware')['cpu_time'].count()
         df_stat['total'] = len(self._campaign_df.data_frame['input'].unique())
 
         return df_stat.sort_values(['count', 'sum'], ascending=[False, True]).fillna(0).astype(int)
@@ -95,15 +97,15 @@ class ContributionTable(Table):
             lambda x: contribution_agg(x, self._campaign_df.campaign.timeout))
         contrib = pd.DataFrame()
 
-        contrib['vbew_simple'] = contrib_raw.groupby('first').cpu_time.count()
+        contrib['vbew simple'] = contrib_raw.groupby('first').cpu_time.count()
 
         for delta in self._deltas:
             sub = contrib_raw[contrib_raw.cpu_time > delta]
-            contrib[f'vbew > {delta}'] = sub.groupby('first').cpu_time.count()
+            contrib[f'vbew {delta}s'] = sub.groupby('first').cpu_time.count()
 
         contrib['contribution'] = contrib_raw.groupby('first').unique.sum()
 
-        return contrib.fillna(0).astype(int).sort_values(['vbew_simple', 'contribution'], ascending=[False, False])
+        return contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False])
 
 
 class CactusMPL(CactusPlot):
@@ -127,7 +129,11 @@ class CactusMPL(CactusPlot):
         ax.set_yscale('log' if self._logy else 'linear')
 
         self._set_plot(df, ax)
-        self._set_legend(ax)
+
+        if self._legend_location is None:
+            ax.legend().remove()
+        else:
+            self._set_legend(ax)
 
         ax.set_xlim(self._get_x_lim(ax))
         ax.set_ylim(self._get_y_lim(ax))
@@ -138,13 +144,13 @@ class CactusMPL(CactusPlot):
         return ax
 
     def _set_plot(self, df, ax):
-        styles = [self.style_map.get(x) for x in df.columns] if self.style_map else None
+        styles = [self._style_map.get(x) for x in df.columns] if self._style_map else None
 
         kwargs = [
             {
-                'color': self.color_map.get(x) if self.color_map else None,
+                'color': self._color_map.get(x) if self._color_map else None,
                 'linewidth': 3 if x in self._campaign_df.vbew_names else 1,
-                'marker': 'o' if self.show_marker else None,
+                'marker': 'o' if self._show_marker else None,
             } for x in df.columns
         ]
 
@@ -195,11 +201,11 @@ class CDFMPL(CDFPlot):
         return ax
 
     def _set_plot(self, df, ax):
-        styles = [self.style_map.get(x) for x in df.columns] if self.style_map else None
+        styles = [self._style_map.get(x) for x in df.columns] if self._style_map else None
 
         kwargs = [
             {
-                'color': self.color_map.get(x) if self.color_map else None,
+                'color': self._color_map.get(x) if self._color_map else None,
                 'linewidth': 3 if x in self._campaign_df.vbew_names else 1,
             } for x in df.columns
         ]
@@ -234,12 +240,13 @@ class BoxMPL(BoxPlot):
 
         fig, ax = plt.subplots(figsize=self._figsize)
         ax.set_title(self.get_title())
-        ax.set_yscale('log' if self._logy else 'linear')
+        ax.set_xlabel(self.get_x_axis_name())
+        ax.set_xscale('log' if self._logx else 'linear')
 
         if self._xp_ware_name_map is not None:
             df = df.rename(columns=self._xp_ware_name_map)
 
-        df.boxplot(ax=ax, rot=15, meanline=True, showmeans=True)
+        df.boxplot(ax=ax, rot=0, meanline=True, showmeans=True, vert=False, grid=False)
 
         if self._output is not None:
             fig.savefig(self._output, bbox_inches='tight', transparent=True)
@@ -247,12 +254,14 @@ class BoxMPL(BoxPlot):
         return ax
 
 
-
-
 class ScatterMPL(ScatterPlot):
     """
     Creation of a static scatter plot.
     """
+
+    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, color_col=None, **kwargs):
+        super().__init__(campaign_df, xp_ware_x, xp_ware_y, **kwargs)
+        self._color_col = color_col
 
     def get_figure(self):
         """
@@ -261,7 +270,7 @@ class ScatterMPL(ScatterPlot):
         """
         df = self.get_data_frame()
         self._set_font()
-        limits = [self.min, self._campaign_df.campaign.timeout]
+        limits = [self._min, self._campaign_df.campaign.timeout]
 
         fig, ax = plt.subplots(figsize=self._figsize)
         ax.set_title(self.get_title())
@@ -275,7 +284,16 @@ class ScatterMPL(ScatterPlot):
         ax.set_xlim(self._get_x_lim(ax))
         ax.set_ylim(self._get_y_lim(ax))
 
-        df.plot.scatter(x=self.xp_ware_i, y=self.xp_ware_j, ax=ax)
+        self._extra_col(df, self._color_col)
+
+        if self._color_col is None:
+            df.plot.scatter(x=self._xp_ware_i, y=self._xp_ware_j, ax=ax)
+        else:
+            for name, sub in df.groupby(self._color_col):
+                ax.scatter(sub[self._xp_ware_i], sub[self._xp_ware_j], label=name)
+
+        plt.legend(title=None)
+
         ax.set_xlabel(self.get_x_axis_name())
         ax.set_ylabel(self.get_y_axis_name())
 
@@ -289,18 +307,25 @@ class ScatterMPL(ScatterPlot):
 
         @return: the x axis name.
         """
-        return self._get_final_xpware_name(self.xp_ware_i)
+        return self._get_final_xpware_name(self._xp_ware_i)
 
     def get_y_axis_name(self):
         """
 
         @return: the y axis name.
         """
-        return self._get_final_xpware_name(self.xp_ware_j)
+        return self._get_final_xpware_name(self._xp_ware_j)
 
     def get_title(self):
         """
 
         @return: the title of the plot.
         """
-        return f'Comparison of {self._get_final_xpware_name(self.xp_ware_i)} and {self._get_final_xpware_name(self.xp_ware_j)}'
+        return f'Comparison of {self._get_final_xpware_name(self._xp_ware_i)} and {self._get_final_xpware_name(self._xp_ware_j)}'
+
+    def _extra_col(self, df, col):
+        if col is None:
+            return
+
+        ori = self._campaign_df.data_frame
+        df[col] = ori.groupby('input')['sat'].agg(lambda x: str(set(x) - {None}))

@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 from tests.test_core.json_reader import JsonReader
 from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
-from metrics.wallet.figure.abstract_figure import DEFAULT_COLORS
-from metrics.wallet.figure.static_figure import StatTable, CactusMPL, BoxMPL, ScatterMPL, LINE_STYLES, ContributionTable
+from metrics.wallet.figure.static_figure import StatTable, CactusMPL, BoxMPL, ScatterMPL, LINE_STYLES, \
+    ContributionTable, DEFAULT_COLORS
 
 
 class MyTestCase(unittest.TestCase):
