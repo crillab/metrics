@@ -11,57 +11,57 @@ from metrics.wallet.figure.static_figure import StatTable, CactusMPL, BoxMPL, Sc
 
 class MyTestCase(unittest.TestCase):
     STAT_TABLE_RESULT_NO_VBS = {
-        'CHS': {'common_count': 374,
-                'common_sum': 21656,
+        'CHS': {'common count': 374,
+                'common sum': 21656,
                 'count': 380,
                 'sum': 66237,
                 'total': 500,
-                'uncommon_count': 6},
-        'ExplorationLuby': {'common_count': 374,
-                            'common_sum': 22161,
+                'uncommon count': 6},
+        'ExplorationLuby': {'common count': 374,
+                            'common sum': 22161,
                             'count': 389,
                             'sum': 38602,
                             'total': 500,
-                            'uncommon_count': 15},
-        'WDegCAxCD': {'common_count': 374,
-                      'common_sum': 27034,
+                            'uncommon count': 15},
+        'WDegCAxCD': {'common count': 374,
+                      'common sum': 27034,
                       'count': 381,
                       'sum': 67638,
                       'total': 500,
-                      'uncommon_count': 7}}
+                      'uncommon count': 7}}
 
     STAT_TABLE_RESULT_VBS = {
         "CHS": {
             "count": 380,
             "sum": 66237,
          'total': 500,
-            "common_count": 374,
-            "common_sum": 21656,
-            "uncommon_count": 6
+            "common count": 374,
+            "common sum": 21656,
+            "uncommon count": 6
         },
         "ExplorationLuby": {
             "count": 389,
             "sum": 38602,
          'total': 500,
-            "common_count": 374,
-            "common_sum": 22161,
-            "uncommon_count": 15
+            "common count": 374,
+            "common sum": 22161,
+            "uncommon count": 15
         },
         "WDegCAxCD": {
             "count": 381,
             "sum": 67638,
          'total': 500,
-            "common_count": 374,
-            "common_sum": 27034,
-            "uncommon_count": 7
+            "common count": 374,
+            "common sum": 27034,
+            "uncommon count": 7
         },
         "vbew": {
             "count": 387,
             "sum": 39302,
          'total': 500,
-            "common_count": 374,
-            "common_sum": 15317,
-            "uncommon_count": 13
+            "common count": 374,
+            "common sum": 15317,
+            "uncommon count": 13
         }
     }
 
@@ -78,25 +78,25 @@ class MyTestCase(unittest.TestCase):
             "count": 5,
             "sum": 130,
          'total': 5,
-            "common_count": 5,
-            "common_sum": 130,
-            "uncommon_count": 0
+            "common count": 5,
+            "common sum": 130,
+            "uncommon count": 0
         },
         "ExplorationLuby": {
             "count": 5,
             "sum": 23,
          'total': 5,
-            "common_count": 5,
-            "common_sum": 23,
-            "uncommon_count": 0
+            "common count": 5,
+            "common sum": 23,
+            "uncommon count": 0
         },
         "WDegCAxCD": {
             "count": 5,
             "sum": 47,
          'total': 5,
-            "common_count": 5,
-            "common_sum": 47,
-            "uncommon_count": 0
+            "common count": 5,
+            "common sum": 47,
+            "uncommon count": 0
         }
     }
 
@@ -110,17 +110,17 @@ class MyTestCase(unittest.TestCase):
             "count": 380,
             "sum": 59037,
          'total': 500,
-            "common_count": 380,
-            "common_sum": 26637,
-            "uncommon_count": 0
+            "common count": 380,
+            "common sum": 26637,
+            "uncommon count": 0
         },
         "ExplorationLuby": {
             "count": 389,
             "sum": 31402,
          'total': 500,
-            "common_count": 380,
-            "common_sum": 25761,
-            "uncommon_count": 9
+            "common count": 380,
+            "common sum": 25761,
+            "uncommon count": 9
         }
     }
 
@@ -159,7 +159,7 @@ class MyTestCase(unittest.TestCase):
         cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
         contrib = ContributionTable(cdfb, [0, 10, 100])
         self.assertEqual('WDegCAxCD', contrib.get_figure().iloc[0].name)
-        self.assertEqual(168, contrib.get_figure().iloc[0].vbew_simple)
+        self.assertEqual(168, contrib.get_figure().iloc[0]['vbew 0s'])
 
     def test_static_cactus(self):
         color_map = {
