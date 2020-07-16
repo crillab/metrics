@@ -144,6 +144,7 @@ Notebook example [here](example/sat-competition/dynamic_analysis.ipynb)
 
 Notebook example [here](example/sat-competition/static_cactus_and_output.ipynb)
 
+![Comparison of all competition solvers](example/sat-competition/output/cactus.svg)
 ![Comparison of all competition solvers](example/sat-competition/output/cactus_zoom.svg)
 
 
