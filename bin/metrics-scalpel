@@ -206,7 +206,20 @@ class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         return answers['memory_out'] if answers['memory_out'] != '' else None
 
     def read_experiment_wares(self) -> None:
-        pass
+        questions = [
+            {
+                'type': 'input',
+                'name': 'xpware',
+                'message': 'Enter experiment ware name'
+            }
+        ]
+        while True:
+            answers = prompt(questions)
+            if answers['xpware'] == '':
+                break
+            self._listener.start_experiment_ware()
+            self._listener.log_data('name', answers['xpware'])
+            self._listener.end_experiment_ware()
 
     def read_input_set(self) -> None:
         pass
@@ -260,6 +273,32 @@ class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
             return self._data_file_generator()
         return []
+
+    def _get_hierarchy_depth(self) -> Optional[int]:
+        if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'depth',
+                    'message': 'Enter hierarchy depth'
+                }
+            ]
+            answers = prompt(questions)
+            return answers['depth']
+        return None
+
+    def _get_experiment_ware_depth(self) -> Optional[int]:
+        if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'depth',
+                    'message': 'Enter the depth of the directory corresponding to the experiment-ware'
+                }
+            ]
+            answers = prompt(questions)
+            return answers['depth']
+        return None
 
 
 if __name__ == '__main__':
