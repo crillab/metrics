@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  metrics:
+    container_name: metrics
+    restart: always
+    build: .
+    ports:
+      - "8000:8000"
+    command: /usr/src/app/gunicorn.sh
+
+  nginx:
+    container_name: nginx
+    restart: always
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - metrics
