@@ -44,16 +44,16 @@ class CampaignTestCase(unittest.TestCase):
         self._create_campaign_builder()
 
     def test_double_xp_ware_inside_builder(self):
-        self.assertTrue((self.cb.is_experiment_ware_name_exist('MySolver')))
-        self.assertFalse((self.cb.is_experiment_ware_name_exist('MySolvers')))
+        self.assertTrue((self.cb.has_experiment_ware_with_name('MySolver')))
+        self.assertFalse((self.cb.has_experiment_ware_with_name('MySolvers')))
 
     def test_double_xp_ware_inside_builder_condition(self):
         with self.assertRaises(ValueError):
             self._create_experiment_ware(self.cb.add_experiment_ware_builder())
 
     def test_double_input_inside_builder(self):
-        self.assertTrue((self.cb.is_input_path_exist('/somewhere/over/the/rainbow/')))
-        self.assertFalse((self.cb.is_input_path_exist('/somewhere/over/the/rainbow/blue/birds/fly/')))
+        self.assertTrue((self.cb.has_input_with_path('/somewhere/over/the/rainbow/')))
+        self.assertFalse((self.cb.has_input_with_path('/somewhere/over/the/rainbow/blue/birds/fly/')))
 
     def test_success_build_campaign(self):
         c = self.cb.build()

@@ -162,10 +162,10 @@ class CampaignBuilder(ModelBuilder):
                                                         self._attribute_manager_sets.input_attr_set)
         return input_set
 
-    def is_experiment_ware_name_exist(self, param):
+    def has_experiment_ware_with_name(self, param):
         return not self._attribute_manager_sets.xp_ware_attr_set.get_attribute_manager('name').is_unique(param)
 
-    def is_input_path_exist(self, param):
+    def has_input_with_path(self, param):
         return not self._attribute_manager_sets.input_attr_set.get_attribute_manager('path').is_unique(param)
 
 
@@ -218,6 +218,9 @@ class InputSetBuilder(ModelBuilder):
         input = self['inputs'] = InputBuilder(self._input_attribute_set)
         return input
 
+    def has_input_with_path(self, param):
+        return not self._input_attribute_set.get_attribute_manager('path').is_unique(param)
+
 
 class InputBuilder(ModelBuilder):
     """
@@ -230,9 +233,6 @@ class InputBuilder(ModelBuilder):
         @param attribute_manager_set: the attribute manager set that will manage values of attributes.
         """
         super().__init__(Input, attribute_manager_set)
-
-    def is_input_path_exist(self, param):
-        return not self._attribute_manager_set.get_attribute_manager('path').is_unique(param)
 
 
 class AttributeManagerSets:
