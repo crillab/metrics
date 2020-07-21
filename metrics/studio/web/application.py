@@ -9,14 +9,15 @@ import io
 import dash_table
 import pandas as pd
 
-from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.parser import CsvCampaignParser
-from metrics.studio.web.layout import configuration, box_plot, data_loading, plots, table
+from metrics.studio.web.layout import data_loading, plots, table
+from metrics.studio.web.util import create_listener, decode
 
 PLOTLY_LOGO = "https://images.plot.ly/logo/new-branding/plotly-logomark.png"
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 MAIN_MENU_TABS = {'Data loading': data_loading, 'Plots': plots, 'Table': table}
 
 navbar = dbc.Navbar(
@@ -48,6 +49,8 @@ app.layout = html.Div(className='container', children=[
 
 
 def parse_contents(contents, filename, date, separator=','):
+    if contents is None:
+        return []
     content_type, content_string = contents.split(',')
 
     decoded = base64.b64decode(content_string)
@@ -93,20 +96,13 @@ def update_output(list_of_contents, list_of_names, list_of_dates, sep):
 @app.callback([Output('box', 'children')],
               [Input('xp-ware', 'value'), Input('time', 'value'),
                Input('input', 'value')],
-              [State('upload-data', 'filename'), State('upload-data', 'contents'),
-               State('upload-data', 'last_modified'), State('sep', 'value')])
-def read_campaign_and_generate_plot(xp_ware, time, input, filename, contents, last_modified, sep):
-    print(contents)
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def campaign_callback(xp_ware, time, input, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None:
+        return list(),
 
-    listener = CampaignParserListener()
-    listener.add_key_mapping('experiment_ware', xp_ware)
-    listener.add_key_mapping('time', time)
-    listener.add_key_mapping('input', input)
-
-    content_type, content_string = contents.split(',')
-    decoded = base64.b64decode(content_string)
-    print(decoded)
+    listener = create_listener(xp_ware, input, time)
     csv_parser = CsvCampaignParser(listener, separator=sep)
-    csv_parser.parse_stream(io.StringIO(decoded.decode('utf-8')))
+    csv_parser.parse_stream(decode(contents))
     campaign = listener.get_campaign()
     return list(),
