@@ -65,7 +65,7 @@ $(OUTDIR)/pylint.out: $(OUTDIR) $(MODULE_NAME)/*.py $(TESTS)/*/*.py
 
 # Executes the SonarQube static analysis.
 sonar: test pylint
-	sonar-scanner
+	sonar-scanner -Dsonar.host.url=${SONAR_HOST} -Dsonar.login=${SONAR_TOKEN} -Dsonar.projectKey=${SONAR_KEY}
 
 
 ##################
