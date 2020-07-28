@@ -31,7 +31,7 @@ a campaign is being parsed, so as to build its representation.
 
 
 from collections import defaultdict
-from typing import List, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 from metrics.core.builder import CampaignBuilder
 from metrics.core.model import Campaign
@@ -47,9 +47,10 @@ class KeyMapping:
         """
         Creates a new KeyMapping.
         """
-        self._dict = {}
+        self._dict_representation = {}
 
-    def __setitem__(self, scalpel_key: str, campaign_key: Union[str, List[str]]) -> None:
+    def __setitem__(self, scalpel_key: str,
+                    campaign_key: Union[str, List[str]]) -> None:
         """
         Maps a key as defined in the campaign to that expected by Scalpel.
 
@@ -57,9 +58,9 @@ class KeyMapping:
         :param campaign_key: The key defined in the campaign.
         """
         if isinstance(campaign_key, str):
-            self._dict[scalpel_key] = [campaign_key]
+            self._dict_representation[scalpel_key] = [campaign_key]
         else:
-            self._dict[scalpel_key] = campaign_key
+            self._dict_representation[scalpel_key] = campaign_key
 
     def __getitem__(self, campaign_key: str) -> Tuple[str, int]:
         """
@@ -71,9 +72,9 @@ class KeyMapping:
                  or the given key if no mapping is set for this key and, as
                  second element, the number of values expected for this key.
         """
-        for k, v in self._dict.items():
-            if campaign_key in v:
-                return k, len(v)
+        for key, value in self._dict_representation.items():
+            if campaign_key in value:
+                return key, len(value)
         return campaign_key, 1
 
 
@@ -92,7 +93,8 @@ class CampaignParserListener:
         self._current_builder = None
         self._pending_keys = defaultdict(list)
 
-    def add_key_mapping(self, scalpel_key: str, campaign_key: Union[str, List[str]]) -> None:
+    def add_key_mapping(self, scalpel_key: str,
+                        campaign_key: Union[str, List[str]]) -> None:
         """
         Maps a key as defined in the campaign to that expected by Scalpel.
 
@@ -122,7 +124,8 @@ class CampaignParserListener:
 
     def end_experiment_ware(self) -> None:
         """
-        Notifies this listener that the current experiment-ware has been fully parsed.
+        Notifies this listener that the current experiment-ware has been
+        fully parsed.
         """
         self._current_builder = self._campaign_builder
 
@@ -160,22 +163,28 @@ class CampaignParserListener:
 
     def end_experiment(self) -> None:
         """
-        Notifies this listener that the current experiment has been fully parsed.
+        Notifies this listener that the current experiment has been
+        fully parsed.
         """
         self._current_builder = self._campaign_builder
 
-    def log_data(self, key: str, value: str) -> None:
+    def log_data(self, key: str, value: Any) -> None:
         """
         Notifies this listener about data that has been read.
-        This data is set to the element of the campaign that is currently being built.
+        This data is set to the element of the campaign that is currently
+        being built.
 
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
+        # Adding the read value.
         scalpel_key, nb = self._key_mapping[key]
-        self._pending_keys[scalpel_key].append(value)
-        if len(self._pending_keys[scalpel_key]) == nb:
-            values = ['' if v is None else v for v in self._pending_keys[scalpel_key]]
+        read_values = self._pending_keys[scalpel_key]
+        read_values.append(str(value))
+
+        # If all the values of the mapping have been read, we can commit them.
+        if len(read_values) == nb:
+            values = ['' if v is None else v for v in read_values]
             self._current_builder[scalpel_key] = ' '.join(values)
             del self._pending_keys[scalpel_key]
 

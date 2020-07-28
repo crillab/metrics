@@ -64,8 +64,8 @@ def read_yaml(yaml_configuration: str) -> Campaign:
 
     :return: The read campaign.
     """
-    campaign_parser_listener = CampaignParserListener()
-    configuration = read_configuration(yaml_configuration, campaign_parser_listener)
-    campaign_parser = create_parser(configuration, campaign_parser_listener)
+    parser_listener = CampaignParserListener()
+    configuration = read_configuration(yaml_configuration, parser_listener)
+    campaign_parser = create_parser(configuration, parser_listener)
     campaign_parser.parse_file(configuration.get_main_file())
-    return campaign_parser_listener.get_campaign()
+    return parser_listener.get_campaign()
