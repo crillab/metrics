@@ -50,12 +50,12 @@ def create_parser(config: ScalpelConfiguration,
 
     :return: The parser to use to parse the campaign.
     """
-    # If the user has written their own parser, we use it.
+    # If the user has written their own parser, this parser is used.
     custom_parser = config.get_custom_parser()
     if custom_parser is not None:
         return locate(custom_parser)(config, listener)
 
-    # Otherwise, we use one of the default parsers.
+    # Otherwise, a default parser is chosen w.r.t. the campaign's format.
     campaign_format = config.get_format()
 
     if campaign_format == CampaignFormat.CSV:
@@ -74,9 +74,6 @@ def create_parser(config: ScalpelConfiguration,
         return FlatDirectoryCampaignParser(config, listener)
 
     if campaign_format == CampaignFormat.DEEP_LOG_DIRECTORY:
-        depth = config.get_hierarchy_depth()
-        xp_ware_depth = config.get_experiment_ware_depth()
-        return DeepDirectoryCampaignParser(config, listener, int(depth),
-                                           xp_ware_depth)
+        return DeepDirectoryCampaignParser(config, listener)
 
     raise ValueError(f'Unrecognized input format: {campaign_format}')

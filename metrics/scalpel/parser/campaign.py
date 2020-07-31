@@ -28,10 +28,10 @@
 This module provides various classes for parsing different types of files
 containing the results of a campaign, so as to build its representation.
 """
-from _ast import expr
-from csv import reader as load_csv
+
+
 from os import path, scandir
-from typing import Iterable, List, Optional, TextIO
+from typing import List, Optional, TextIO
 
 from metrics.scalpel.config import ScalpelConfiguration
 from metrics.scalpel.config.format import OutputFormat
@@ -97,7 +97,7 @@ class FileCampaignParser(CampaignParser):
 
         :param file_path: The path of the file to read.
         """
-        with open(file_path) as file:
+        with open(file_path, 'r') as file:
             self.parse_stream(file)
 
     def parse_stream(self, stream: TextIO) -> None:
@@ -128,6 +128,7 @@ class CsvCampaignParser(FileCampaignParser):
         super().__init__(listener)
         self._separator = separator
         self._quote_char = quote_char
+        self._reader = None
 
     def parse_stream(self, stream: TextIO) -> None:
         """
@@ -135,19 +136,39 @@ class CsvCampaignParser(FileCampaignParser):
 
         :param stream: The stream to read.
         """
-        reader = CsvReader(stream, self._separator, self._quote_char,
-                           self._row_filter)
-        for line in reader.read():
+        self.parse_header(stream)
+        self.parse_content()
+
+    def parse_header(self, stream: TextIO) -> List[str]:
+        """
+        Parses the header of a CSV stream.
+
+        :param stream: The stream to read.
+
+        :return: The header of the CSV stream
+        """
+        self._reader = CsvReader(stream, self._separator, self._quote_char,
+                                 self._row_filter)
+        return self._reader.read_header()
+
+    def parse_content(self) -> None:
+        """
+        Parses the content of a CSV stream using the given reader.
+        """
+        for line in self._reader.read_content():
             self.start_experiment()
             for key, value in line:
                 self.log_data(key, value)
             self.end_experiment()
 
-    def _row_filter(self, line):
+    def _row_filter(self, row: List[str]) -> bool:
         """
+        Checks whether the given row is relevant for the purpose of the
+        campaign.
 
-        :param line:
-        :return:
+        :param row: The row to check.
+
+        :return: Whether the given row is relevant.
         """
         return True
 
@@ -166,18 +187,16 @@ class EvaluationCampaignParser(CsvCampaignParser):
         """
         super().__init__(listener, '|')
 
-    def _row_filter(self, line):
+    def _row_filter(self, row: List[str]) -> bool:
         """
-        Parses the given line as an experiment.
+        Checks whether the given row is relevant for the purpose of the
+        campaign.
 
-        :param line: The line to parse.
+        :param row: The row to check.
 
-        :return: The list of the values in the line, or an empty list if the
-                 line does not contain any relevant information.
+        :return: Whether the given row is relevant.
         """
-        if len(line) == 1:
-            return []
-        return line
+        return len(row) > 1
 
 
 class DirectoryCampaignParser(CampaignParser):
@@ -192,7 +211,7 @@ class DirectoryCampaignParser(CampaignParser):
         Creates a new DirectoryCampaignParser.
 
         :param configuration: The configuration describing how to extract
-               data from the output file.
+               data from the output files.
         :param listener: The listener to notify while parsing.
         """
         super().__init__(listener)
@@ -264,9 +283,7 @@ class DeepDirectoryCampaignParser(DirectoryCampaignParser):
     """
 
     def __init__(self, configuration: ScalpelConfiguration,
-                 listener: CampaignParserListener,
-                 depth: int = 1,
-                 experiment_ware_depth: Optional[int] = None) -> None:
+                 listener: CampaignParserListener) -> None:
         """
         Creates a new DeepDirectoryCampaignParser.
 
@@ -276,8 +293,8 @@ class DeepDirectoryCampaignParser(DirectoryCampaignParser):
         :param depth: The depth to explore in the file hierarchy.
         """
         super().__init__(configuration, listener)
-        self._depth = depth
-        self._experiment_ware_depth = experiment_ware_depth
+        self._depth = configuration.get_hierarchy_depth()
+        self._experiment_ware_depth = configuration.get_experiment_ware_depth()
         self._experiment_ware = None
 
     def explore(self, root: str) -> None:
