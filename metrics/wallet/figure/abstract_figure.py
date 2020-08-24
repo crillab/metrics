@@ -28,11 +28,10 @@ import matplotlib
 
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame, CampaignDFFilter
 
-DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
-                  '#17becf']
 """
 Default colors that could be used to customise figures.
 """
+
 
 class Figure:
     """
@@ -65,7 +64,8 @@ class Figure:
 
 class Table(Figure):
 
-    def __init__(self, campaign_df: CampaignDataFrame, commas_for_number: bool = False, dollars_for_number: bool = False, **kwargs):
+    def __init__(self, campaign_df: CampaignDataFrame, commas_for_number: bool = False,
+                 dollars_for_number: bool = False, **kwargs):
         super().__init__(campaign_df, **kwargs)
         self._commas_for_number = commas_for_number
         self._dollars_for_number = dollars_for_number
@@ -93,6 +93,8 @@ class Table(Figure):
                     index_names=False,
                     bold_rows=True
                 )
+        else:
+            raise ValueError('Only .tex extension is accepted.')
 
     def get_figure(self):
         """
@@ -105,12 +107,15 @@ class Table(Figure):
 
         return df
 
+
 class Plot(Figure):
     """
     A plot is a figure print in 2d with axis and title.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, figsize=(7, 5), font_name='DejaVu Sans', font_size=12, font_color='#000000', logx: bool = False, logy: bool = False, latex_writing: bool = False, x_min: int = 0, y_min: int = 0, x_max: int = -1, y_max: int = -1, **kwargs):
+    def __init__(self, campaign_df: CampaignDataFrame, figsize=(7, 5), font_name='DejaVu Sans', font_size=12,
+                 font_color='#000000', logx: bool = False, logy: bool = False, latex_writing: bool = False,
+                 x_min: int = 0, y_min: int = 0, x_max: int = -1, y_max: int = -1, **kwargs):
         super().__init__(campaign_df, **kwargs)
 
         self._font_name = font_name
@@ -161,16 +166,16 @@ class Plot(Figure):
         matplotlib.rc('ytick', color=self._font_color)
 
     def _get_x_lim(self, ax):
-        min, max = ax.get_xlim()
-        min = self._x_min if self._x_min != -1 else min
-        max = self._x_max if self._x_max != -1 else max
-        return [min, max]
+        left, right = ax.get_xlim()
+        left = self._x_min if self._x_min != -1 else left
+        right = self._x_max if self._x_max != -1 else right
+        return [left, right]
 
     def _get_y_lim(self, ax):
-        min, max = ax.get_ylim()
-        min = self._y_min if self._y_min != -1 else min
-        max = self._y_max if self._y_max != -1 else max
-        return [min, max]
+        left, right = ax.get_ylim()
+        left = self._y_min if self._y_min != -1 else left
+        right = self._y_max if self._y_max != -1 else right
+        return [left, right]
 
     def _get_final_xpware_name(self, col):
         mapped = self._xp_ware_name_map is not None and col in self._xp_ware_name_map
@@ -182,7 +187,9 @@ class CactusPlot(Plot):
     Creation of a cactus plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, cumulated=False, show_marker=True, color_map=None, style_map=None, cactus_col='cpu_time', legend_location: str = 'best', ncol_legend: int = 1, bbox_to_anchor=None, **kwargs):
+    def __init__(self, campaign_df: CampaignDataFrame, cumulated=False, show_marker=True, color_map=None,
+                 style_map=None, cactus_col='cpu_time', legend_location: str = 'best', ncol_legend: int = 1,
+                 bbox_to_anchor=None, **kwargs):
         """
         Creates a cactus plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -194,11 +201,11 @@ class CactusPlot(Plot):
         @param xp_ware_name_map: a mapping of experimentware names.
         """
         super().__init__(campaign_df, **kwargs)
-        self.cumulated = cumulated
-        self.show_marker = show_marker
-        self.color_map = color_map
-        self.style_map = style_map
-        self.cactus_col = cactus_col
+        self._cumulated = cumulated
+        self._show_marker = show_marker
+        self._color_map = color_map
+        self._style_map = style_map
+        self._cactus_col = cactus_col
         self._legend_location = legend_location
         self._bbox_to_anchor = bbox_to_anchor
         self._ncol_legend = ncol_legend
@@ -209,7 +216,7 @@ class CactusPlot(Plot):
         @return: the pandas dataframe used by this figure.
         """
         df_solved = self._campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
-        df_cactus = df_solved.pivot(columns='experiment_ware', values=self.cactus_col)
+        df_cactus = df_solved.pivot(columns='experiment_ware', values=self._cactus_col)
         for col in df_cactus.columns:
             df_cactus[col] = df_cactus[col].sort_values().values
         df_cactus = df_cactus.dropna(how='all').reset_index(drop=True)
@@ -218,7 +225,7 @@ class CactusPlot(Plot):
         order = list(df_cactus.count().sort_values(ascending=False).index)
         df_cactus = df_cactus[order]
 
-        return df_cactus.cumsum() if self.cumulated else df_cactus
+        return df_cactus.cumsum() if self._cumulated else df_cactus
 
     def get_x_axis_name(self):
         """
@@ -232,7 +239,67 @@ class CactusPlot(Plot):
 
         @return: the y axis name.
         """
-        return 'Cumulated time' if self.cumulated else 'Time to solve an input'
+        return 'Cumulated time' if self._cumulated else 'Time to solve an input'
+
+    def get_title(self):
+        """
+
+        @return: the title of the plot.
+        """
+        return 'Comparison of experimentwares'
+
+
+class CDFPlot(Plot):
+    """
+    Creation of a Cumulative Distribution Function to compare the performance of several solvers.
+    """
+
+    def __init__(self, campaign_df: CampaignDataFrame, color_map=None, style_map=None, cdf_col='cpu_time',
+                 legend_location: str = 'best', ncol_legend: int = 1, bbox_to_anchor=None, **kwargs):
+        """
+        Creates a cactus plot.
+        @param campaign_df: the campaign dataframe to plot.
+        @param color_map: a color map to personalise each plot line by a given color.
+        @param style_map: a style map to personalise each plot line by a given style (dotted...).
+        @param xp_ware_name_map: a mapping of experimentware names.
+        """
+        super().__init__(campaign_df, **kwargs)
+        self._color_map = color_map
+        self._style_map = style_map
+        self._cdf_col = cdf_col
+        self._legend_location = legend_location
+        self._bbox_to_anchor = bbox_to_anchor
+        self._ncol_legend = ncol_legend
+
+    def get_data_frame(self):
+        """
+
+        @return: the pandas dataframe used by this figure.
+        """
+        df_solved = self._campaign_df.data_frame
+        df_cdf = df_solved.pivot(columns='experiment_ware', values=self._cdf_col)
+        for col in df_cdf.columns:
+            df_cdf[col] = df_cdf[col].sort_values().values
+        df_cdf = df_cdf.dropna(how='all').reset_index(drop=True)
+
+        order = list(df_cdf.applymap(lambda x: x < self._campaign_df.campaign.timeout).sum().sort_values(ascending=False).index)
+        df_cdf = df_cdf[order]
+
+        return df_cdf
+
+    def get_x_axis_name(self):
+        """
+
+        @return: the x axis name.
+        """
+        return 'Time to solve an input'
+
+    def get_y_axis_name(self):
+        """
+
+        @return: the y axis name.
+        """
+        return 'Solved inputs'
 
     def get_title(self):
         """
@@ -247,7 +314,8 @@ class ScatterPlot(Plot):
     Creation of a scatter plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col='cpu_time', marker_alpha: float = 0.3, **kwargs):
+    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col='cpu_time',
+                 marker_alpha: float = 0.3, **kwargs):
         """
         Creates a scatter plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -256,12 +324,12 @@ class ScatterPlot(Plot):
         @param sample: if there is too much datas, a sample can choose "sample" number of inputs to show.
         """
         super().__init__(campaign_df, **kwargs)
-        self.xp_ware_i = xp_ware_x
-        self.xp_ware_j = xp_ware_y
-        self.sample = sample
-        self.scatter_col = scatter_col
-        self.df_scatter = self.get_data_frame()
-        self.min = self.df_scatter[[self.xp_ware_i, self.xp_ware_j]].min(skipna=True).min()
+        self._xp_ware_i = xp_ware_x
+        self._xp_ware_j = xp_ware_y
+        self._sample = sample
+        self._scatter_col = scatter_col
+        self._df_scatter = self.get_data_frame()
+        self._min = self._df_scatter[[self._xp_ware_i, self._xp_ware_j]].min(skipna=True).min()
         self._marker_alpha = marker_alpha
 
     def get_data_frame(self):
@@ -270,31 +338,31 @@ class ScatterPlot(Plot):
         @return: the pandas dataframe used by this figure.
         """
         df_solved = self._campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
-        df_scatter = df_solved.pivot_table(index=['input'], columns='experiment_ware', values=self.scatter_col,
+        df_scatter = df_solved.pivot_table(index=['input'], columns='experiment_ware', values=self._scatter_col,
                                            fill_value=self._campaign_df.campaign.timeout)
 
-        return df_scatter.sample(n=self.sample) if self.sample else df_scatter
+        return df_scatter.sample(n=self._sample) if self._sample else df_scatter
 
     def get_x_axis_name(self):
         """
 
         @return: the x axis name.
         """
-        return self.xp_ware_i
+        return self._xp_ware_i
 
     def get_y_axis_name(self):
         """
 
         @return: the y axis name.
         """
-        return self.xp_ware_j
+        return self._xp_ware_j
 
     def get_title(self):
         """
 
         @return: the title of the plot.
         """
-        return f'Comparison of {self.xp_ware_i} and {self.xp_ware_j}'
+        return f'Comparison of {self._xp_ware_i} and {self._xp_ware_j}'
 
 
 class BoxPlot(Plot):
@@ -304,7 +372,7 @@ class BoxPlot(Plot):
 
     def __init__(self, campaign_df: CampaignDataFrame, box_col='cpu_time', **kwargs):
         super().__init__(campaign_df, **kwargs)
-        self.box_col = box_col
+        self._box_col = box_col
 
     def get_data_frame(self):
         """
@@ -312,7 +380,7 @@ class BoxPlot(Plot):
         @return: the pandas dataframe used by this figure.
         """
         df_by_ware = self._campaign_df.data_frame
-        df_by_ware = df_by_ware.pivot(columns='experiment_ware', values=self.box_col)
+        df_by_ware = df_by_ware.pivot(columns='experiment_ware', values=self._box_col)
         return df_by_ware
 
     def get_x_axis_name(self):
@@ -320,7 +388,7 @@ class BoxPlot(Plot):
 
         @return: the x axis name.
         """
-        return ''
+        return 'Time to solve an input'
 
     def get_y_axis_name(self):
         """

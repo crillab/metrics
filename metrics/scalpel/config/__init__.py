@@ -25,12 +25,14 @@
 
 
 """
-This package provides the modules for setting up Scalpel and describing how
-it can extract relevant data from the files of the campaign.
+This package provides the modules for setting up Scalpel, in particular to
+describe how it can extract relevant data from the files of the campaign.
 """
 
+
 from metrics.scalpel.config.config import MappingConfiguration, \
-    RawDataConfiguration, ScalpelConfigurationBuilder, \
-    EmptyRawDataConfiguration, read_configuration, ScalpelConfiguration
+    RawDataConfiguration, EmptyRawDataConfiguration, \
+    ScalpelConfigurationBuilder, ScalpelConfiguration, \
+    read_configuration
 
 from metrics.scalpel.config.format import CampaignFormat

@@ -31,6 +31,8 @@ to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
 """
 
 
+from typing import Any, Iterable
+
 from metrics.core.model import Campaign
 
 from metrics.scalpel.config import read_configuration
@@ -60,12 +62,37 @@ def read_yaml(yaml_configuration: str) -> Campaign:
     the given YAML file.
 
     :param yaml_configuration: The path of the YAML file describing Scalpel's
-           configuration.
+                               configuration.
+
+    :return: The read campaign.
+    """
+    parser_listener = CampaignParserListener()
+    configuration = read_configuration(yaml_configuration, parser_listener)
+    campaign_parser = create_parser(configuration, parser_listener)
+    campaign_parser.parse_file(configuration.get_main_file())
+    return parser_listener.get_campaign()
+
+
+def convert_object(yaml_configuration: str, iterable: Iterable[Any]) -> Campaign:
+    """
+    Convert the data stored in the given iterabl object following the
+    configuration described in the given YAML file.
+
+    :param yaml_configuration: The path of the YAML file describing Scalpel's
+                               configuration.
+    :param iterable: The object to iterate over so as to get the data about the
+                     campaign.
+                     Each element encountered during the iteration must define
+                     an "items()" method returning a set of key-value pairs
+                     (such as dictionaries or rows in a data-frame, for instance.
 
     :return: The read campaign.
     """
     campaign_parser_listener = CampaignParserListener()
-    configuration = read_configuration(yaml_configuration, campaign_parser_listener)
-    campaign_parser = create_parser(configuration, campaign_parser_listener)
-    campaign_parser.parse_file(configuration.get_main_file())
+    read_configuration(yaml_configuration, campaign_parser_listener)
+    for element in iterable:
+        campaign_parser_listener.start_experiment()
+        for key, value in element.items():
+            campaign_parser_listener.log_data(key, value)
+        campaign_parser_listener.end_experiment()
     return campaign_parser_listener.get_campaign()
