@@ -29,7 +29,6 @@ This module provides a listener which listens to the events triggered while
 a campaign is being parsed, so as to build its representation.
 """
 
-
 from collections import defaultdict
 from typing import Any, List, Tuple, Union
 
@@ -77,6 +76,9 @@ class KeyMapping:
                 return key, len(value)
         return campaign_key, 1
 
+    def get_sorted_keys(self, scalpel_key: str):
+        return self._dict_representation[scalpel_key]
+
 
 class CampaignParserListener:
     """
@@ -91,7 +93,8 @@ class CampaignParserListener:
         self._campaign_builder = None
         self._input_set_builder = None
         self._current_builder = None
-        self._pending_keys = defaultdict(list)
+        self._pending_keys = defaultdict(dict)
+        self._current_experiment = False
 
     def add_key_mapping(self, scalpel_key: str,
                         campaign_key: Union[str, List[str]]) -> None:
@@ -160,6 +163,7 @@ class CampaignParserListener:
         Notifies this listener that a new experiment is going to be parsed.
         """
         self._current_builder = self._campaign_builder.add_experiment_builder()
+        self._current_experiment = True
 
     def end_experiment(self) -> None:
         """
@@ -167,6 +171,7 @@ class CampaignParserListener:
         fully parsed.
         """
         self._current_builder = self._campaign_builder
+        self._current_experiment = False
 
     def log_data(self, key: str, value: Any) -> None:
         """
@@ -180,13 +185,32 @@ class CampaignParserListener:
         # Adding the read value.
         scalpel_key, nb = self._key_mapping[key]
         read_values = self._pending_keys[scalpel_key]
-        read_values.append(str(value))
+        read_values[key] = str(value)
 
         # If all the values of the mapping have been read, we can commit them.
         if len(read_values) == nb:
-            values = ['' if v is None else v for v in read_values]
-            self._current_builder[scalpel_key] = ' '.join(values)
+            values = ['' if read_values[v] is None else read_values[v] for v in
+                      self._key_mapping.get_sorted_keys(scalpel_key)]
+
+            name = ' '.join(values)
+            self._current_builder[scalpel_key] = name
+
+            if self._current_experiment:
+                if scalpel_key == 'experiment_ware' and self._campaign_builder.has_experiment_ware_with_name(name):
+                    xp_ware_builder = self._campaign_builder.add_experiment_ware_builder()
+                    self.create_on_the_fly(xp_ware_builder, read_values, 'name', name)
+                if scalpel_key == 'input' and self._campaign_builder.has_input_with_path(name):
+                    self._input_set_builder = self._input_set_builder if self._input_set_builder is not None \
+                        else self._campaign_builder.add_input_set_builder()
+                    input_builder = self._input_set_builder.add_input_builder()
+                    self.create_on_the_fly(input_builder, read_values, 'path', name)
             del self._pending_keys[scalpel_key]
+
+    @staticmethod
+    def create_on_the_fly(builder, read_values, key, name):
+        for k, v in read_values.items():
+            builder[k] = v
+        builder[key] = name
 
     def get_campaign(self) -> Campaign:
         """
