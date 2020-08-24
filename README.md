@@ -135,84 +135,45 @@ from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
 campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
 ```
 
-### Cactus Plot
+### Dynamic Plots
 
-```python
-from metrics.wallet.figure.dynamic_figure import CactusPlotly
-cactus = CactusPlotly(campaign_df)
-cactus.get_figure()
-```
+Notebook example [here](example/sat-competition/dynamic_analysis.ipynb)
 
 
+### Static Cactus Plot
 
-![Comparison of all competition solvers](example/sat-competition/cactus_full.png)
+Notebook example [here](example/sat-competition/static_cactus_and_output.ipynb)
 
-```python
-subset = {
-    'CaDiCaL default',
-    'MapleLCMDistChronoBT-DL-v2.2 default',
-    'MapleLCMDistChronoBT-DL-v2.1 default',
-    'MapleLCMDiscChronoBT-DL-v3 default',
-    'cmsatv56-walksat-chronobt default'
-}
-campaign_df_best = campaign_df.sub_data_frame('experiment_ware', subset)
-```
-
-```python
-cactus = CactusPlotly(campaign_df_best, show_marker=True, min_solved_inputs=200)
-cactus.get_figure()
-```
-
-![Comparison of best competition solvers](example/sat-competition/cactus_best.png)
+![Comparison of all competition solvers](example/sat-competition/output/cactus.svg)
+![Comparison of all competition solvers](example/sat-competition/output/cactus_zoom.svg)
 
 
-### Table 
+### Static CDF Plot
 
-Create VBS: 
+Notebook example [here](example/sat-competition/static_cdf_and_output.ipynb)
 
-```python
-vbs1 = {
-    'CaDiCaL default',
-    'MapleLCMDistChronoBT-DL-v2.2 default'
-}
-vbs2 = {
-    'CaDiCaL default',
-    'MapleLCMDiscChronoBT-DL-v3 default'
-}
-
-campaign_df_best_plus_vbs = campaign_df_best\
-    .add_vbew(vbs1, 'cpu_time', vbew_name='vbs1')\
-    .add_vbew(vbs2, 'cpu_time', vbew_name='vbs2')
-```
-
-```python
-from metrics.wallet.figureure.static_figure import StatTable
-stat = StatTable(campaign_df_best_plus_vbs)
-stat.get_figure()
-```
-
-### Scatter
-
-```python
-stat = ScatterPlotly(campaign_df, 
-    'CaDiCaL default', 'MapleLCMDistChronoBT-DL-v2.2 default')
-stat.get_figure() 
-```
-
-![Comparison of best competition solvers](example/sat-competition/scatter.png)
+![Comparison of all competition solvers](example/sat-competition/output/cdf.svg)
 
 
-### Box plot 
+### Static Scatter Plot
 
-```python
-from metrics.wallet.figure.dynamic_figure import BoxPlotly
-box = BoxPlotly(campaign_df_best)
-box.get_figure()
-```
+Notebook example [here](example/sat-competition/static_scatter_and_output.ipynb)
 
-![Comparison of best competition solvers](example/sat-competition/box.png)
+![Comparison of all competition solvers](example/sat-competition/output/scatter_zoom.svg)
 
-You can see the complete notebook example [here](example/sat-competition/analysis.ipynb)
+
+### Static Box Plot
+
+Notebook example [here](example/sat-competition/static_box_and_output.ipynb)
+
+![Comparison of all competition solvers](example/sat-competition/output/box.svg)
+
+
+### Static Tables
+
+Notebook example [here](example/sat-competition/tables_and_output.ipynb)
+
+
 
 # Citing mETRICS 
 
