@@ -291,8 +291,7 @@ class ScatterMPL(ScatterPlot):
         else:
             for name, sub in df.groupby(self._color_col):
                 ax.scatter(sub[self._xp_ware_i], sub[self._xp_ware_j], label=name)
-
-        plt.legend(title=None)
+            plt.legend(title=None)
 
         ax.set_xlabel(self.get_x_axis_name())
         ax.set_ylabel(self.get_y_axis_name())
