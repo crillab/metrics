@@ -26,8 +26,8 @@
 
 """
 This module provides various classes for parsing different types of files
-containing the output files of experiment-wares produced during a campaign, so
-as to extract the data it contains.
+containing the output of experiment-wares produced during a campaign, so as to
+extract the data they contain.
 """
 
 
@@ -42,7 +42,7 @@ from metrics.scalpel.parser.utils import CsvReader
 class CampaignOutputParser:
     """
     The CampaignOutputParser is the parent class for the parsers used to
-    read the output files produced by an experiment-ware.
+    read the output files produced by an experiment-ware during an experiment.
     """
 
     def __init__(self, listener: CampaignParserListener, file: str) -> None:
@@ -83,7 +83,7 @@ class CampaignOutputParser:
 class CsvCampaignOutputParser(CampaignOutputParser):
     """
     The CsvCampaignOutputParser is a parser that reads a CSV output file
-    produced by an experiment-ware.
+    produced by an experiment-ware during an experiment.
     """
 
     def __init__(self, listener: CampaignParserListener, file: str,
@@ -93,14 +93,13 @@ class CsvCampaignOutputParser(CampaignOutputParser):
 
         :param listener: The listener to notify while parsing.
         :param file: The path of the file to parse.
-        :param separator: The value separator, which is ',' by default.
+        :param separator: The value separator used in the CSV input.
         :param quote_char: The character used to quote the fields in the
-                           CSV file.
+                           CSV input, if any.
         """
         super().__init__(listener, file)
         self._separator = separator
         self._quote_char = quote_char
-        self._keys = []
 
     def _internal_parse(self, stream: TextIO) -> None:
         """
@@ -116,8 +115,8 @@ class CsvCampaignOutputParser(CampaignOutputParser):
 
 class JsonCampaignOutputParser(CampaignOutputParser):
     """
-    The JsonCampaignParser is a parser that reads the output of a campaign from
-    a JSON file produced by an experiment-ware.
+    The JsonCampaignOutputParser is a parser that reads the output of an
+     experiment from a JSON file produced by an experiment-ware.
     """
 
     def _internal_parse(self, stream: TextIO) -> None:
@@ -126,15 +125,14 @@ class JsonCampaignOutputParser(CampaignOutputParser):
 
         :param stream: The stream to read.
         """
-        self._read_json(load_json(stream))
+        self._read(load_json(stream))
 
-    def _read_json(self, json: Any, prefix: Optional[str] = None) -> None:
+    def _read(self, json: Any, prefix: Optional[str] = None) -> None:
         """
-        Explores the given (JSON) object, and notifies the listener during
-        the exploration.
+        Reads data from a (JSON) object by recursively exploring it.
 
         :param json: The JSON object to explore.
-        :param prefix: The prefix of the fields in the JSON object.
+        :param prefix: The prefix for the fields in the JSON object.
         """
         if isinstance(json, list):
             self._read_array(json, prefix)
@@ -155,19 +153,18 @@ class JsonCampaignOutputParser(CampaignOutputParser):
         """
         for key, value in obj.items():
             new_prefix = JsonCampaignOutputParser._create_prefix(prefix, key)
-            self._read_json(value, new_prefix)
+            self._read(value, new_prefix)
 
-    def _read_array(self, array: list, prefix: Optional[str]) -> None:
+    def _read_array(self, array: list, field: Optional[str]) -> None:
         """
         Explores the given JSON array, and notifies the listener during
         the exploration.
 
         :param array: The JSON array to explore.
-        :param prefix: The prefix of the elements in the JSON array.
+        :param field: The name of the field corresponding to the JSON array.
         """
-        for index, elt in enumerate(array):
-            new_prefix = JsonCampaignOutputParser._create_prefix(prefix, index)
-            self._read_json(elt, new_prefix)
+        for elt in array:
+            self._read(elt, field)
 
     @staticmethod
     def _create_prefix(prefix: Optional[str], field: Any) -> str:
@@ -184,20 +181,21 @@ class JsonCampaignOutputParser(CampaignOutputParser):
 
 class RawCampaignOutputParser(CampaignOutputParser):
     """
-    The ExperimentWareOutputCampaignParser is a parser that reads the raw
-    output of an experiment-ware.
+    The RawCampaignOutputParser is a parser that reads the raw output of an
+    experiment-ware.
     """
 
     def __init__(self, configuration: ScalpelConfiguration,
                  listener: CampaignParserListener,
                  file: str, file_path: str) -> None:
         """
-        Creates a new ExperimentWareOutputCampaignParser.
+        Creates a new RawCampaignOutputParser.
 
         :param configuration: The configuration describing how to extract
                data from the output file.
         :param listener: The listener to notify while parsing.
-        :param file: The path of the file to parse.
+        :param file: The name of the file to parse.
+        :param file_path: The path of the file to parse.
         """
         super().__init__(listener, file_path)
         self._configuration = configuration
@@ -210,9 +208,9 @@ class RawCampaignOutputParser(CampaignOutputParser):
         :param stream: The stream to read.
         """
         for line in stream:
-            self.parse_line(line)
+            self._parse_line(line)
 
-    def parse_line(self, line: str) -> None:
+    def _parse_line(self, line: str) -> None:
         """
         Parses the given line to extract data about the campaign.
 

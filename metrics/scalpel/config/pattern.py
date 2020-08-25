@@ -134,7 +134,8 @@ def compile_named_pattern(string: str) -> UserDefinedPattern:
 
     :return: The compiled pattern.
 
-    :raises: A ValueError is raised if the string does not contain a named pattern.
+    :raises: A ValueError is raised if the string does not contain a
+             named pattern.
     """
     for named_pattern in NamedPattern:
         pattern = named_pattern.compile(string)

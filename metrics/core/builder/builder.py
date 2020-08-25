@@ -162,6 +162,12 @@ class CampaignBuilder(ModelBuilder):
                                                         self._attribute_manager_sets.input_attr_set)
         return input_set
 
+    def has_experiment_ware_with_name(self, param):
+        return not self._attribute_manager_sets.xp_ware_attr_set.get_attribute_manager('name').is_unique(param)
+
+    def has_input_with_path(self, param):
+        return not self._attribute_manager_sets.input_attr_set.get_attribute_manager('path').is_unique(param)
+
 
 class ExperimentWareBuilder(ModelBuilder):
     """
@@ -211,6 +217,9 @@ class InputSetBuilder(ModelBuilder):
         """
         input = self['inputs'] = InputBuilder(self._input_attribute_set)
         return input
+
+    def has_input_with_path(self, param):
+        return not self._input_attribute_set.get_attribute_manager('path').is_unique(param)
 
 
 class InputBuilder(ModelBuilder):
@@ -278,12 +287,12 @@ class AttributeManagerSets:
     def _init_input_builder_attribute_set(self):
         self._input_attr_set.add_attribute_manager_for_typing(name='path', ordered_typing=[TypingStrategyEnum.STRING],
                                                               is_list=False, empty=False,
-                                                              nullable=False)
+                                                              nullable=False, unique=True)
 
     def _init_experiment_ware_builder_attribute_set(self):
         self._xp_ware_attr_set.add_attribute_manager_for_typing(name='name', ordered_typing=[TypingStrategyEnum.STRING],
                                                                 is_list=False, empty=False,
-                                                                nullable=False)
+                                                                nullable=False, unique=True)
 
     def _init_experiment_builder_attribute_set(self):
         self._xp_attr_set.add_attribute_manager_for_typing(name='input', ordered_typing=[TypingStrategyEnum.STRING], is_list=False,

@@ -25,13 +25,13 @@
 
 
 """
-This module provides utility classes wrapping the readers from the standard
-library to better fit Scalpel's needs.
+This module provides utility classes wrapping standard readers to better fit
+Scalpel's needs.
 """
 
 
 from csv import reader as load_csv
-from typing import Callable, Iterable, Iterator, List, Optional, TextIO, Tuple
+from typing import Callable, Iterable, List, Optional, TextIO, Tuple
 
 
 class CsvReader:
@@ -47,9 +47,9 @@ class CsvReader:
         Creates a new CsvReader.
 
         :param stream: The stream to read as a CSV input.
-        :param separator: The value separator, which is ',' by default.
+        :param separator: The value separator used in the CSV input.
         :param quote_char: The character used to quote the fields in the
-                           CSV file, if any.
+                           CSV input, if any.
         :param row_filter: The filter allowing to select which rows to consider
                            from the CSV stream.
         """
@@ -57,19 +57,38 @@ class CsvReader:
         self._separator = separator
         self._quote_char = quote_char
         self._row_filter = row_filter
+        self._line_iterator = None
         self._keys = []
 
     def read(self) -> Iterable[List[Tuple[str, str]]]:
         """
-        Parses the associated stream to extract data from this stream.
+        Parses the associated CSV stream to extract data from this stream.
 
-        :return: The data collected from the CSV file, given by key-value pairs.
+        :return: The data collected from the stream, given by key-value pairs.
         """
-        for line in self._internal_read():
+        self.read_header()
+        return self.read_content()
+
+    def read_header(self) -> List[str]:
+        """
+        Parses the associated CSV stream to extract its header.
+
+        :return: The header of the CSV stream.
+        """
+        self._line_iterator = iter(self._internal_read())
+        self._keys = next(self._line_iterator)
+        return self._keys
+
+    def read_content(self) -> Iterable[List[Tuple[str, str]]]:
+        """
+        Parses the associated CSV stream to extract its content.
+
+        :return: The content of the CSV stream.
+        """
+        for line in self._line_iterator:
             line = list(map(str.strip, line))
-            mapped = self._parse_line(line)
-            if mapped is not None:
-                yield mapped
+            if self._row_filter(line):
+                yield zip(self._keys, line)
 
     def _internal_read(self) -> Iterable[List[str]]:
         """
@@ -82,17 +101,3 @@ class CsvReader:
 
         return load_csv(self._stream, delimiter=self._separator,
                         quotechar=self._quote_char)
-
-    def _parse_line(self, line: List[str]) -> Optional[Iterator[Tuple[str, str]]]:
-        """
-        Parses the given line to extract the data it contains.
-
-        :param line: The line to parse.
-        """
-        if not self._keys:
-            # The header has not been read yet.
-            self._keys = line
-
-        elif self._row_filter(line):
-            # Reading the values of this line.
-            return zip(self._keys, line)

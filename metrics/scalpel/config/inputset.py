@@ -258,7 +258,7 @@ def create_input_set_reader(fmt: InputSetFormat, **kwargs) -> Callable[[Campaign
         return lambda l, s: _str_reader(FileListInputSetReader, l, s, **kwargs)
 
     if fmt == InputSetFormat.FILE:
-        return lambda l, s: _file_reader(l, s, **kwargs)
+        return lambda l, s: _file_reader(l, s[0], **kwargs)
 
     return lambda l, s: _str_reader(HierarchyInputSetReader, l, s[0], **kwargs)
 

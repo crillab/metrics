@@ -53,7 +53,7 @@ class CactusPlotly(CactusPlot):
 
         return [{
             'name': col,
-            'mode': 'lines+markers' if self.show_marker else 'lines',
+            'mode': 'lines+markers' if self._show_marker else 'lines',
             'marker.symbol': i % 10,
             'line.width': 2,
             'x': self.df_cactus.index,
@@ -85,9 +85,9 @@ class ScatterPlotly(ScatterPlot):
 
     def _get_data(self):
         return [{
-            'x': self.df_scatter[self.xp_ware_i],
-            'y': self.df_scatter[self.xp_ware_j],
-            'text': self.df_scatter.index,
+            'x': self._df_scatter[self._xp_ware_i],
+            'y': self._df_scatter[self._xp_ware_j],
+            'text': self._df_scatter.index,
             'mode': 'markers',
         }]
 
@@ -100,7 +100,7 @@ class ScatterPlotly(ScatterPlot):
             'y1': timeout,
             'type': 'line',
             'line': {'color': 'gray', 'width': 2, 'dash': opt[2]}
-        } for opt in [(self.min, self.min, 'dash'), (self.min, timeout, 'dot'), (timeout, self.min, 'dot')]
+        } for opt in [(self._min, self._min, 'dash'), (self._min, timeout, 'dot'), (timeout, self._min, 'dot')]
         ]
 
         return {

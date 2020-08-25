@@ -1,3 +1,6 @@
+import json
+import os
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -8,15 +11,25 @@ import datetime
 import io
 import dash_table
 import pandas as pd
+from dash.exceptions import PreventUpdate
+from flask_session import Session
+from flask import session
 
-from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.parser import CsvCampaignParser
-from metrics.studio.web.layout import configuration, box_plot, data_loading, plots, table
+from metrics.studio.web.layout import data_loading, plots, table
+from metrics.studio.web.util import create_listener, decode
+from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
+from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly
 
 PLOTLY_LOGO = "https://images.plot.ly/logo/new-branding/plotly-logomark.png"
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.server.secret_key = os.urandom(24)
+server = app.server
+SESSION_TYPE = 'memcached'
+Session(app)
+
 MAIN_MENU_TABS = {'Data loading': data_loading, 'Plots': plots, 'Table': table}
 
 navbar = dbc.Navbar(
@@ -48,6 +61,8 @@ app.layout = html.Div(className='container', children=[
 
 
 def parse_contents(contents, filename, date, separator=','):
+    if contents is None:
+        return []
     content_type, content_string = contents.split(',')
 
     decoded = base64.b64decode(content_string)
@@ -82,31 +97,34 @@ def parse_contents(contents, filename, date, separator=','):
               [State('upload-data', 'filename'),
                State('upload-data', 'last_modified'), State('sep', 'value')])
 def update_output(list_of_contents, list_of_names, list_of_dates, sep):
-    if list_of_contents is not None:
-        table_result, column = parse_contents(list_of_contents, list_of_names, list_of_dates, sep)
-        children = [table_result]
-        options = [{'label': i, 'value': i} for i in column]
-        return children, options, options, options
-    return list(), list(), list(), list()
+    if list_of_contents is None:
+        raise PreventUpdate
+    table_result, column = parse_contents(list_of_contents, list_of_names, list_of_dates, sep)
+    children = [table_result]
+    options = [{'label': i, 'value': i} for i in column]
+    return children, options, options, options
 
 
-@app.callback([Output('box', 'children')],
+@app.callback([Output('box', 'children'), Output('cactus', 'children')],
               [Input('xp-ware', 'value'), Input('time', 'value'),
                Input('input', 'value')],
-              [State('upload-data', 'filename'), State('upload-data', 'contents'),
-               State('upload-data', 'last_modified'), State('sep', 'value')])
-def read_campaign_and_generate_plot(xp_ware, time, input, filename, contents, last_modified, sep):
-    print(contents)
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def campaign_callback(xp_ware, time, input, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None:
+        raise PreventUpdate
+    campaign_df, campaign = create_campaign_df(contents, input, sep, time, xp_ware) if session.get('campaign',
+                                                                                                   None) is None \
+        else session.get('campaign')
+    session['campaign'] = json.dumps(campaign)
+    box = BoxPlotly(campaign_df)
+    cactus = CactusPlotly(campaign_df, show_marker=False)
+    return [dcc.Graph(figure=box.get_figure()), ], [dcc.Graph(figure=cactus.get_figure()), ]
 
-    listener = CampaignParserListener()
-    listener.add_key_mapping('experiment_ware', xp_ware)
-    listener.add_key_mapping('time', time)
-    listener.add_key_mapping('input', input)
 
-    content_type, content_string = contents.split(',')
-    decoded = base64.b64decode(content_string)
-    print(decoded)
+def create_campaign_df(contents, input, sep, time, xp_ware):
+    listener = create_listener(xp_ware, input, time)
     csv_parser = CsvCampaignParser(listener, separator=sep)
-    csv_parser.parse_stream(io.StringIO(decoded.decode('utf-8')))
+    csv_parser.parse_stream(decode(contents))
     campaign = listener.get_campaign()
-    return list(),
+    campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
+    return campaign_df, campaign

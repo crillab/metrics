@@ -139,7 +139,7 @@ class AttributeManagerForTyping(AttributeManager):
     AttributeManagerForTyping makes attention to give the same typing to all attributes where this attribute manager is associated.
     """
 
-    def __init__(self, name: str, ordered_typing: List[TypingStrategy], is_list: bool, empty: bool, nullable: bool):
+    def __init__(self, name: str, ordered_typing: List[TypingStrategy], is_list: bool, empty: bool, nullable: bool, unique: bool):
         """
         Creates a new AttributeManager for Builder.
         @param name: the attribute name of the object where this attribute manager is used.
@@ -152,6 +152,17 @@ class AttributeManagerForTyping(AttributeManager):
         self._initial_ordered_typing = ordered_typing
         self._ordered_typing = ordered_typing.copy()
 
+        self._set_of_verified_values = set() if unique else None
+
+    def is_unique(self, obj: Any):
+        return self._set_of_verified_values is None or obj not in self._set_of_verified_values
+
+    def _verify_unique(self, obj: Any):
+        if not self.is_unique(obj):
+            raise ValueError(f'{obj} value appearing twice in the item {self._name} (unique constraint).')
+        if self._set_of_verified_values is not None:
+            self._set_of_verified_values.add(obj)
+
     def verify(self, obj: Any) -> None:
         """
         Verifies if the current typing strategy corresponds to the object or try the next.
@@ -163,6 +174,8 @@ class AttributeManagerForTyping(AttributeManager):
                 raise TypeError(f'Item {self._name} cannot be None.')
             else:
                 return
+
+        self._verify_unique(obj)
 
         while self._ordered_typing:
             if self._ordered_typing[0].verify(obj):
@@ -193,6 +206,7 @@ class AttributeManagerSet:
         Creates an AttributeManagerSet.
         """
         self._attribute_managers = list()
+        self._attribute_managers_by_name = {}
 
     @property
     def attribute_managers(self):
@@ -202,9 +216,13 @@ class AttributeManagerSet:
         """
         return self._attribute_managers
 
+    def get_attribute_manager(self, name):
+        return self._attribute_managers_by_name[name]
+
     def add_attribute_manager_for_typing(self, name: str, ordered_typing: List[TypingStrategy], is_list: bool = False,
                                          empty: bool = True,
-                                         nullable: bool = True):
+                                         nullable: bool = True,
+                                         unique: bool = False):
         """
         Adds an attribute manager to a given attribute with the order of the different wanted typing in order of
         preference.
@@ -215,8 +233,9 @@ class AttributeManagerSet:
         @param nullable: True if this attribute could equal to None.
         @return: the attribute manager with these criteria.
         """
-        attr = AttributeManagerForTyping(name, ordered_typing, is_list, empty, nullable)
+        attr = AttributeManagerForTyping(name, ordered_typing, is_list, empty, nullable, unique)
         self._attribute_managers.append(attr)
+        self._attribute_managers_by_name[name] = attr
         return attr
 
     def add_attribute_manager_for_typing_finder(self, name: str, is_list: bool = False, empty: bool = True,
@@ -248,4 +267,5 @@ class AttributeManagerSet:
         """
         attr = AttributeManagerForBuilder(name, builder_type, is_list, empty, nullable)
         self._attribute_managers.append(attr)
+        self._attribute_managers_by_name[name] = attr
         return attr

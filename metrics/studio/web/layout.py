@@ -45,7 +45,7 @@ def data_loading():
         dbc.FormGroup(
             [
                 dbc.Label("Separator"),
-                dbc.Input(placeholder=",", type="text",id="sep"),
+                dbc.Input(placeholder=",", type="text", id="sep"),
                 dbc.FormText("CSV separator (default is ','"),
             ]
         ),
@@ -70,11 +70,11 @@ def data_loading():
 
 
 def scatter_plot():
-    pass
+    return [html.Div(id='scatter')]
 
 
 def cactus_plot():
-    pass
+    return [html.Div(id='cactus')]
 
 
 def statistics():
