@@ -29,7 +29,6 @@ This module provides classes for managing the configuration of Scalpel, which
 describes how to read the data collected during a campaign.
 """
 
-
 from __future__ import annotations
 
 from abc import ABC
@@ -93,7 +92,7 @@ class ScalpelConfiguration:
                  log_datas: Optional[Dict[str, List[LogData]]] = None,
                  hierarchy_depth: Optional[int] = None,
                  experiment_ware_depth: Optional[int] = None,
-                 custom_parser: Optional[str] = None,) -> None:
+                 custom_parser: Optional[str] = None, ) -> None:
         """
         Creates a new ScalpelConfiguration.
 
@@ -149,7 +148,7 @@ class ScalpelConfiguration:
                 return True
 
         if self._data_files is not None:
-            if any(fnmatch(data_file, file) for data_file in self._data_files):
+            if any(fnmatch(file, data_file) for data_file in self._data_files):
                 return True
 
         return False
