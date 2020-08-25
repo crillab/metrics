@@ -8,12 +8,11 @@ from metrics.scalpel import CampaignParserListener
 def create_listener(xp_ware, input, time) -> CampaignParserListener:
     listener = CampaignParserListener()
     listener.start_campaign()
-    listener.log_data('timeout', '14400')
+    listener.log_data('timeout', '5000')
     listener.log_data('memout', '14400')
     listener.log_data('name', 'Campaign')
-    listener.end_campaign()
     listener.add_key_mapping('experiment_ware', xp_ware)
-    listener.add_key_mapping('time', time)
+    listener.add_key_mapping('cpu_time', time)
     listener.add_key_mapping('input', input)
     return listener
 
