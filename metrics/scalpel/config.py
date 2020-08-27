@@ -32,15 +32,18 @@ describes how to read the data collected during a campaign.
 
 from __future__ import annotations
 
+from abc import ABC
+from collections import defaultdict
+from fnmatch import fnmatch
 from os import path, walk
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union, Any
 
-from yaml import safe_load
+from yaml import safe_load as load_yaml
 
 from metrics.scalpel.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.pattern import UserDefinedPattern
+from metrics.scalpel.pattern import UserDefinedPattern, compile_named_pattern, compile_regex
 
 
 class LogData:
@@ -85,21 +88,27 @@ class ScalpelConfiguration:
     relevant values to retrieve from this campaign.
     """
 
-    def __init__(self, fmt: CampaignFormat, main_file: str,
+    def __init__(self, fmt: Optional[CampaignFormat], main_file: str,
+                 data_files: Optional[List[str]] = None,
                  log_datas: Optional[Dict[str, List[LogData]]] = None,
                  custom_parser: Optional[str] = None) -> None:
         """
         Creates a new ScalpelConfiguration.
 
         :param fmt: The format in which the results of the campaign are stored.
-                    If None, the format will be guessed from a best effort basis.
+                    If None, the format will be guessed on a best effort basis.
         :param main_file: The path of the main file containing data about the
                           campaign.
+        :param data_files: The names of the files to be considered for each experiment
+                           (wildcards are allowed).
         :param log_datas: The description of the data to extract from the different
                           files of the campaign.
+        :param custom_parser: The (completely specified) class of the parser to use to
+                              parse the campaign.
         """
         self._format = fmt
         self._main_file = main_file
+        self._data_files = data_files
         self._log_datas = log_datas
         self._custom_parser = custom_parser
 
@@ -121,49 +130,25 @@ class ScalpelConfiguration:
         :raises: A ValueError is raised if the format was not specified and
                  guessing the format of the campaign has failed.
         """
-        if self._format is None:
-            return self._guess_format()
         return self._format
 
-    def _guess_format(self) -> CampaignFormat:
+    def is_to_be_parsed(self, file: str) -> bool:
         """
-        Guesses the format of the campaign to parse.
+        CHecks whether the given file must be parsed by Scalpel.
 
-        :return: The guessed format of the campaign.
+        :param file: The name of the file to check (not its path).
 
-        :raises: A ValueError is raised if it is not possible to guess the
-                 format of the campaign.
+        :return: Whether the file must be parsed.
         """
-        if path.isdir(self._main_file):
-            return self._guess_directory_format()
-        if path.exists(self._main_file):
-            return self._guess_regular_format()
-        raise ValueError(f'{self._main_file}: No such file or directory.')
+        if self._log_datas is not None:
+            if file in self._log_datas.keys():
+                return True
 
-    def _guess_regular_format(self):
-        """
-        Guesses the format of the campaign to parse when stored in a regular file.
+        if self._data_files is not None:
+            if any(fnmatch(data_file, file) for data_file in self._data_files):
+                return True
 
-        :return: The format of the campaign, guessed from the extension of its
-                 main file.
-
-        :raises: A ValueError is raised if it is not possible to guess the
-                 format of the campaign.
-        """
-        index = self._main_file.rindex('.')
-        return CampaignFormat.value_of(self._main_file[index + 1:])
-
-    def _guess_directory_format(self):
-        """
-        Guesses the format of the campaign to parse when stored in a directory.
-
-        :return: The format of the campaign, guessed from the deepness of the
-                 file hierarchy rooted at the main file of this campaign.
-        """
-        for _, dirs, _ in walk(self._main_file):
-            if dirs:
-                return CampaignFormat.DEEP_LOG_DIRECTORY
-        return CampaignFormat.FLAT_LOG_DIRECTORY
+        return False
 
     def get_files(self) -> Iterable[str]:
         """
@@ -195,10 +180,324 @@ class ScalpelConfiguration:
         return self._custom_parser
 
 
+class ConfigurationIterator:
+    """
+    The ConfigurationIterator allows to iterate over a specific part of
+    Scalpel's configuration.
+    """
+
+    def has_next(self) -> bool:
+        """
+        Checks whether there is a next configuration element.
+
+        :return: If there is a next configuration element.
+        """
+        raise NotImplementedError('Method "has_next()" is abstract!')
+
+    def next(self) -> None:
+        """
+        Moves to the next configuration element.
+        By default, this method does nothing.
+        """
+        pass
+
+
+class EmptyConfigurationIterator(ConfigurationIterator):
+    """
+    The EmptyConfigurationIterator is the parent class for all ConfigurationIterator
+    that do not contain any element.
+    """
+
+    def has_next(self) -> bool:
+        """
+        Checks whether there is a next configuration element.
+
+        :return: If there is a next configuration element.
+        """
+        return False
+
+
+class ListConfigurationIterator(ConfigurationIterator):
+    """
+    The ListConfigurationIterator adapts a classical iterable to a
+    ConfigurationIterator.
+    """
+
+    def __init__(self, adaptee: Iterable):
+        """
+        Creates a new ListConfigurationIterator.
+
+        :param adaptee: The iterable element to adapt.
+        """
+        self._adaptee = list(adaptee)
+        self._index = 0
+
+    def has_next(self) -> bool:
+        """
+        Checks whether there is a next configuration element.
+
+        :return: If there is a next configuration element.
+        """
+        return self._index < len(self._adaptee)
+
+    def current(self) -> Any:
+        """
+        Checks whether there is a next configuration element.
+
+        :return: The current configuration element.
+        """
+        return self._adaptee[self._index]
+
+    def next(self):
+        """
+        Moves to the next configuration element.
+
+        By default, this method does nothing.
+        """
+        self._index += 1
+
+
+class MappingConfiguration(ConfigurationIterator, ABC):
+    """
+    The MappingConfiguration defines the property of the mapping configuration.
+    """
+
+    def get_scalpel_key(self) -> str:
+        """
+        Gives the key expected by Scalpel for the current element.
+
+        :return: The key expected by Scalpel.
+        """
+        raise NotImplementedError('Method "get_scalpel_key()" is abstract!')
+
+    def get_campaign_key(self) -> Union[str, List[str]]:
+        """
+        Gives the actual key(s) appearing in the campaign for the current element.
+
+        :return: The actual key of the campaign.
+        """
+        raise NotImplementedError('Method "get_campaign_key()" is abstract!')
+
+
+class EmptyMappingConfiguration(EmptyConfigurationIterator, MappingConfiguration):
+    """
+    The EmptyMappingConfiguration is a MappingConfiguration with no element.
+    """
+
+    def get_scalpel_key(self) -> str:
+        """
+        Gives the key expected by Scalpel for the current element.
+
+        :return: The key expected by Scalpel.
+        """
+        raise ValueError('Empty mapping configuration!')
+
+    def get_campaign_key(self) -> Union[str, List[str]]:
+        """
+        Gives the actual key(s) appearing in the campaign for the current element.
+
+        :return: The actual key of the campaign.
+        """
+        raise ValueError('Empty mapping configuration!')
+
+
+class DictionaryMappingConfiguration(ListConfigurationIterator, MappingConfiguration):
+    """
+    The DictionaryMappingConfiguration allows to extract a MappingConfiguration from a dictionary.
+    """
+
+    def __init__(self, mapping: Dict[str, Union[str, List[str]]]):
+        """
+        Creates a new DictionaryMappingConfiguration.
+
+        :param mapping: The dictionary containing the configuration.
+        """
+        super().__init__(mapping.keys())
+        self._mapping = mapping
+
+    def get_scalpel_key(self) -> str:
+        """
+        Gives the key expected by Scalpel for the current element.
+
+        :return: The key expected by Scalpel.
+        """
+        return self.current()
+
+    def get_campaign_key(self) -> Union[str, List[str]]:
+        """
+        Gives the actual key(s) appearing in the campaign for the current element.
+
+        :return: The actual key of the campaign.
+        """
+        return self._mapping[self.current()]
+
+
+class RawDataConfiguration(ConfigurationIterator, ABC):
+    """
+    The MappingConfiguration defines the property of the raw data configuration.
+    """
+
+    def get_name(self) -> str:
+        """
+        Gives the name of the current raw data.
+
+        :return: The name of the raw data.
+        """
+        raise NotImplementedError('Method "get_campaign_key()" is abstract!')
+
+    def get_file(self) -> str:
+        """
+        Gives the file from which to retrieve the current raw data.
+
+        :return: The file containing the raw data.
+        """
+        raise NotImplementedError('Method "get_file()" is abstract!')
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        """
+        Gives the simplified pattern identifying the current raw data.
+
+        :return: The simplified pattern for the raw data, if any.
+        """
+        raise NotImplementedError('Method "get_simplified_pattern()" is abstract!')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        """
+        Gives the regular expression identifying the current raw data.
+
+        :return: The regular expression for the raw data, if any.
+        """
+        raise NotImplementedError('Method "get_regex_pattern()" is abstract!')
+
+    def get_regex_group(self) -> Optional[int]:
+        """
+        Gives the group identifying the current raw data in the regular expression.
+
+        :return: The group in the regular expression, if any.
+        """
+        raise NotImplementedError('Method "get_regex_group()" is abstract!')
+
+    def get_compiled_pattern(self) -> UserDefinedPattern:
+        """
+        Gives the compiled pattern identifying the current raw data.
+
+        :return: The compiled pattern.
+
+        :raises ValueError: A ValueError is raised if no simplified pattern nor
+                            regular expression was specified for the raw data.
+        """
+        # First, we look for a named pattern.
+        simplified_pattern = self.get_simplified_pattern()
+        if simplified_pattern is not None:
+            return compile_named_pattern(simplified_pattern)
+
+        # There is no look pattern: trying a regular expression.
+        regex = self.get_regex_pattern()
+        group = self.get_regex_group()
+        if regex is not None:
+            group = 1 if group is None else group
+            return compile_regex(regex, group)
+
+        # The description of the data is missing!
+        raise ValueError('A pattern or regex is missing!')
+
+
+class EmptyRawDataConfiguration(EmptyConfigurationIterator, RawDataConfiguration):
+    """
+    The EmptyRawDataConfiguration is a RawDataConfiguration with no element.
+    """
+
+    def get_name(self) -> str:
+        """
+        Gives the name of the current raw data.
+
+        :return: The name of the raw data.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+    def get_file(self) -> str:
+        """
+        Gives the file from which to retrieve the current raw data.
+
+        :return: The file containing the raw data.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        """
+        Gives the simplified pattern identifying the current raw data.
+
+        :return: The simplified pattern for the raw data, if any.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        """
+        Gives the regular expression identifying the current raw data.
+
+        :return: The regular expression for the raw data, if any.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+    def get_regex_group(self) -> Optional[int]:
+        """
+        Gives the group identifying the current raw data in the regular expression.
+
+        :return: The group in the regular expression, if any.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+
+class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfiguration):
+    """
+    The DictionaryRawDataConfiguration allows to extract a RawDataConfiguration from a
+    list of dictionaries.
+    """
+
+    def get_name(self) -> str:
+        """
+        Gives the name of the current raw data.
+
+        :return: The name of the raw data.
+        """
+        return self.current().get('log-data')
+
+    def get_file(self) -> str:
+        """
+        Gives the file from which to retrieve the current raw data.
+
+        :return: The file containing the raw data.
+        """
+        return self.current().get('file')
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        """
+        Gives the simplified pattern identifying the current raw data.
+
+        :return: The simplified pattern for the raw data, if any.
+        """
+        return self.current().get('pattern')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        """
+        Gives the regular expression identifying the current raw data.
+
+        :return: The regular expression for the raw data, if any.
+        """
+        return self.current().get('regex')
+
+    def get_regex_group(self) -> Optional[int]:
+        """
+        Gives the group identifying the current raw data in the regular expression.
+
+        :return: The group in the regular expression, if any.
+        """
+        return self.current().get('group')
+
+
 class ScalpelConfigurationBuilder:
     """
-    The ScalpelConfigurationBuilder allows to build Scalpel's configuration
-    from YAML.
+    The ScalpelConfigurationBuilder allows to build Scalpel's configuration.
     """
 
     def __init__(self, listener: CampaignParserListener) -> None:
@@ -211,19 +510,46 @@ class ScalpelConfigurationBuilder:
         self._listener = listener
         self._format = None
         self._main_file = None
+        self._data_files = None
+        self._log_datas = defaultdict(list)
+        self._custom_parser = None
+
+    def build(self) -> ScalpelConfiguration:
+        """
+        Builds the configuration of Scalpel, as specified by the user.
+
+        :return: The built configuration.
+        """
+        self._listener.start_campaign()
+        self.read_mapping()
+        self.read_metadata()
+        self.read_setup()
+        self.read_experiment_wares()
+        self.read_input_set()
+        self.read_source()
+        self.read_data_files()
+        return ScalpelConfiguration(self._format, self._main_file,
+                                    self._data_files, self._log_datas,
+                                    self._custom_parser)
 
     def read_mapping(self) -> None:
         """
-        Reads the mapping associating each log variable to a variable recognized by Scalpel.
+        Reads the mapping allowing to retrieve the data wanted by Scalpel from
+        the experiment files.
         """
-        for scalpel_key, campaign_key in self._get_mapping():
+        mapping = self._get_mapping()
+        while mapping.has_next():
+            scalpel_key = mapping.get_scalpel_key()
+            campaign_key = mapping.get_campaign_key()
             self._listener.add_key_mapping(scalpel_key, campaign_key)
+            mapping.next()
 
-    def _get_mapping(self) -> Iterable[Tuple[str, Union[List[str], str]]]:
+    def _get_mapping(self) -> MappingConfiguration:
         """
-        Gives the mapping associating each log variable to a variable recognized by Scalpel.
+        Gives the mapping configuration object allowing to retrieve the data
+        expected by Scalpel from the experiment files.
 
-        :return: The mapping of the variables
+        :return: The configuration for the mapping.
         """
         raise NotImplementedError('Method "_get_mapping()" is abstract!')
 
@@ -231,10 +557,10 @@ class ScalpelConfigurationBuilder:
         """
         Reads the description of the campaign to parse.
         """
-        self._listener.log_data('name', self._get_campaign_name())
-        self._listener.log_data('date', self._get_campaign_date())
+        self._log_data('name', self._get_campaign_name())
+        self._log_data('date', self._get_campaign_date())
 
-    def _get_campaign_name(self) -> str:
+    def _get_campaign_name(self) -> Optional[str]:
         """
         Gives the name of the campaign being considered.
 
@@ -242,7 +568,7 @@ class ScalpelConfigurationBuilder:
         """
         raise NotImplementedError('Method "_get_campaign_name()" is abstract!')
 
-    def _get_campaign_date(self) -> str:
+    def _get_campaign_date(self) -> Optional[str]:
         """
         Gives the date of the campaign being considered.
 
@@ -254,21 +580,22 @@ class ScalpelConfigurationBuilder:
         """
         Reads the description of the experimental setup.
         """
-        self._listener.log_data('os', self._get_os_description())
-        self._listener.log_data('cpu', self._get_cpu_description())
-        self._listener.log_data('memory', self._get_total_memory())
-        self._listener.log_data('timeout', self._get_time_out())
-        self._listener.log_data('memout', self._get_memory_out())
+        self._log_data('os', self._get_os_description())
+        self._log_data('cpu', self._get_cpu_description())
+        self._log_data('memory', self._get_total_memory())
+        self._log_data('timeout', self._get_time_out())
+        self._log_data('memout', self._get_memory_out())
 
-    def _get_os_description(self) -> str:
+    def _get_os_description(self) -> Optional[str]:
         """
-        Gives the description of the operating system on which the campaign has been executed.
+        Gives the description of the operating system on which the campaign has
+        been executed.
 
         :return: The description of the OS.
         """
         raise NotImplementedError('Method "_get_os_description()" is abstract!')
 
-    def _get_cpu_description(self) -> str:
+    def _get_cpu_description(self) -> Optional[str]:
         """
         Gives the description of the CPU of the machine(s) on which the campaign
         has been executed.
@@ -277,7 +604,7 @@ class ScalpelConfigurationBuilder:
         """
         raise NotImplementedError('Method "_get_cpu_description()" is abstract!')
 
-    def _get_total_memory(self) -> str:
+    def _get_total_memory(self) -> Optional[str]:
         """
         Gives the total amount of memory available on the machine(s) on which the
         campaign has been executed.
@@ -286,44 +613,157 @@ class ScalpelConfigurationBuilder:
         """
         raise NotImplementedError('Method "_get_total_memory()" is abstract!')
 
-    def _get_time_out(self) -> str:
+    def _get_time_out(self) -> Optional[str]:
         """
         Gives the time limit set to the experiments in this campaign.
 
-        :return: The set time limit.
+        :return: The configured time limit.
         """
         raise NotImplementedError('Method "_get_time_out()" is abstract!')
 
-    def _get_memory_out(self) -> str:
+    def _get_memory_out(self) -> Optional[str]:
         """
         Gives the memory limit set to the experiments in this campaign.
 
-        :return: The set memoru limit.
+        :return: The set configured limit.
         """
         raise NotImplementedError('Method "_get_memory_out()" is abstract!')
 
     def read_experiment_wares(self) -> None:
+        """
+        Reads the experiment-wares that are considered in the campaign being
+        parsed by Scalpel.
+        """
         raise NotImplementedError('Method "read_experiment_wares()" is abstract!')
 
     def read_input_set(self) -> None:
+        """
+        Reads the input set considered in the campaign being parsed by Scalpel.
+        """
         raise NotImplementedError('Method "read_input_data()" is abstract!')
 
-    def read_log_data(self) -> None:
-        raise NotImplementedError('Method "read_experiment_data()" is abstract!')
-
     def read_source(self) -> None:
-        raise NotImplementedError('Method "read_source()" is abstract!')
+        """
+        Reads the description of the source from which the campaign is to
+        be parsed.
+        """
+        self._main_file = self._get_campaign_path()
+        self._format = self._guess_format()
+        self._format = self._get_format()
+        self._custom_parser = self._get_custom_parser()
 
-    def build(self) -> ScalpelConfiguration:
-        self._listener.start_campaign()
-        self.read_mapping()
-        self.read_metadata()
-        self.read_setup()
-        self.read_experiment_wares()
-        self.read_input_set()
-        self.read_source()
-        self.read_log_data()
-        return ScalpelConfiguration(self._format, self._main_file)
+    def _get_campaign_path(self) -> str:
+        """
+        Gives the path of the file containing all the data about the campaign.
+        This file may be either a regular file or a directory.
+
+        :return: The path to the main file of the campaign.
+        """
+        raise NotImplementedError('Method "_get_campaign_path()" is abstract!')
+
+    def _get_format(self) -> Optional[CampaignFormat]:
+        """
+        Gives the format of the campaign to parse.
+        If not specified, the format is guessed on a best effort basis.
+
+        :return: The format of the campaign to parse, if any.
+        """
+        raise NotImplementedError('Method "_get_format()" is abstract!')
+
+    def _guess_format(self) -> Optional[CampaignFormat]:
+        """
+        Guesses the format of the campaign to parse.
+
+        :return: The guessed format of the campaign, or None if it could
+                 not be guessed.
+        """
+        if path.isdir(self._main_file):
+            return self._guess_directory_format()
+        if path.exists(self._main_file):
+            return self._guess_regular_format()
+        return None
+
+    def _guess_directory_format(self) -> Optional[CampaignFormat]:
+        """
+        Guesses the format of the campaign to parse when stored in a directory.
+
+        :return: The format of the campaign, guessed from the deepness of the
+                 file hierarchy rooted at the main file of this campaign.
+        """
+        for _, dirs, _ in walk(self._main_file):
+            if dirs:
+                return CampaignFormat.DEEP_LOG_DIRECTORY
+        return CampaignFormat.FLAT_LOG_DIRECTORY
+
+    def _guess_regular_format(self) -> Optional[CampaignFormat]:
+        """
+        Guesses the format of the campaign to parse when stored in a regular file.
+
+        :return: The format of the campaign, guessed from the extension of its
+                 main file, or None if it could not be guessed.
+        """
+        try:
+            index = self._main_file.rindex('.')
+            return CampaignFormat.value_of(self._main_file[index + 1:])
+        except ValueError:
+            return None
+
+    def _get_custom_parser(self) -> Optional[str]:
+        """
+        Gives the (completely specified) class of the custom parser to use to parse
+        the campaign, if any.
+
+        :return: The class of the parser to use
+        """
+        raise NotImplementedError('Method "_get_custom_parser()" is abstract!')
+
+    def read_data_files(self) -> None:
+        """
+        Reads the files from which Scalpel will extract relevant data for the
+        analysis.
+        Such files are only meaningful when the campaign is stored in a
+        directory.
+        """
+        raw_data = self._get_raw_data()
+        while raw_data.has_next():
+            file = raw_data.get_file()
+            name = raw_data.get_name()
+            pattern = raw_data.get_compiled_pattern()
+            self._log_datas[file].append(LogData(name, pattern))
+            raw_data.next()
+        self._data_files = self._get_data_files()
+
+    def _get_raw_data(self) -> RawDataConfiguration:
+        """
+        Gives the raw data configuration, which describes how to extract data
+        from the log files of the experiment-wares.
+        Such data is only meaningful when the campaign is stored in a
+        directory.
+
+        :return: The raw data configuration.
+        """
+        raise NotImplementedError('Method "_get_raw_data()" is abstract!')
+
+    def _get_data_files(self) -> Iterable[str]:
+        """
+        Gives the output files to consider for each experiment, which must be in
+        a format that Scalpel natively recognizes (JSON, CSV, etc.).
+        Such files are only meaningful when the campaign is stored in a "deep"
+        file hierarchy.
+
+        :return: The raw data configuration.
+        """
+        raise NotImplementedError('Method "_get_data_files()" is abstract!')
+
+    def _log_data(self, key: str, value: Optional[str]) -> None:
+        """
+        Notifies the listener about data that has been read.
+
+        :param key: The key identifying the read data.
+        :param value: The value that has been read.
+        """
+        if value is not None:
+            self._listener.log_data(key, value)
 
 
 class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
@@ -337,13 +777,25 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         super().__init__(listener)
         self._dict_config = dict_config
 
-    def _get_mapping(self):
+    def _get(self, key: str) -> dict:
         """
-        Gives the mapping associating each log variable to a variable recognized by Scalpel.
+        Gives the dictionary containing the configuration for the specified key.
 
-        :return: The mapping of the variables
+        :return: The configuration for the specified key, or an empty dictionary
+                 if the configuration is not specified.
         """
-        return self._dict_config['data']['mapping'].items()
+        config = self._dict_config.get(key)
+        return {} if config is None else config
+
+    def _get_mapping(self) -> MappingConfiguration:
+        """
+        Gives the mapping configuration object allowing to retrieve the data
+        expected by Scalpel from the experiment files.
+
+        :return: The configuration for the mapping.
+        """
+        mapping = self._get('data').get('mapping')
+        return EmptyMappingConfiguration() if mapping is None else DictionaryMappingConfiguration(mapping)
 
     def _get_campaign_name(self) -> str:
         """
@@ -367,7 +819,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
 
         :return: The description of the OS.
         """
-        return self._dict_config.get('setup').get('os')
+        return self._get('setup').get('os')
 
     def _get_cpu_description(self) -> str:
         """
@@ -376,7 +828,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
 
         :return: The description of the CPU.
         """
-        return self._dict_config.get('setup').get('cpu')
+        return self._get('setup').get('cpu')
 
     def _get_total_memory(self) -> str:
         """
@@ -385,7 +837,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
 
         :return: The total amount of memory.
         """
-        return self._dict_config.get('setup').get('ram')
+        return self._get('setup').get('ram')
 
     def _get_time_out(self) -> str:
         """
@@ -393,37 +845,90 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
 
         :return: The set time limit.
         """
-        return str(self._dict_config.get('setup').get('timeout'))
+        return str(self._get('setup').get('timeout'))
 
     def _get_memory_out(self) -> str:
         """
         Gives the memory limit set to the experiments in this campaign.
 
-        :return: The set memoru limit.
+        :return: The set memory limit.
         """
-        return str(self._dict_config.get('setup').get('memout'))
+        return str(self._get('setup').get('memout'))
 
-    def read_experiment_wares(self) -> 'ScalpelConfigurationBuilder':
+    def read_experiment_wares(self) -> None:
+        """
+        Reads the experiment-wares that are considered in the campaign being
+        parsed by Scalpel.
+        """
         for xp_ware in self._dict_config['experiment-wares']:
             self._listener.start_experiment_ware()
             self._listener.log_data('name', xp_ware)
             self._listener.end_experiment_ware()
-        return self
 
-
-    def read_input_set(self) -> 'ScalpelConfigurationBuilder':
+    def read_input_set(self) -> None:
+        """
+        Reads the input set considered in the campaign being parsed by Scalpel.
+        """
         self._listener.start_input_set()
         fmt = InputSetFormat.value_of(self._dict_config['input-set']['type'])
         name = self._dict_config['input-set']['name']
         self._listener.log_data('name', name)
-        create_input_set_reader(fmt)(self._listener, self._dict_config['input-set']['path-list'][0])
+        create_input_set_reader(fmt)(self._listener, self._dict_config['input-set']['path-list'])
         self._listener.end_input_set()
 
-    def read_log_data(self) -> 'ScalpelConfigurationBuilder':
-        self._main_file = self._dict_config['source']['path']
+    def _get_campaign_path(self) -> str:
+        """
+        Gives the path of the file containing all the data about the campaign.
+        This file may be either a regular file or a directory.
 
-    def read_source(self) -> None:
-        pass
+        :return: The path to the main file of the campaign.
+        """
+        return self._get('source').get('path')
+
+    def _get_format(self) -> Optional[CampaignFormat]:
+        """
+        Gives the format of the campaign to parse.
+        If not specified, the format is guessed on a best effort basis.
+
+        :return: The format of the campaign to parse, if any.
+        """
+        fmt = self._get('source').get('format')
+        if fmt is None:
+            return self._format
+        return CampaignFormat.value_of(fmt)
+
+    def _get_custom_parser(self) -> Optional[str]:
+        """
+        Gives the (completely specified) class of the custom parser to use to parse
+        the campaign, if any.
+
+        :return: The class of the parser to use
+        """
+        return self._get('source').get('parser')
+
+    def _get_raw_data(self) -> RawDataConfiguration:
+        """
+        Gives the raw data configuration, which describes how to extract data
+        from the log files of the experiment-wares.
+        Such data is only meaningful when the campaign is stored in a
+        directory.
+
+        :return: The raw data configuration.
+        """
+        data = self._get('data').get('raw-data')
+        return EmptyRawDataConfiguration() if data is None else DictionaryRawDataConfiguration(data)
+
+    def _get_data_files(self) -> Iterable[str]:
+        """
+        Gives the output files to consider for each experiment, which must be in
+        a format that Scalpel natively recognizes (JSON, CSV, etc.).
+        Such files are only meaningful when the campaign is stored in a "deep"
+        file hierarchy.
+
+        :return: The raw data configuration.
+        """
+        files = self._get('data').get('data-files')
+        return [] if files is None else files
 
 
 def read_configuration(yaml_file: str, listener: CampaignParserListener) -> ScalpelConfiguration:
@@ -437,6 +942,6 @@ def read_configuration(yaml_file: str, listener: CampaignParserListener) -> Scal
     :return: The read configuration.
     """
     with open(yaml_file, 'r') as yaml_stream:
-        yaml = safe_load(yaml_stream)
+        yaml = load_yaml(yaml_stream)
         builder = DictionaryScalpelConfigurationBuilder(yaml, listener)
         return builder.build()
