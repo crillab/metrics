@@ -1,8 +1,9 @@
 import json
 import unittest
 
+import jsonpickle
+
 from metrics.core.builder.builder import CampaignBuilder
-from metrics.core.json_manager import CampaignEncoder
 from metrics.core.model import Campaign
 
 
@@ -100,7 +101,7 @@ class CampaignTestCase(unittest.TestCase):
 
     def test_success_export_campaign(self):
         c = self.cb.build()
-        json_c = json.dumps(c, indent=4, cls=CampaignEncoder)
+        json_c = jsonpickle.encode(c, unpicklable=False)
         self.assertEqual(JSON_CAMPAIGN, json.loads(json_c))
 
     def test_success_access_campaign_attr(self):
