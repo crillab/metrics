@@ -27,6 +27,7 @@ deploy_cril:
     tags:
         - docker
     script:
+        - cat $HOME/.docker/config.json
         - make docker-push
     needs: ["build"]
     environment:
