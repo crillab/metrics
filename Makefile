@@ -101,6 +101,8 @@ upload:
 
 docker-build:
 	docker build -t $(DOCKER_ORGANIZATION)/$(MODULE_NAME):latest .
+docker-push:
+	docker push $(DOCKER_ORGANIZATION)/$(MODULE_NAME):latest
 
 #####################
 ## Utility Targets ##

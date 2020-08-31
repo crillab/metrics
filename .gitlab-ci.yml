@@ -1,6 +1,4 @@
 before_script:
-  # docker login asks for the password to be passed through stdin for security
-  # we use $CI_JOB_TOKEN here which is a special token provided by GitLab
   - export http_proxy=$HTTP_PROXY
   - export https_proxy=$HTTP_PROXY
   #- echo -n $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
@@ -29,7 +27,7 @@ deploy_cril:
     tags:
         - docker
     script:
-        - docker push thibaultfalque/metrics:latest
+        - make docker-push
     needs: ["build"]
     environment:
         name: staging
