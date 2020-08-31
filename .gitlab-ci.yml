@@ -22,7 +22,7 @@ deploy_cril:
     tags:
         - docker
     script:
-        - echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin -p 
+        - echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
         - docker push thibaultfalque/metrics:latest
     needs: ["build"]
     environment:
