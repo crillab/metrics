@@ -28,9 +28,9 @@
 This module provides various classes for parsing different types of files
 containing the results of a campaign, so as to build its representation.
 """
-
-
+import glob
 from os import path, scandir
+from os.path import basename, splitext
 from typing import List, Optional, TextIO
 
 from metrics.scalpel.config import ScalpelConfiguration
@@ -385,3 +385,44 @@ class FlatDirectoryCampaignParser(DirectoryCampaignParser):
                 parser = self._get_parser_for(file.name, path.join(root, file.name))
                 parser.parse()
                 self.end_experiment()
+
+
+class MultipleFilesCampaignParser(DirectoryCampaignParser):
+    """
+    The MultipleFilesCampaignParser allows to extract the data collected during
+    a campaign when they are stored in a single directory, in which all files
+    with the same name correspond to exactly one experiment.
+    """
+
+    def __init__(self, configuration: ScalpelConfiguration,
+                 listener: CampaignParserListener) -> None:
+        """
+        Creates a new FlatDirectoryCampaignParser.
+
+        :param configuration: The configuration describing how to extract
+               data from the output file.
+        :param listener: The listener to notify while parsing.
+        """
+        super().__init__(configuration, listener)
+
+    def explore(self, root: str) -> None:
+        """
+        Explores the file hierarchy rooted at the given directory.
+
+        :param root:  The root directory of the file hierarchy to explore.
+        """
+        names = set()
+        with scandir(root) as root_dir:
+            for file in root_dir:
+                names.add(self._get_extension(file.name))
+        for n in names:
+            self.start_experiment()
+            for file in glob.glob(f'{path.join(root,n)}.*'):
+                if self._configuration.is_to_be_parsed(file):
+                    parser = self._get_parser_for(file, path.join(root, file))
+                    parser.parse()
+            self.end_experiment()
+
+    @staticmethod
+    def _get_extension(filename):
+        return splitext(filename)[0]
