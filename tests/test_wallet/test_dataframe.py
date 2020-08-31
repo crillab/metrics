@@ -3,6 +3,10 @@ from __future__ import annotations
 import os
 import unittest
 
+import jsonpickle as jsonpickle
+import jsonpickle.ext.pandas as jsonpickle_pd
+jsonpickle_pd.register_handlers()
+
 from tests.test_core.json_reader import JsonReader
 from metrics.wallet.dataframe.builder import *
 from metrics.wallet.dataframe.dataframe import CampaignDFFilter
@@ -50,9 +54,14 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
         cls.campaign_df = CampaignDataFrameBuilder(cls.campaign).build_from_campaign()
         cls.campaign_df.data_frame['success'] = cls.campaign_df.data_frame.apply((lambda x: x['cpu_time'] < cls.campaign.timeout), axis=1)
 
+        cdf = cls.campaign_df
+        json_cdf = jsonpickle.encode(cdf)
+        cls.campaign_df = jsonpickle.decode(json_cdf)
+
     def test_data_frame(self):
         self.assertEqual(list(self.campaign_df.data_frame.columns),
-                         ['input', 'experiment_ware', 'cpu_time', 'start_time', 'status', 'Constraints_arities', 'Constraints_distribution', 'Variables_degrees', 'family', 'date', 'success'])
+                         ['input', 'experiment_ware', 'cpu_time', 'start_time', 'status', 'Constraints_arities',
+                          'Constraints_distribution', 'Variables_degrees', 'family', 'date', 'success'])
         self.assertEqual(1500, len(self.campaign_df.data_frame))
 
     def test_delete_common_timeout(self):
