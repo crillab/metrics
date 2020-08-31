@@ -1,3 +1,8 @@
+before_script:
+  # docker login asks for the password to be passed through stdin for security
+  # we use $CI_JOB_TOKEN here which is a special token provided by GitLab
+  - echo -n $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
 test:
     script:
         - make test
@@ -25,6 +30,6 @@ deploy_cril:
         - docker push thibaultfalque/metrics:latest
     needs: ["build"]
     environment:
-        name: CRIL_ENV
+        name: staging
     only:
         - web
