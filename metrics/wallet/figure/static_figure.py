@@ -133,7 +133,7 @@ class CactusMPL(CactusPlot):
         if self._legend_location is None:
             ax.legend().remove()
         else:
-            self._set_legend(ax)
+            self._set_legend(df, ax)
 
         ax.set_xlim(self._get_x_lim(ax))
         ax.set_ylim(self._get_y_lim(ax))
@@ -149,7 +149,7 @@ class CactusMPL(CactusPlot):
         kwargs = [
             {
                 'color': self._color_map.get(x) if self._color_map else None,
-                'linewidth': 3 if x in self._campaign_df.vbew_names else 1,
+                'linewidth': 3 if x in self._campaign_df.vbew_names else 2,
                 'marker': 'o' if self._show_marker else None,
             } for x in df.columns
         ]
@@ -160,13 +160,21 @@ class CactusMPL(CactusPlot):
             else:
                 ax.plot(df.index, df[col], styles[i], label=self._get_final_xpware_name(col), **(kwargs[i]))
 
-    def _set_legend(self, ax):
+    def _set_legend(self, df, ax):
+        colors = ['lightgray' if self._style_map.get(x) == ' ' else 'black' for x in df.columns] if self._style_map else None
+
         if self._xp_ware_name_map is None:
-            ax.legend(self.get_data_frame().columns, loc=self._legend_location, bbox_to_anchor=self._bbox_to_anchor,
+            leg = ax.legend(self.get_data_frame().columns, loc=self._legend_location, bbox_to_anchor=self._bbox_to_anchor,
                       ncol=self._ncol_legend)
         else:
-            ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns], loc=self._legend_location,
+            leg = ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns], loc=self._legend_location,
                       bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
+
+        if colors is not None:
+            for color, text in zip(colors, leg.get_texts()):
+                text.set_color(color)
+
+
 
 
 class CDFMPL(CDFPlot):

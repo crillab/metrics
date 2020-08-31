@@ -128,3 +128,5 @@ class InputSet(Model):
         self.name = attributes.pop('name')
         self.inputs = attributes.pop('inputs')
         super().__init__(attributes)
+
+

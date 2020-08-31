@@ -1,8 +1,48 @@
+import json
 import unittest
-from datetime import datetime
 
-from metrics.core.builder.builder import CampaignBuilder, AttributeManagerSets
+import jsonpickle
+
+from metrics.core.builder.builder import CampaignBuilder
 from metrics.core.model import Campaign
+
+
+JSON_CAMPAIGN = {
+    "name": "Une campagne de Napol\u00e9on",
+    "timeout": 0.015,
+    "memout": 0.015,
+    "experiment_wares": [
+        {
+            "name": "MySolver",
+            "id": 1,
+            "date": "now",
+            "checksum": "afhjlsdgjdgsf2q2d3",
+            "last_modified": "now"
+        }
+    ],
+    "input_set": {
+        "name": "Ukulele bench",
+        "inputs": [
+            {
+                "path": "/somewhere/over/the/rainbow/"
+            },
+            {
+                "path": "/somewhere/under/the/rainbow/"
+            }
+        ]
+    },
+    "experiments": [
+        {
+            "input": "input",
+            "experiment_ware": "ConAbs",
+            "cpu_time": 1200.0,
+            "id": 1,
+            "start_time": "now"
+        }
+    ],
+    "id": 1,
+    "date": "now"
+}
 
 
 class CampaignTestCase(unittest.TestCase):
@@ -18,14 +58,14 @@ class CampaignTestCase(unittest.TestCase):
     def _create_experiment_ware(self, builder):
         builder['id'] = 1
         builder['name'] = 'MySolver'
-        builder['date'] = datetime.now()
+        builder['date'] = 'now'
         builder['checksum'] = 'afhjlsdgjdgsf2q2d3'
-        builder['last_modified'] = datetime.now()
+        builder['last_modified'] = 'now'
 
     def _create_experiment_builder(self, builder):
         builder['id'] = 1
         builder['input'] = 'input'
-        builder['start_time'] = datetime.now()
+        builder['start_time'] = 'now'
         builder['experiment_ware'] = 'ConAbs'
         builder['cpu_time'] = 1200.
 
@@ -35,7 +75,7 @@ class CampaignTestCase(unittest.TestCase):
         self.cb['name'] = 'Une campagne de Napoléon'
         self.cb['timeout'] = 0.015
         self.cb['memout'] = 0.015
-        self.cb['date'] = datetime.now()
+        self.cb['date'] = 'now'
         self._create_experiment_ware(self.cb.add_experiment_ware_builder())
         self._create_inputset(self.cb.add_input_set_builder())
         self._create_experiment_builder(self.cb.add_experiment_builder())
@@ -58,6 +98,11 @@ class CampaignTestCase(unittest.TestCase):
     def test_success_build_campaign(self):
         c = self.cb.build()
         self.assertTrue(isinstance(c, Campaign))
+
+    def test_success_export_campaign(self):
+        c = self.cb.build()
+        json_c = jsonpickle.encode(c, unpicklable=False)
+        self.assertEqual(JSON_CAMPAIGN, json.loads(json_c))
 
     def test_success_access_campaign_attr(self):
         c = self.cb.build()
