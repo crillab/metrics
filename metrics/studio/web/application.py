@@ -1,6 +1,7 @@
 import base64
 import datetime
 import io
+import itertools
 import os
 import uuid
 
@@ -20,7 +21,7 @@ from metrics.studio.web.analysis import AnalysisWeb
 from metrics.studio.web.config import external_stylesheets, PLOTLY_LOGO
 from metrics.studio.web.layout import data_loading, plots, table
 from metrics.studio.web.util import create_listener, decode
-from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly
+from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, ScatterPlotly
 
 jsonpickle_pd.register_handlers()
 
@@ -129,7 +130,7 @@ def update_output(list_of_contents, list_of_names, list_of_dates, sep):
     return children, options, options, options
 
 
-@app.callback([Output('box', 'children'), Output('cactus', 'children')],
+@app.callback([Output('loading-icon-box', 'children'), Output('loading-icon-cactus', 'children'),  Output('loading-icon-scatter', 'children')],
               [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
                Input('input', 'value')],
               [State('upload-data', 'contents'), State('sep', 'value')])
@@ -139,4 +140,11 @@ def campaign_callback(session_id, xp_ware, time, input, contents, sep):
     campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
     box = BoxPlotly(campaign_df)
     cactus = CactusPlotly(campaign_df, show_marker=False)
-    return [dcc.Graph(figure=box.get_figure()), ], [dcc.Graph(figure=cactus.get_figure()), ]
+
+    all_scatter = []
+    for c1, c2 in itertools.combinations(campaign.experiment_wares, 2):
+        scatter = ScatterPlotly(campaign_df, c1['name'], c2['name'])
+        all_scatter.append(dcc.Graph(figure=scatter.get_figure()))
+        break
+
+    return [dcc.Graph(figure=box.get_figure()), ], [dcc.Graph(figure=cactus.get_figure()), ], all_scatter

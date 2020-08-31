@@ -37,7 +37,7 @@ def configuration():
 
 
 def box_plot():
-    return [html.Div(id='box')]
+    return [dcc.Loading(id="loading-icon-box", children=html.Div(id='box'))]
 
 
 def data_loading():
@@ -70,11 +70,11 @@ def data_loading():
 
 
 def scatter_plot():
-    return [html.Div(id='scatter')]
+    return [dcc.Loading(id="loading-icon-scatter", children=html.Div(id='scatter'))]
 
 
 def cactus_plot():
-    return [html.Div(id='cactus')]
+    return [dcc.Loading(id="loading-icon-cactus", children=html.Div(id='cactus'))]
 
 
 def statistics():
