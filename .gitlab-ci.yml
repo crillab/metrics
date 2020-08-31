@@ -1,16 +1,31 @@
 test:
-
     script:
         - make test
-
     tags:
         - pytest
-
+    stage: test
 sonar:
-
     script:
         - make sonar
-
     tags:
         - pylint
         - sonar
+    stage: test
+build:
+    script:
+        - make docker-build
+    tags:
+        - docker
+    stage: build
+deploy_cril:
+    stage: deploy
+    tags:
+        - docker
+    script:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker push thibaultfalque/metrics:latest
+    needs: ["build"]
+    environment:
+        name: CRIL_ENV
+    only:
+        - web

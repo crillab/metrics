@@ -26,6 +26,7 @@ jsonpickle_pd.register_handlers()
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.server.secret_key = os.urandom(24)
+server = app.server
 cache = Cache(app.server, config={
     'CACHE_TYPE': 'filesystem',
     'CACHE_DIR': 'cache-directory',
