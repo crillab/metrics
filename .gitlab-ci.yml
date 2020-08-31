@@ -1,3 +1,8 @@
+variables:
+  # fill those if you have a proxy in your environment
+  http_proxy: $HTTP_PROXY
+  https_proxy: $HTTP_PROXY
+  
 before_script:
   # docker login asks for the password to be passed through stdin for security
   # we use $CI_JOB_TOKEN here which is a special token provided by GitLab
