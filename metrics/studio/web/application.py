@@ -116,7 +116,8 @@ def parse_contents(contents, filename, date, separator=','):
         ]), list()
 
 
-@app.callback([Output('output-data-upload', 'children'), Output('xp-ware', 'options'), Output('time', 'options'),
+@app.callback([Output('output-data-upload', 'children'), Output('xp-ware', 'options'),
+               Output('time', 'options'),
                Output('input', 'options')],
               [Input('upload-data', 'contents')],
               [State('upload-data', 'filename'),
@@ -130,10 +131,13 @@ def update_output(list_of_contents, list_of_names, list_of_dates, sep):
     return children, options, options, options
 
 
-@app.callback([Output('loading-icon-box', 'children'), Output('loading-icon-cactus', 'children'),  Output('loading-icon-scatter', 'children')],
-              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
-               Input('input', 'value')],
-              [State('upload-data', 'contents'), State('sep', 'value')])
+@app.callback([
+    Output('cactus-experiment-ware', 'options'),
+    Output('experiment-ware-1', 'options'), Output('experiment-ware-2', 'options'),
+    Output('box-experiment-ware', 'options')],
+    [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+     Input('input', 'value')],
+    [State('upload-data', 'contents'), State('sep', 'value')])
 def campaign_callback(session_id, xp_ware, time, input, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
@@ -141,10 +145,52 @@ def campaign_callback(session_id, xp_ware, time, input, contents, sep):
     box = BoxPlotly(campaign_df)
     cactus = CactusPlotly(campaign_df, show_marker=False)
 
-    all_scatter = []
-    for c1, c2 in itertools.combinations(campaign.experiment_wares, 2):
-        scatter = ScatterPlotly(campaign_df, c1['name'], c2['name'])
-        all_scatter.append(dcc.Graph(figure=scatter.get_figure()))
-        break
+    experiment_ware = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
 
-    return [dcc.Graph(figure=box.get_figure()), ], [dcc.Graph(figure=cactus.get_figure()), ], all_scatter
+    return experiment_ware, experiment_ware, experiment_ware, experiment_ware
+
+
+@app.callback([Output('loading-icon-box', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('box-experiment-ware', 'value')],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def campaign_callback(session_id, xp_ware, time, input, box_experiment_ware, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    newdf = campaign_df.sub_data_frame('experiment_ware',
+                                       box_experiment_ware if box_experiment_ware is not None else [
+                                           e['name'] for e in campaign.experiment_wares])
+    box = BoxPlotly(newdf)
+
+    return [dcc.Graph(figure=box.get_figure()), ],
+
+
+@app.callback([Output('loading-icon-scatter', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('experiment-ware-1', 'value'),
+               Input('experiment-ware-2', 'value')],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def campaign_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None or xp1 is None or xp2 is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    scatter = ScatterPlotly(campaign_df, xp1, xp2)
+
+    return [dcc.Graph(figure=scatter.get_figure()), ],
+
+
+@app.callback([Output('loading-icon-cactus', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('cactus-experiment-ware', 'value'), ],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def campaign_callback(session_id, xp_ware, time, input, cactus_experiment_ware, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    newdf = campaign_df.sub_data_frame('experiment_ware',
+                                       cactus_experiment_ware if cactus_experiment_ware is not None else [
+                                           e['name'] for e in campaign.experiment_wares])
+    cactus = CactusPlotly(newdf)
+
+    return [dcc.Graph(figure=cactus.get_figure()), ],
