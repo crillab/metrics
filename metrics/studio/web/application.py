@@ -18,7 +18,7 @@ from flask_caching import Cache
 
 from metrics.scalpel.parser import CsvCampaignParser
 from metrics.studio.web.analysis import AnalysisWeb
-from metrics.studio.web.config import external_stylesheets, PLOTLY_LOGO
+from metrics.studio.web.config import external_stylesheets, PLOTLY_LOGO, OPERATOR_LIST
 from metrics.studio.web.layout import data_loading, plots, table
 from metrics.studio.web.util import create_listener, decode
 from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, ScatterPlotly
@@ -85,7 +85,23 @@ def get_campaign(session_id, contents, input, sep, time, xp_ware):
     return query_and_serialize_data(session_id, contents, input, sep, time, xp_ware)
 
 
-def parse_contents(contents, filename, date, separator=','):
+def create_data_table(df, filename, date):
+    return html.Div([
+        html.H5(filename),
+        html.H6(datetime.datetime.fromtimestamp(date)),
+
+        dash_table.DataTable(
+            data=df.to_dict('records'),
+            columns=[{'name': i, 'id': i} for i in df.columns],
+            filter_action="native",
+            sort_action="native",
+            sort_mode="multi",
+            column_selectable="single",
+        ),
+    ])
+
+
+def parse_contents(contents, separator=','):
     if contents is None:
         return []
     content_type, content_string = contents.split(',')
@@ -96,19 +112,7 @@ def parse_contents(contents, filename, date, separator=','):
         df = pd.read_csv(
             io.StringIO(decoded.decode('utf-8')), sep=separator)
 
-        return html.Div([
-            html.H5(filename),
-            html.H6(datetime.datetime.fromtimestamp(date)),
-
-            dash_table.DataTable(
-                data=df.to_dict('records'),
-                columns=[{'name': i, 'id': i} for i in df.columns],
-                filter_action="native",
-                sort_action="native",
-                sort_mode="multi",
-                column_selectable="single",
-            ),
-        ]), df.columns
+        return df
     except Exception as e:
         print(e)
         return html.Div([
@@ -125,10 +129,37 @@ def parse_contents(contents, filename, date, separator=','):
 def update_output(list_of_contents, list_of_names, list_of_dates, sep):
     if list_of_contents is None:
         raise PreventUpdate
-    table_result, column = parse_contents(list_of_contents, list_of_names, list_of_dates, sep)
-    children = [table_result]
-    options = [{'label': i, 'value': i} for i in column]
+    df = parse_contents(list_of_contents, sep)
+    children = [create_data_table(df, list_of_names, list_of_dates)]
+    options = [{'label': i, 'value': i} for i in df.columns]
     return children, options, options, options
+
+
+@app.callback(Output('is_success', 'children'),
+              [Input('add', 'n_clicks')],
+              [State('is_success', 'children'), State('upload-data', 'contents'),
+               State('sep', 'value')])
+def is_success_form(n_clicks, children, contents, sep):
+    if contents is None:
+        raise PreventUpdate
+    df = parse_contents(contents, sep)
+    children.append(dbc.FormGroup([dbc.Label("Predicate"), dbc.Col(
+        dcc.Dropdown(
+            id="predicate-column",
+            options=[
+                {'label': x, 'value': x} for x in df.columns
+            ],
+            multi=False,
+            placeholder="Select column for predicate",
+        ), width=3), dbc.Col(
+        dcc.Dropdown(id="operator",
+                     options=[
+                         {'label': x, 'value': x} for x in OPERATOR_LIST
+                     ],
+                     multi=False,
+                     placeholder="Select operator",
+                     ), width=3), dcc.Input('predicate-value')], className='mt-2', row=True))
+    return children
 
 
 @app.callback([
@@ -136,17 +167,15 @@ def update_output(list_of_contents, list_of_names, list_of_dates, sep):
     Output('experiment-ware-1', 'options'), Output('experiment-ware-2', 'options'),
     Output('box-experiment-ware', 'options')],
     [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
-     Input('input', 'value')],
+     Input('input', 'value'),Input('is_success','children')],
     [State('upload-data', 'contents'), State('sep', 'value')])
-def campaign_callback(session_id, xp_ware, time, input, contents, sep):
+def campaign_callback(session_id, xp_ware, time, input, children, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
     campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
-    box = BoxPlotly(campaign_df)
-    cactus = CactusPlotly(campaign_df, show_marker=False)
 
     experiment_ware = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
-
+    print(children)
     return experiment_ware, experiment_ware, experiment_ware, experiment_ware
 
 
