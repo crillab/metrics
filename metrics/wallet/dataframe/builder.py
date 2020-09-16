@@ -35,9 +35,9 @@ from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 
 class Analysis:
 
-    def __init__(self, input_file: str, is_success: Callable[[Any], bool] = None):
+    def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None):
         self._input_file = input_file
-        self._campaign = self._make_campaign()
+        self._campaign = campaign if campaign is not None else self._make_campaign()
         self._is_success = (lambda x: x['cpu_time'] < self._campaign.timeout) if is_success is None else is_success
         self._campaign_df = self._make_campaign_df()
 
