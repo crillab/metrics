@@ -47,6 +47,8 @@ setup(
         'metrics.core',
         'metrics.scalpel',
         'metrics.wallet',
+        'metrics.studio.web',
+        'metrics'
     ],
 
     description=metrics.__summary__,
