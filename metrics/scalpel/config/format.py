@@ -33,6 +33,7 @@ Scalpel.
 from __future__ import annotations
 
 from enum import Enum
+from typing import Optional
 
 
 class FormatEnum(Enum):
@@ -52,6 +53,7 @@ class FormatEnum(Enum):
     def __contains__(self, identifier: str) -> bool:
         """
         Checks whether the given identifier identifies this format.
+        The comparison is case insensitive.
 
         :param identifier: The identifier to check.
 
@@ -63,21 +65,19 @@ class FormatEnum(Enum):
         return False
 
     @classmethod
-    def value_of(cls, identifier: str) -> FormatEnum:
+    def value_of(cls, identifier: str) -> Optional[FormatEnum]:
         """
         Gives the format identified by the given identifier.
 
         :param identifier: The identifier of the format to get.
 
-        :return: The format identified by the given identifier.
-
-        :raises: A ValueError is raised if the identifier does not identify
-                 any format.
+        :return: The format identified by the given identifier, or None if
+                 there is no such format.
         """
         for fmt in cls:
             if identifier in fmt:
                 return fmt
-        raise ValueError(f'{identifier} does not match any recognized format!')
+        return None
 
 
 class InputSetFormat(FormatEnum):
@@ -106,3 +106,17 @@ class CampaignFormat(FormatEnum):
     RAW_LOG = 'raw', 'raw-log'
     FLAT_LOG_DIRECTORY = 'flat-dir'
     DEEP_LOG_DIRECTORY = 'deep-dir'
+
+
+class OutputFormat(FormatEnum):
+    """
+    The OutputFormat defines the different formats that can be parsed by
+    Scalpel to retrieve the data about an experiment from the experiment-ware's
+    output.
+    """
+
+    CSV = 'csv'
+    CSV2 = 'csv2', 'csv-2'
+    TSV = 'tsv', 'table'
+    JSON = 'json'
+    RAW_LOG = 'out', 'log'
