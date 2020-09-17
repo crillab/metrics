@@ -891,6 +891,8 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         Reads the experiment-wares that are considered in the campaign being
         parsed by Scalpel.
         """
+        if 'experiment-wares' not in self._dict_config:
+            return
         for xp_ware in self._dict_config['experiment-wares']:
             self._listener.start_experiment_ware()
             self._listener.log_data('name', xp_ware)
@@ -900,6 +902,8 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         """
         Reads the input set considered in the campaign being parsed by Scalpel.
         """
+        if 'input-set' not in self._dict_config:
+            return
         self._listener.start_input_set()
         fmt = InputSetFormat.value_of(self._dict_config['input-set']['type'])
         name = self._dict_config['input-set']['name']
