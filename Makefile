@@ -16,7 +16,7 @@ MODULE_NAME = metrics
 DOCKER_ORGANIZATION = thibaultfalque
 
 # The version of the package to build.
-VERSION = 0.2.1
+VERSION = 0.2.3
 
 
 # The directory of the unit tests for the package to build.
@@ -94,6 +94,7 @@ dist/$(PACKAGE_NAME)-$(VERSION).tar.gz:
 upload:
 	twine upload dist/*
 
+deploy: clean package upload
 
 ####################
 ## Docker Targets ##
