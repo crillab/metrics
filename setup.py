@@ -45,6 +45,7 @@ setup(
     version=metrics.__version__,
     packages=[
         'metrics.core',
+        'metrics.core.builder',
         'metrics.scalpel',
         'metrics.wallet',
     ],
