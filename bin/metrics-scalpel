@@ -1,23 +1,305 @@
 #!/usr/bin/env python3
-
-from sys import argv
+import os
 from signal import signal, SIGPIPE, SIG_DFL
+from typing import Union, List, Optional, Iterable, Generator
+
+from metrics.scalpel import CampaignParserListener
+from metrics.scalpel.config import CampaignFormat, ScalpelConfigurationBuilder,\
+     MappingConfiguration, RawDataConfiguration, EmptyRawDataConfiguration
+from PyInquirer import prompt
+
 signal(SIGPIPE, SIG_DFL)
 
-header = None
 
-def readcsv(inputfile):
-    global header
-    xpware = inputfile.split("/")[-1][:-4]
-    with open(inputfile) as f:
-        if header is None:
-            header = "xpware," + next(f)
-            print(header, end="")
-        else:
-            next(f)
-        for line in  f:
-            print(xpware, line, sep=',', end="")
+class CLIMappingConfiguration(MappingConfiguration):
+    def get_scalpel_key(self) -> str:
+        answers = dict(scalpel_key='')
+        while len(answers['scalpel_key']) == 0:
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'scalpel_key',
+                    'message': 'Scalpel Key'
+                }
+            ]
+            answers = prompt(questions)
+        return answers['scalpel_key']
 
-for csv in argv[1:]:
-    assert len(csv) - csv.rfind(".csv") == 4
-    readcsv(csv)
+    def get_campaign_key(self) -> Union[str, List[str]]:
+        answers = dict(campaign_key='')
+        while len(answers['campaign_key']) == 0:
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'campaign_key',
+                    'message': 'Campaign Key'
+                }
+            ]
+            answers = prompt(questions)
+        return answers['campaign_key']
+
+    def has_next(self) -> bool:
+        questions = [
+            {
+                'type': 'confirm',
+                'message': 'Do you want to add a mapping?',
+                'name': 'continue',
+                'default': True,
+            },
+        ]
+        answers = prompt(questions)
+        return answers['continue']
+
+
+class CLIRawDataConfiguration(RawDataConfiguration):
+    def get_name(self) -> str:
+        answers = dict(name='')
+        while len(answers['name']) == 0:
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'name',
+                    'message': 'Name'
+                }
+            ]
+            answers = prompt(questions)
+        return answers['name']
+
+    def get_file(self) -> str:
+        answers = dict(file='')
+        while len(answers['file']) == 0:
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'file',
+                    'message': 'File'
+                }
+            ]
+            answers = prompt(questions)
+        return answers['file']
+
+    def get_regex_pattern(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'regex_pattern',
+                'message': 'Enter regex pattern'
+            }
+        ]
+        answers = prompt(questions)
+        return int(answers['regex_pattern']) if answers['regex_pattern'] != '' else None
+
+    def get_regex_group(self) -> Optional[int]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'regex_group',
+                'message': 'Enter regex group'
+            }
+        ]
+        answers = prompt(questions)
+        return int(answers['regex_group']) if answers['regex_group'] != '' else None
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'simplified_pattern',
+                'message': 'Enter simplified pattern'
+            }
+        ]
+        answers = prompt(questions)
+        return int(answers['simplified_pattern']) if answers['simplified_pattern'] != '' else None
+
+    def has_next(self) -> bool:
+        questions = [
+            {
+                'type': 'confirm',
+                'message': 'Do you want to add a raw data file?',
+                'name': 'continue',
+                'default': True,
+            },
+        ]
+        answers = prompt(questions)
+        return answers['continue']
+
+
+class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
+    def _get_mapping(self) -> MappingConfiguration:
+        return CLIMappingConfiguration()
+
+    def _get_campaign_name(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'name',
+                'message': 'What\'s the campaign name ?'
+            }
+        ]
+        answers = prompt(questions)
+        return answers['name'] if answers['name'] != '' else None
+
+    def _get_campaign_date(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'date',
+                'message': 'What\'s the campaign date ?'
+            }
+        ]
+        answers = prompt(questions)
+        return answers['date'] if answers['date'] != '' else None
+
+    def _get_os_description(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'os_description',
+                'message': 'Enter OS description'
+            }
+        ]
+        answers = prompt(questions)
+        return answers['os_description'] if answers['os_description'] != '' else None
+
+    def _get_cpu_description(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'cpu_description',
+                'message': 'Enter CPU description'
+            }
+        ]
+        answers = prompt(questions)
+        return answers['cpu_description'] if answers['cpu_description'] != '' else None
+
+    def _get_total_memory(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'total_memory',
+                'message': 'Enter total memory'
+            }
+        ]
+        answers = prompt(questions)
+        return answers['total_memory'] if answers['total_memory'] != '' else None
+
+    def _get_time_out(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'time_out',
+                'message': 'Enter time out'
+            }
+        ]
+        answers = prompt(questions)
+        return answers['time_out'] if answers['time_out'] != '' else None
+
+    def _get_memory_out(self) -> Optional[str]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'memory_out',
+                'message': 'Enter memory out'
+            }
+        ]
+        answers = prompt(questions)
+        return answers['memory_out'] if answers['memory_out'] != '' else None
+
+    def read_experiment_wares(self) -> None:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'xpware',
+                'message': 'Enter experiment ware name'
+            }
+        ]
+        while True:
+            answers = prompt(questions)
+            if answers['xpware'] == '':
+                break
+            self._listener.start_experiment_ware()
+            self._listener.log_data('name', answers['xpware'])
+            self._listener.end_experiment_ware()
+
+    def read_input_set(self) -> None:
+        pass
+
+    def _get_format(self) -> Optional[CampaignFormat]:
+        questions = [
+            {
+                'type': 'list',
+                'name': 'format',
+                'message': 'Select a format',
+                'choices': [data.name for data in CampaignFormat],
+                'default': self._format
+            }
+        ]
+        answers = prompt(questions)
+        return answers['format']
+
+    def _get_campaign_path(self) -> str:
+        answers = dict(campaign_path='')
+        while len(answers['campaign_path']) == 0 and os.path.exists(answers['campaign_path']):
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'campaign_path',
+                    'message': 'Enter the campaign path'
+                }
+            ]
+            answers = prompt(questions)
+        return answers['campaign_path']
+
+    def _get_raw_data(self) -> RawDataConfiguration:
+        if self._format in (CampaignFormat.DEEP_LOG_DIRECTORY, CampaignFormat.FLAT_LOG_DIRECTORY):
+            return CLIRawDataConfiguration()
+        return EmptyRawDataConfiguration()
+
+    def _data_file_generator(self) -> Generator[str, None, None]:
+        questions = [
+            {
+                'type': 'input',
+                'name': 'file_name',
+                'message': 'Enter experiment file name'
+            }
+        ]
+        while True:
+            answers = prompt(questions)
+            if answers['file_name'] == '':
+                break
+            yield answers['file_name']
+
+    def _get_data_files(self) -> Iterable[str]:
+        if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
+            return self._data_file_generator()
+        return []
+
+    def _get_hierarchy_depth(self) -> Optional[int]:
+        if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'depth',
+                    'message': 'Enter hierarchy depth'
+                }
+            ]
+            answers = prompt(questions)
+            return answers['depth']
+        return None
+
+    def _get_experiment_ware_depth(self) -> Optional[int]:
+        if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
+            questions = [
+                {
+                    'type': 'input',
+                    'name': 'depth',
+                    'message': 'Enter the depth of the directory corresponding to the experiment-ware'
+                }
+            ]
+            answers = prompt(questions)
+            return answers['depth']
+        return None
+
+
+if __name__ == '__main__':
+    scalpel_configuration = CLIScalpelConfigurationBuilder(CampaignParserListener()).build()

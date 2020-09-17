@@ -13,8 +13,10 @@ PACKAGE_NAME = crillab-metrics
 
 MODULE_NAME = metrics
 
+DOCKER_ORGANIZATION = thibaultfalque
+
 # The version of the package to build.
-VERSION = 0.1.0
+VERSION = 0.2.0
 
 
 # The directory of the unit tests for the package to build.
@@ -65,7 +67,8 @@ $(OUTDIR)/pylint.out: $(OUTDIR) $(MODULE_NAME)/*.py $(TESTS)/*/*.py
 
 # Executes the SonarQube static analysis.
 sonar: test pylint
-	sonar-scanner
+	if test -z "$$SONAR_ORGA"; then sonar-scanner -Dsonar.host.url=${SONAR_HOST} -Dsonar.login=${SONAR_TOKEN} -Dsonar.projectKey=${SONAR_KEY};else sonar-scanner -Dsonar.host.url=${SONAR_HOST} -Dsonar.login=${SONAR_TOKEN} -Dsonar.projectKey=${SONAR_KEY} -Dsonar.organization=${SONAR_ORGA}; fi
+	
 
 
 ##################
@@ -91,6 +94,15 @@ dist/$(PACKAGE_NAME)-$(VERSION).tar.gz:
 upload:
 	python3 setup.py sdist upload
 
+
+####################
+## Docker Targets ##
+####################
+
+docker-build:
+	docker build -t $(DOCKER_ORGANIZATION)/$(MODULE_NAME):latest .
+docker-push:
+	docker push $(DOCKER_ORGANIZATION)/$(MODULE_NAME):latest
 
 #####################
 ## Utility Targets ##

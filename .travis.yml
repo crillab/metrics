@@ -5,10 +5,10 @@ python:
 addons:
   sonarcloud:
     organization: "cril"
-    token:
-      secure: "5QahXycx0sckeSU4cK/quLeJ5WD7hbbS35FsQ8kJz9uvRagSKDDnBE2TC+4ABRUhIgmzzJvMJuFofot+Fl2Xgc5I3bhow3oqmBjNgyxmAJDF85JGAWdktKaYJBSFhn7aT8PRVaD1TAt1NjvChbh7xDU8wQvxulObhr1h+Y9aP7J+quRx/gv8ufYNRFsviBWvg07g65csxMBxfHVhtOvgCaOa3i05ZftXZS6Uw31jyezGGk1r+F/rLhTzQzKAD0qLU2AjCJ0Yt74J/Cl3zFJ3I2oxILE60MmpIVhV+0IC2D9W4QO3bSz/qyckD8icqz0eV0s4aO41RFDuId1iZMI9S56+XAqTgededSD3jJzqM4CwfuSir4YRkURHOdNV0tJtnHUXSVPcodfwLYmwZ9eGRd0oqu+GteHNKpTU74BfURCTDn6euwAyPNzxJg7o60/U5F8NSzcAmNPxMMO+Og7tt8GUhfNmTw2R4UYsyPlFQ+WCnjGh8I5xc15KyHgxHHgDl3ovdIn9tCMw5PvKnwHXfI02L3Ch6LF2aucuFCUr1r8IK0fxl632nIwBocliMNfbN0+ghsMPaPGUyvNb8OUYmO0SQKkqVIV+q/Clg9N1NulxlqoY3Qq2sroCyJH3sFlTpzsBGAFHxnfbLFM+D59JxyJtj2DmGfKaQRLPOPSqJLU=" # encrypted value of your token
+    #token:
+    #  secure: "5QahXycx0sckeSU4cK/quLeJ5WD7hbbS35FsQ8kJz9uvRagSKDDnBE2TC+4ABRUhIgmzzJvMJuFofot+Fl2Xgc5I3bhow3oqmBjNgyxmAJDF85JGAWdktKaYJBSFhn7aT8PRVaD1TAt1NjvChbh7xDU8wQvxulObhr1h+Y9aP7J+quRx/gv8ufYNRFsviBWvg07g65csxMBxfHVhtOvgCaOa3i05ZftXZS6Uw31jyezGGk1r+F/rLhTzQzKAD0qLU2AjCJ0Yt74J/Cl3zFJ3I2oxILE60MmpIVhV+0IC2D9W4QO3bSz/qyckD8icqz0eV0s4aO41RFDuId1iZMI9S56+XAqTgededSD3jJzqM4CwfuSir4YRkURHOdNV0tJtnHUXSVPcodfwLYmwZ9eGRd0oqu+GteHNKpTU74BfURCTDn6euwAyPNzxJg7o60/U5F8NSzcAmNPxMMO+Og7tt8GUhfNmTw2R4UYsyPlFQ+WCnjGh8I5xc15KyHgxHHgDl3ovdIn9tCMw5PvKnwHXfI02L3Ch6LF2aucuFCUr1r8IK0fxl632nIwBocliMNfbN0+ghsMPaPGUyvNb8OUYmO0SQKkqVIV+q/Clg9N1NulxlqoY3Qq2sroCyJH3sFlTpzsBGAFHxnfbLFM+D59JxyJtj2DmGfKaQRLPOPSqJLU=" # encrypted value of your token
 script:
   # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
   - make pylint
   - make test
-  - sonar-scanner
+  - make sonar

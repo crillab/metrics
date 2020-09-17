@@ -1,8 +1,11 @@
 ###############################################################################
 #                                                                             #
-#  Metrics - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
+#  Scalpel - A Metrics Module                                                 #
 #  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
+#  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
+#  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
+#                                                                             #
 #                                                                             #
 #  This program is free software: you can redistribute it and/or modify it    #
 #  under the terms of the GNU Lesser General Public License as published by   #
@@ -20,25 +23,16 @@
 #                                                                             #
 ###############################################################################
 
-__all__ = [
-    '__title__',
-    '__summary__',
-    '__uri__',
-    '__version__',
-    '__author__',
-    '__email__',
-    '__license__',
-    '__copyright__',
-]
 
-__title__ = 'metrics'
-__summary__ = 'rEproducible sofTware peRformance analysIs in perfeCt Simplicity'
-__keywords__ = 'reproducible software performance analysis'
-__uri__ = 'https://github.com/crillab/metrics'
+"""
+This package provides the modules for setting up Scalpel, in particular to
+describe how it can extract relevant data from the files of the campaign.
+"""
 
-__version__ = '0.2.0'
-__author__ = 'Thibault Falque, Romain Wallon, Hugues Wattez'
-__email__ = 'thibault.falque@exakis-nelite.com, wallon@cril.fr, wattez@cril.fr'
 
-__license__ = 'LGPLv3+'
-__copyright__ = '2019-2020 - Univ Artois & CNRS, Exakis Nelite'
+from metrics.scalpel.config.config import MappingConfiguration, \
+    RawDataConfiguration, EmptyRawDataConfiguration, \
+    ScalpelConfigurationBuilder, ScalpelConfiguration, \
+    read_configuration
+
+from metrics.scalpel.config.format import CampaignFormat
