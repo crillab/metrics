@@ -33,7 +33,7 @@ def configuration():
                 multi=True,
                 placeholder="Select columns for experiment ware",
             )], className='mt-2', ),
-        html.Div(id="is_success",
+        html.Div(id="is_success",style={'display':'none'},
                  children=[dbc.Button('Add predicate', id='add', color="primary", )])
     ]
 

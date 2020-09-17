@@ -187,7 +187,7 @@ def is_success_form(n_clicks, children, contents, sep):
 def campaign_callback(session_id, xp_ware, time, input, children, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, sep)
+    campaign_df, campaign = get_campaign(session_id, contents, input,sep,time,xp_ware)
 
     experiment_ware = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
     print(children)
@@ -201,7 +201,7 @@ def campaign_callback(session_id, xp_ware, time, input, children, contents, sep)
 def box_callback(session_id, xp_ware, time, input, box_experiment_ware, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, sep)
+    campaign_df, campaign = get_campaign(session_id, contents, input,sep,time,xp_ware)
     newdf = campaign_df.sub_data_frame('experiment_ware',
                                        box_experiment_ware if box_experiment_ware is not None else [
                                            e['name'] for e in campaign.experiment_wares])
@@ -218,7 +218,7 @@ def box_callback(session_id, xp_ware, time, input, box_experiment_ware, contents
 def cactus_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None or xp1 is None or xp2 is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, sep)
+    campaign_df, campaign = get_campaign(session_id, contents, input,sep,time,xp_ware)
     scatter = ScatterPlotly(campaign_df, xp1, xp2)
 
     return [dcc.Graph(figure=scatter.get_figure()), ],
@@ -231,7 +231,7 @@ def cactus_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
 def scatter_callback(session_id, xp_ware, time, input, cactus_experiment_ware, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, sep)
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep,time,xp_ware)
     newdf = campaign_df.sub_data_frame('experiment_ware',
                                        cactus_experiment_ware if cactus_experiment_ware is not None else [
                                            e['name'] for e in campaign.experiment_wares])
