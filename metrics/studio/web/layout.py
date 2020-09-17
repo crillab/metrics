@@ -32,12 +32,23 @@ def configuration():
                 ],
                 multi=True,
                 placeholder="Select columns for experiment ware",
-            )], className='mt-2', )
+            )], className='mt-2', ),
+        html.Div(id="is_success",style={'display':'none'},
+                 children=[dbc.Button('Add predicate', id='add', color="primary", )])
     ]
 
 
 def box_plot():
-    return [html.Div(id='box')]
+    return [dbc.FormGroup([
+        dbc.Label("Experiment ware"),
+        dcc.Dropdown(
+            id="box-experiment-ware",
+            options=[
+            ],
+            multi=True,
+            placeholder="Select experiment ware",
+        )], className='mt-2', )
+        , dcc.Loading(id="loading-icon-box", children=html.Div(id='box'))]
 
 
 def data_loading():
@@ -45,7 +56,7 @@ def data_loading():
         dbc.FormGroup(
             [
                 dbc.Label("Separator"),
-                dbc.Input(placeholder=",", type="text",id="sep"),
+                dbc.Input(placeholder=",", type="text", id="sep"),
                 dbc.FormText("CSV separator (default is ','"),
             ]
         ),
@@ -70,11 +81,38 @@ def data_loading():
 
 
 def scatter_plot():
-    pass
+    return [dbc.FormGroup([
+        dbc.Label("Experiment ware 1:"),
+        dcc.Dropdown(
+            id="experiment-ware-1",
+            options=[
+            ],
+            multi=False,
+            placeholder="Select experiment ware",
+        )], className='mt-2', ),
+        dbc.FormGroup([
+            dbc.Label("Experiment ware 2:"),
+            dcc.Dropdown(
+                id="experiment-ware-2",
+                options=[
+                ],
+                multi=False,
+                placeholder="Select experiment ware",
+            )], className='mt-2', ),
+        dcc.Loading(id="loading-icon-scatter", children=html.Div(id='scatter'))]
 
 
 def cactus_plot():
-    pass
+    return [dbc.FormGroup([
+        dbc.Label("Experiment ware:"),
+        dcc.Dropdown(
+            id="cactus-experiment-ware",
+            options=[
+            ],
+            multi=True,
+            placeholder="Select experiment ware",
+        )], className='mt-2', ),
+        dcc.Loading(id="loading-icon-cactus", children=html.Div(id='cactus'))]
 
 
 def statistics():

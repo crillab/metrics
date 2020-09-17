@@ -77,7 +77,10 @@ class KeyMapping:
         return campaign_key, 1
 
     def get_sorted_keys(self, scalpel_key: str):
-        return self._dict_representation[scalpel_key]
+        keys = self._dict_representation.get(scalpel_key)
+        if keys is None:
+            return [scalpel_key]
+        return keys
 
 
 class CampaignParserListener:
@@ -196,12 +199,13 @@ class CampaignParserListener:
             self._current_builder[scalpel_key] = name
 
             if self._current_experiment:
-                if scalpel_key == 'experiment_ware' and self._campaign_builder.has_experiment_ware_with_name(name):
+                if scalpel_key == 'experiment_ware' and not self._campaign_builder.has_experiment_ware_with_name(name):
                     xp_ware_builder = self._campaign_builder.add_experiment_ware_builder()
                     self.create_on_the_fly(xp_ware_builder, read_values, 'name', name)
-                if scalpel_key == 'input' and self._campaign_builder.has_input_with_path(name):
-                    self._input_set_builder = self._input_set_builder if self._input_set_builder is not None \
-                        else self._campaign_builder.add_input_set_builder()
+                if scalpel_key == 'input' and not self._campaign_builder.has_input_with_path(name):
+                    if self._input_set_builder is None:
+                        self._input_set_builder = self._campaign_builder.add_input_set_builder()
+                        self._input_set_builder['name'] = 'auto_name'
                     input_builder = self._input_set_builder.add_input_builder()
                     self.create_on_the_fly(input_builder, read_values, 'path', name)
             del self._pending_keys[scalpel_key]
