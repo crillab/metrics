@@ -23,6 +23,7 @@ from metrics.studio.web.config import external_stylesheets, OPERATOR_LIST
 
 from metrics.studio.web.util.util import create_listener, decode
 from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, ScatterPlotly
+from metrics.wallet.figure.static_figure import StatTable, ContributionTable
 
 jsonpickle_pd.register_handlers()
 
@@ -50,9 +51,11 @@ app.layout = serve_layout
 
 def get_campaign(session_id, contents, input, sep, time, xp_ware):
     @cache.memoize()
-    def query_and_serialize_data(session_id, contents, input, sep, time, xp_ware):
+    def query_and_serialize_data(session_id, contents, input, separator, time, xp_ware):
+        if separator is None:
+            separator = ','
         listener = create_listener(xp_ware, input, time)
-        csv_parser = CsvCampaignParser(listener, separator=sep)
+        csv_parser = CsvCampaignParser(listener, separator=separator)
         csv_parser.parse_stream(decode(contents))
         campaign = listener.get_campaign()
         analysis_web = AnalysisWeb(campaign)
@@ -66,23 +69,8 @@ def get_header(session_id, contents, sep):
     @cache.memoize()
     def query_and_serialize_data(session_id, contents, sep):
         pass
+
     return query_and_serialize_data(session_id, contents, sep)
-
-
-def create_data_table(df, filename, date):
-    return html.Div([
-        html.H5(filename),
-        html.H6(datetime.datetime.fromtimestamp(date)),
-
-        dash_table.DataTable(
-            data=df.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in df.columns],
-            filter_action="native",
-            sort_action="native",
-            sort_mode="multi",
-            column_selectable="single",
-        ),
-    ])
 
 
 def parse_contents(contents, separator=','):
@@ -104,7 +92,7 @@ def parse_contents(contents, separator=','):
         ]), list()
 
 
-@app.callback([ Output('xp-ware', 'options'),
+@app.callback([Output('xp-ware', 'options'),
                Output('time', 'options'),
                Output('input', 'options')],
               [Input('upload-data', 'contents')],
@@ -114,9 +102,8 @@ def update_output(list_of_contents, list_of_names, list_of_dates, sep):
     if list_of_contents is None:
         raise PreventUpdate
     df = parse_contents(list_of_contents, sep)
-    children = [create_data_table(df, list_of_names, list_of_dates)]
     options = [{'label': i, 'value': i} for i in df.columns]
-    return  options, options, options
+    return options, options, options
 
 
 @app.callback(Output('is_success', 'children'),
@@ -182,7 +169,7 @@ def box_callback(session_id, xp_ware, time, input, box_experiment_ware, contents
                Input('input', 'value'), Input('experiment-ware-1', 'value'),
                Input('experiment-ware-2', 'value')],
               [State('upload-data', 'contents'), State('sep', 'value')])
-def cactus_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
+def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None or xp1 is None or xp2 is None:
         raise PreventUpdate
     campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
@@ -195,13 +182,87 @@ def cactus_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
               [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
                Input('input', 'value'), Input('global-experiment-ware', 'value'), ],
               [State('upload-data', 'contents'), State('sep', 'value')])
-def scatter_callback(session_id, xp_ware, time, input, cactus_experiment_ware, contents, sep):
+def cactus_callback(session_id, xp_ware, time, input, cactus_experiment_ware, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    new_df = campaign_df.sub_data_frame('experiment_ware',
+                                        cactus_experiment_ware if cactus_experiment_ware is not None else [
+                                            e['name'] for e in campaign.experiment_wares])
+    cactus = CactusPlotly(new_df)
+
+    return [dcc.Graph(figure=cactus.get_figure()), ],
+
+
+@app.callback([Output('loading-cdf', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('global-experiment-ware', 'value'), ],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def cactus_callback(session_id, xp_ware, time, input, global_experiment_ware, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    new_df = campaign_df.sub_data_frame('experiment_ware',
+                                        global_experiment_ware if global_experiment_ware is not None else [
+                                            e['name'] for e in campaign.experiment_wares])
+    cdf = CactusPlotly(new_df)
+
+    return [dcc.Graph(figure=cdf.get_figure()), ],
+
+
+@app.callback([Output('loading-summary', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('global-experiment-ware', 'value')],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def stat_table_callback(session_id, xp_ware, time, input, global_experiment_ware, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
     campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
     newdf = campaign_df.sub_data_frame('experiment_ware',
-                                       cactus_experiment_ware if cactus_experiment_ware is not None else [
+                                       global_experiment_ware if global_experiment_ware is not None else [
                                            e['name'] for e in campaign.experiment_wares])
-    cactus = CactusPlotly(newdf)
+    stat_table = StatTable(
+        newdf,
+        dollars_for_number=True,  # 123456789 -> $123456789$
+        commas_for_number=True,  # 123456789 -> 123,456,789
 
-    return [dcc.Graph(figure=cactus.get_figure()), ],
+        xp_ware_name_map=None,  # a map to rename experimentwares
+    )
+    df = stat_table.get_figure()
+    df['experiment_ware'] = df.index
+    return [dash_table.DataTable(data=df.to_dict('records'),
+                                 columns=[{'name': 'experiment_ware', 'id': 'experiment_ware'}] + [
+                                     {'name': col, 'id': col} for col in df.columns if col != 'experiment_ware']
+                                 , filter_action="native",
+                                 sort_action="native",
+                                 sort_mode="multi",
+                                 column_selectable="single")]
+
+
+@app.callback([Output('loading-icon-contribution', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('global-experiment-ware', 'value'), Input('deltas', 'value')],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def contribution_table_callback(session_id, xp_ware, time, input, global_experiment_ware, global_deltas, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None or global_deltas is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    new_df = campaign_df.sub_data_frame('experiment_ware',
+                                        global_experiment_ware if global_experiment_ware is not None else [
+                                            e['name'] for e in campaign.experiment_wares])
+    contribution_table = ContributionTable(
+        new_df,
+        deltas=[int(a) for a in global_deltas],
+        dollars_for_number=True,  # 123456789 -> $123456789$
+        commas_for_number=True,  # 123456789 -> 123,456,789
+
+        xp_ware_name_map=None,  # a map to rename experimentwares
+    )
+    df = contribution_table.get_figure()
+    df['experiment_ware'] = df.index
+    return [
+        dash_table.DataTable(data=df.to_dict('records'), columns=[{'name': 'experiment_ware', 'id': 'experiment_ware'}] + [{'name': col, 'id': col} for col in df.columns],
+                             filter_action="native",
+                             sort_action="native",
+                             sort_mode="multi",
+                             column_selectable="single")]

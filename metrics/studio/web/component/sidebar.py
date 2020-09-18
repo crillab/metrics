@@ -19,8 +19,7 @@ def data_loading():
         dbc.FormGroup(
             [
                 dbc.Label("Separator"),
-                dbc.Input(placeholder="", type="text", id="sep"),
-                dbc.FormText("CSV separator (default is ',')"),
+                dbc.Input(placeholder="", type="text", id="sep")
             ]
         ),
         dbc.FormGroup(
@@ -85,7 +84,7 @@ def configuration():
 
 def plot_configuration():
     return [
-        html.H3("Experiment Ware"),
+        html.H3("Plot Configuration"),
         dbc.FormGroup([
             dbc.Label("Experiment ware:"),
             dcc.Dropdown(
@@ -95,7 +94,18 @@ def plot_configuration():
                 multi=True,
                 placeholder="Select experiment ware",
             )], className='mt-2', ),
+        dbc.FormGroup([
+            dbc.Label("Deltas:"),
+            dcc.Dropdown(
+                id="deltas",
+                options=[
+                    {'label': f"{val}", 'value': f'{val}'} for val in [1, 10, 100]
+                ],
+                multi=True,
+                placeholder="Select deltas",
+            )], className='mt-2', ),
     ]
+
 
 sidebar = html.Div(
     [
