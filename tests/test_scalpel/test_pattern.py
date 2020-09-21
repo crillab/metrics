@@ -94,6 +94,22 @@ class TestCompileNamedPattern(TestCase):
     to extract data from a string.
     """
 
+    def test_compile_boolean(self) -> None:
+        """
+        Tests that a Boolean values can be extracted from a matching string.
+        """
+        pattern = compile_named_pattern('Test  case for\t {boolean}.')
+        self.assertIsNotNone(pattern)
+
+        self.assertEqual('true', pattern.search('Test case for true.'))
+        self.assertEqual('FALSE', pattern.search('Test   case   for   FALSE.'))
+        self.assertEqual('trUe', pattern.search('Test\tcase\tfor\ttrUe.'))
+
+        self.assertIsNone(pattern.search(''))
+        self.assertIsNone(pattern.search('Test case for 1664.'))
+        self.assertIsNone(pattern.search('This string does not Talse.'))
+        self.assertIsNone(pattern.search('Test case for frRue'))
+
     def test_compile_integer(self) -> None:
         """
         Tests that an integer can be extracted from a matching string.

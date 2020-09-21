@@ -41,6 +41,7 @@ class NamedPattern(Enum):
     allowing to retrieve a value of a commonly used pattern.
     """
 
+    BOOLEAN = '{boolean}', r'(([tT][rR][uU][eE])|([fF][aA][lL][sS][eE]))'
     INTEGER = '{integer}', r'([-+]?\d+)'
     REAL = '{real}', r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
     WORD = '{word}', r'(\w+)'
