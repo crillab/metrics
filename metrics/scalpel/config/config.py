@@ -87,7 +87,7 @@ class ScalpelConfiguration:
     relevant values to retrieve from this campaign.
     """
 
-    def __init__(self, fmt: Optional[CampaignFormat], main_file: str,
+    def __init__(self, fmt: Optional[CampaignFormat], has_header: bool, quote: str, separator: str, main_file: str,
                  data_files: Optional[List[str]] = None,
                  log_datas: Optional[Dict[str, List[LogData]]] = None,
                  hierarchy_depth: Optional[int] = None,
@@ -98,6 +98,9 @@ class ScalpelConfiguration:
 
         :param fmt: The format in which the results of the campaign are stored.
                     If None, the format will be guessed on a best effort basis.
+        :param has_header:
+        :param quote:
+        :param separator:
         :param main_file: The path of the main file containing data about the
                           campaign.
         :param data_files: The names of the files to be considered for each experiment
@@ -108,6 +111,9 @@ class ScalpelConfiguration:
                               parse the campaign.
         """
         self._format = fmt
+        self._has_header = has_header
+        self._quote = quote
+        self._sep = separator
         self._main_file = main_file
         self._data_files = data_files
         self._log_datas = log_datas
@@ -134,6 +140,15 @@ class ScalpelConfiguration:
                  guessing the format of the campaign has failed.
         """
         return self._format
+
+    def has_header(self) -> bool:
+        return self._has_header
+
+    def get_quote_char(self) -> str:
+        return self._quote
+
+    def get_separator(self) -> str:
+        return self._sep
 
     def is_to_be_parsed(self, file: str) -> bool:
         """
@@ -532,6 +547,9 @@ class ScalpelConfigurationBuilder:
         self._data_files = None
         self._log_datas = defaultdict(list)
         self._custom_parser = None
+        self._header = True
+        self._sep = ','
+        self._quote = None
 
     def build(self) -> ScalpelConfiguration:
         """
@@ -547,7 +565,7 @@ class ScalpelConfigurationBuilder:
         self.read_input_set()
         self.read_source()
         self.read_data_files()
-        return ScalpelConfiguration(self._format, self._main_file,
+        return ScalpelConfiguration(self._format, self._header, self._quote, self._sep, self._main_file,
                                     self._data_files, self._log_datas,
                                     self._hierarchy_depth,
                                     self._experiment_ware_depth,
@@ -671,11 +689,14 @@ class ScalpelConfigurationBuilder:
         self._main_file = self._get_campaign_path()
         self._format = self._guess_format()
         self._format = self._get_format()
+        self._header = self._has_header()
+        self._quote = self._quote_char()
+        self._sep = self._separator()
         self._hierarchy_depth = self._get_hierarchy_depth()
         self._experiment_ware_depth = self._get_experiment_ware_depth()
         self._custom_parser = self._get_custom_parser()
 
-    def _get_campaign_path(self) -> str:
+    def _get_campaign_path(self) -> Iterable[str]:
         """
         Gives the path of the file containing all the data about the campaign.
         This file may be either a regular file or a directory.
@@ -730,6 +751,26 @@ class ScalpelConfigurationBuilder:
             return CampaignFormat.value_of(self._main_file[index + 1:])
         except ValueError:
             return None
+
+    def _has_header(self) -> bool:
+        """
+        Checks whether the input file to parse has a header.
+
+        :return: If the input file to parse has a header.
+        """
+        raise NotImplementedError('Method "_has_header()" is abstract!')
+
+    def _quote_char(self) -> str:
+        """
+        :return: Return the quote char
+        """
+        raise NotImplementedError('Method "_quote_char()" is abstract!')
+
+    def _separator(self) -> str:
+        """
+        :return: Return the separator
+        """
+        raise NotImplementedError('Method "_separator()" is abstract!')
 
     def _get_hierarchy_depth(self) -> Optional[int]:
         """
@@ -920,14 +961,19 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         create_input_set_reader(fmt, **kwargs)(self._listener, paths)
         self._listener.end_input_set()
 
-    def _get_campaign_path(self) -> str:
+    def _get_campaign_path(self) -> Iterable[str]:
         """
         Gives the path of the file containing all the data about the campaign.
         This file may be either a regular file or a directory.
 
         :return: The path to the main file of the campaign.
         """
-        return self._get('source').get('path')
+        campaign_path = self._get('source').get('path')
+        if campaign_path is None:
+            raise ValueError
+        if isinstance(campaign_path, list):
+            return campaign_path
+        return [campaign_path]
 
     def _get_format(self) -> Optional[CampaignFormat]:
         """
@@ -940,6 +986,27 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         if fmt is None:
             return self._format
         return CampaignFormat.value_of(fmt)
+
+    def _has_header(self) -> bool:
+        """
+        Checks whether the input file to parse has a header.
+
+        :return: If the input file to parse has a header.
+        """
+        has_header = self._get('source').get('has-header')
+        return has_header is None or has_header.lower() == 'true'
+
+    def _quote_char(self) -> str:
+        """
+        :return: Return the quote char
+        """
+        return self._get('source').get('quote-char')
+
+    def _separator(self) -> str:
+        """
+        :return: Return the separator
+        """
+        return self._get('source').get('separator')
 
     def _get_hierarchy_depth(self) -> Optional[int]:
         """

@@ -29,7 +29,6 @@ This package provides the modules allowing to parse files so as to retrieve
 the experimental data collected during a campaign.
 """
 
-
 from pydoc import locate
 
 from metrics.scalpel import CampaignParserListener
@@ -59,7 +58,8 @@ def create_parser(config: ScalpelConfiguration,
     campaign_format = config.get_format()
 
     if campaign_format == CampaignFormat.CSV:
-        return CsvCampaignParser(listener)
+        return CsvCampaignParser(listener, separator=config.get_separator(), quote_char=config.get_quote_char(),
+                                 has_header=config.has_header())
 
     if campaign_format == CampaignFormat.CSV2:
         return CsvCampaignParser(listener, separator=';')

@@ -23,7 +23,11 @@ input-set:
 
 source:
   path:
+    -
   format:
+  has-header:
+  quote-char:
+  separator:
   hierarchy-depth:
   experiment-ware:
   parser:

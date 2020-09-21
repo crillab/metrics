@@ -116,7 +116,7 @@ class CsvCampaignParser(FileCampaignParser):
     """
 
     def __init__(self, listener: CampaignParserListener, separator: str = ',',
-                 quote_char: Optional[str] = None) -> None:
+                 quote_char: Optional[str] = None, has_header: bool = True) -> None:
         """
         Creates a new CsvCampaignParser.
 
@@ -128,6 +128,7 @@ class CsvCampaignParser(FileCampaignParser):
         super().__init__(listener)
         self._separator = separator
         self._quote_char = quote_char
+        self._has_header = has_header
         self._reader = None
 
     def parse_stream(self, stream: TextIO) -> None:
@@ -417,7 +418,7 @@ class MultipleFilesCampaignParser(DirectoryCampaignParser):
                 names.add(self._get_extension(file.name))
         for n in names:
             self.start_experiment()
-            for file in glob.glob(f'{path.join(root,n)}.*'):
+            for file in glob.glob(f'{path.join(root, n)}.*'):
                 if self._configuration.is_to_be_parsed(file):
                     parser = self._get_parser_for(file, path.join(root, file))
                     parser.parse()
