@@ -13,8 +13,10 @@ PACKAGE_NAME = crillab-metrics
 
 MODULE_NAME = metrics
 
+DOCKER_ORGANIZATION = thibaultfalque
+
 # The version of the package to build.
-VERSION = 0.1.0
+VERSION = 0.2.4
 
 
 # The directory of the unit tests for the package to build.
@@ -92,6 +94,15 @@ dist/$(PACKAGE_NAME)-$(VERSION).tar.gz:
 upload:
 	python3 setup.py sdist upload
 
+
+####################
+## Docker Targets ##
+####################
+
+docker-build:
+	docker build -t $(DOCKER_ORGANIZATION)/$(MODULE_NAME):latest .
+docker-push:
+	docker push $(DOCKER_ORGANIZATION)/$(MODULE_NAME):latest
 
 #####################
 ## Utility Targets ##
