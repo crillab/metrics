@@ -29,10 +29,9 @@ This module provides classes defining user-defined patterns, which allow to
 identify and extract data from an experiment-ware output file.
 """
 
-
 from enum import Enum
 from re import compile, escape, sub
-from typing import Optional, Pattern
+from typing import Optional, Pattern, Iterable, Tuple
 
 
 class NamedPattern(Enum):
@@ -76,7 +75,39 @@ class NamedPattern(Enum):
         return None
 
 
-class UserDefinedPattern:
+class AbstractUserDefinedPattern:
+
+    def search(self, string: str) -> Tuple[str]:
+        """
+        Searches the given string to retrieve the value specified by the
+        associated pattern.
+
+        :param string: The string to look into.
+
+        :return: The extracted value, if any.
+        """
+        raise NotImplementedError('Method "search()" is abstract!')
+
+
+class UserDefinedPatterns(AbstractUserDefinedPattern):
+
+    def __init__(self):
+        self._children = []
+
+    def add(self, obj: AbstractUserDefinedPattern):
+        self._children.append(obj)
+
+    def search(self, string: str) -> Tuple[str]:
+        results = []
+        for c in self._children:
+            r = c.search(string)
+            if len(r) == 0:
+                return tuple()
+            results.extend(r)
+        return tuple(results)
+
+
+class UserDefinedPattern(AbstractUserDefinedPattern):
     """
     The UserDefinedPattern allows to easily extract from a string a value
     identified with a regular expression.
@@ -92,7 +123,7 @@ class UserDefinedPattern:
         self._pattern = pattern
         self._group_id = group_id
 
-    def search(self, string: str) -> Optional[str]:
+    def search(self, string: str) -> Tuple[str]:
         """
         Searches the given string to retrieve the value specified by the
         associated pattern.
@@ -103,8 +134,8 @@ class UserDefinedPattern:
         """
         match = self._pattern.search(string)
         if match is None:
-            return None
-        return match.group(self._group_id)
+            return tuple()
+        return match.group(self._group_id),
 
 
 def compile_regex(regex: str, group_id: int = 1) -> UserDefinedPattern:

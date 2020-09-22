@@ -42,7 +42,8 @@ from yaml import safe_load as load_yaml
 from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex
+from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex, \
+    AbstractUserDefinedPattern, UserDefinedPatterns
 
 
 class LogData:
@@ -92,7 +93,7 @@ class ScalpelConfiguration:
                  log_datas: Optional[Dict[str, List[LogData]]] = None,
                  hierarchy_depth: Optional[int] = None,
                  experiment_ware_depth: Optional[int] = None,
-                 custom_parser: Optional[str] = None, ) -> None:
+                 custom_parser: Optional[str] = None, file_name_meta: FileNameMetaConfiguration = None) -> None:
         """
         Creates a new ScalpelConfiguration.
 
@@ -120,6 +121,7 @@ class ScalpelConfiguration:
         self._custom_parser = custom_parser
         self._hierarchy_depth = hierarchy_depth
         self._experiment_ware_depth = experiment_ware_depth
+        self._file_name_meta = file_name_meta
 
     def get_main_file(self) -> str:
         """
@@ -210,6 +212,9 @@ class ScalpelConfiguration:
         :return: The class of the custom parser to use, if any.
         """
         return self._custom_parser
+
+    def get_file_name_meta(self) -> FileNameMetaConfiguration:
+        return self._file_name_meta
 
 
 class ConfigurationIterator:
@@ -527,6 +532,124 @@ class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfigura
         return self.current().get('group')
 
 
+class DictionaryConfiguration:
+    def __init__(self, dic):
+        self._dict = dic
+
+    def get(self, key: str):
+        return self._dict.get(key)
+
+
+class FileNameMetaConfiguration(DictionaryConfiguration):
+    """
+    The MappingConfiguration defines the property of the raw data configuration.
+    """
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        """
+        Gives the simplified pattern identifying the current filename.
+
+        :return: The simplified pattern for the raw data, if any.
+        """
+        raise NotImplementedError('Method "get_simplified_pattern()" is abstract!')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        """
+        Gives the regular expression identifying the current filename.
+
+        :return: The regular expression for the raw data, if any.
+        """
+        raise NotImplementedError('Method "get_regex_pattern()" is abstract!')
+
+    def get_input_group(self) -> Optional[int]:
+        """
+        Gives the group identifying the input name in the regular expression.
+
+        :return: The group in the regular expression, if any.
+        """
+        raise NotImplementedError('Method "get_regex_group()" is abstract!')
+
+    def get_experiment_ware_group(self) -> Optional[int]:
+        """
+        Gives the group identifying the experiment ware in the regular expression.
+
+        :return: The group in the regular expression, if any.
+        """
+        raise NotImplementedError('Method "get_regex_group()" is abstract!')
+
+    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
+        """
+        Gives the compiled pattern identifying the current raw data.
+
+        :return: The compiled pattern.
+
+        :raises ValueError: A ValueError is raised if no simplified pattern nor
+                            regular expression was specified for the raw data.
+        """
+        # First, we look for a named pattern.
+        simplified_pattern = self.get_simplified_pattern()
+        if simplified_pattern is not None:
+            return compile_named_pattern(simplified_pattern)
+
+        # There is no look pattern: trying a regular expression.
+        regex = self.get_regex_pattern()
+        experiment_ware_group = self.get_experiment_ware_group()
+        input_group = self.get_input_group()
+        if regex is not None:
+            user_defined_patterns = UserDefinedPatterns()
+            if experiment_ware_group is not None:
+                user_defined_patterns.add(compile_regex(regex, experiment_ware_group))
+            if input_group is not None:
+                user_defined_patterns.add(compile_regex(regex, input_group))
+            return user_defined_patterns
+
+        # The description of the data is missing!
+        raise ValueError('A pattern or regex is missing!')
+
+
+class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
+    """
+    The EmptyFileNameMetaConfiguration is a RawDataConfiguration with no element.
+    """
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        """
+        Gives the simplified pattern identifying the current raw data.
+
+        :return: The simplified pattern for the raw data, if any.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        """
+        Gives the regular expression identifying the current raw data.
+
+        :return: The regular expression for the raw data, if any.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+    def get_input_group(self) -> Optional[int]:
+        raise ValueError('Empty raw data configuration!')
+
+    def get_experiment_ware_group(self) -> Optional[int]:
+        raise ValueError('Empty raw data configuration!')
+
+
+class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration):
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        return self.get('pattern')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        return self.get('regex')
+
+    def get_input_group(self) -> Optional[int]:
+        return self.get('input_group')
+
+    def get_experiment_ware_group(self) -> Optional[int]:
+        return self.get('experiment_ware')
+
+
 class ScalpelConfigurationBuilder:
     """
     The ScalpelConfigurationBuilder allows to build Scalpel's configuration.
@@ -550,6 +673,7 @@ class ScalpelConfigurationBuilder:
         self._header = True
         self._sep = ','
         self._quote = None
+        self._file_name_meta = None
 
     def build(self) -> ScalpelConfiguration:
         """
@@ -564,12 +688,12 @@ class ScalpelConfigurationBuilder:
         self.read_experiment_wares()
         self.read_input_set()
         self.read_source()
-        self.read_data_files()
+        self.read_data()
         return ScalpelConfiguration(self._format, self._header, self._quote, self._sep, self._main_file,
                                     self._data_files, self._log_datas,
                                     self._hierarchy_depth,
                                     self._experiment_ware_depth,
-                                    self._custom_parser)
+                                    self._custom_parser, self._file_name_meta)
 
     def read_mapping(self) -> None:
         """
@@ -799,7 +923,7 @@ class ScalpelConfigurationBuilder:
         """
         raise NotImplementedError('Method "_get_custom_parser()" is abstract!')
 
-    def read_data_files(self) -> None:
+    def read_data(self) -> None:
         """
         Reads the files from which Scalpel will extract relevant data for the
         analysis.
@@ -807,6 +931,7 @@ class ScalpelConfigurationBuilder:
         directory.
         """
         raw_data = self._get_raw_data()
+        self._file_name_meta = self._get_file_name_meta()
         while raw_data.has_next():
             file = raw_data.get_file()
             name = raw_data.get_name()
@@ -814,6 +939,9 @@ class ScalpelConfigurationBuilder:
             self._log_datas[file].append(LogData(name, pattern))
             raw_data.next()
         self._data_files = self._get_data_files()
+
+    def _get_file_name_meta(self) -> FileNameMetaConfiguration:
+        raise NotImplementedError('Method "_get_file_name_meta()" is abstract!')
 
     def _get_raw_data(self) -> RawDataConfiguration:
         """
@@ -1034,6 +1162,10 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: The class of the parser to use
         """
         return self._get('source').get('parser')
+
+    def _get_file_name_meta(self) -> FileNameMetaConfiguration:
+        file_name_meta = self._get('data').get('file_name_meta')
+        return DictionaryFileNameMetaConfiguration(file_name_meta)
 
     def _get_raw_data(self) -> RawDataConfiguration:
         """

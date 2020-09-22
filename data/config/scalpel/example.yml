@@ -37,6 +37,11 @@ data:
     experiment_ware:
     cpu_time:
     input:
+  file-name-meta:
+    pattern:
+    regex:
+    experiment_ware:
+    input:
   raw-data:
     - file:
       name:
