@@ -24,22 +24,28 @@
 """
 This module provides a simple class corresponding to the builder of the dataframe linked to a campaign.
 """
-from typing import Set, Callable, Any
+from __future__ import annotations
+from typing import Set, Callable, Any, List
 
 from pandas import DataFrame
 
 from metrics.core.model import Campaign
 from metrics.scalpel import read_yaml
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
+from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
+from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable
 
 
 class Analysis:
 
-    def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None):
-        self._input_file = input_file
-        self._campaign = campaign if campaign is not None else self._make_campaign()
-        self._is_success = (lambda x: x['cpu_time'] < self._campaign.timeout) if is_success is None else is_success
-        self._campaign_df = self._make_campaign_df()
+    def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None, campaign_df: CampaignDataFrame = None ):
+        if campaign_df is None:
+            self._input_file = input_file
+            self._campaign = self._make_campaign() if campaign is None else campaign
+            self._is_success = (lambda x: x['cpu_time'] < self._campaign.timeout) if is_success is None else is_success
+            self._campaign_df = self._make_campaign_df()
+        else:
+            self._campaign_df = campaign_df
 
     @property
     def campaign_df(self):
@@ -53,6 +59,57 @@ class Analysis:
         campaign_df.data_frame['success'] = campaign_df.data_frame.apply(self._is_success, axis=1)
         campaign_df.data_frame['cpu_time'] = campaign_df.data_frame.apply(lambda x: x['cpu_time'] if x['success'] else campaign_df.campaign.timeout, axis=1)
         return campaign_df
+
+    def sub_analysis(self, column, sub_set) -> Analysis:
+        """
+        Filters the dataframe in function of sub set of authorized values for a given column.
+        @param column: column where  to keep the sub set of values.
+        @param sub_set: the sub set of authorised values.
+        @return: the filtered dataframe in a new instance of Analysis.
+        """
+        return Analysis(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
+
+    def add_vbew(self, xp_ware_set, opti_col='cpu_time', minimize=True, vbew_name='vbew') -> Analysis:
+        """
+        Make a Virtual Best ExperimentWare.
+        We get the best results of a sub set of experiment wares.
+        For example, we can create the vbew of all current experimentwares based on the column cpu_time. A new
+        experiment_ware "vbew" is created with best experiments (in term of cpu_time) of the xp_ware_set.
+        @param xp_ware_set: we based this vbew on this subset of experimentwares.
+        @param opti_col: the col we want to optimize.
+        @param minimize: True if the min value is the optimal, False if it is the max value.
+        @param vbew_name: name of the vbew.
+        @return: a new instance of Analysis with the new vbew.
+        """
+        return Analysis(campaign_df=self._campaign_df.add_vbew(xp_ware_set, opti_col, minimize, vbew_name))
+
+    def groupby(self, column) -> List[Analysis]:
+        """
+        Makes a group by a given column.
+        @param column: column where to applu the groupby.
+        @return: a list of Analysis with each group.
+        """
+        return [
+            Analysis(campaign_df=cdf) for cdf in self._campaign_df.groupby(column)
+        ]
+
+    def get_cactus_plot(self, dynamic: bool = False, **kwargs: dict):
+        return (CactusPlotly(self._campaign_df, **kwargs) if dynamic else CactusMPL(self._campaign_df, **kwargs)).get_figure()
+
+    def get_scatter_plot(self, dynamic: bool = False, **kwargs: dict):
+        return (ScatterPlotly(self._campaign_df, **kwargs) if dynamic else ScatterMPL(self._campaign_df, **kwargs)).get_figure()
+
+    def get_cdf(self, dynamic: bool = False, **kwargs: dict):
+        return (CDFPlotly(self._campaign_df, **kwargs) if dynamic else CDFMPL(self._campaign_df, **kwargs)).get_figure()
+
+    def get_box_plot(self, dynamic: bool = False, **kwargs: dict):
+        return (BoxPlotly(self._campaign_df, **kwargs) if dynamic else BoxMPL(self._campaign_df, **kwargs)).get_figure()
+
+    def get_stat_table(self, **kwargs: dict):
+        return StatTable(self._campaign_df, **kwargs).get_figure()
+
+    def get_contribution_table(self, **kwargs: dict):
+        return StatTable(self._campaign_df, **kwargs).get_figure()
 
 
 class CampaignDataFrameBuilder:
