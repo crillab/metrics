@@ -182,7 +182,7 @@ class AttributeManagerForTyping(AttributeManager):
                 return
             self._ordered_typing.pop(0)
 
-        raise TypeError(f'{self._name} has no matching type in {self._initial_ordered_typing}.')
+        raise TypeError(f'{self._name} has no matching type in {self._initial_ordered_typing} (last unmatching value: "{obj}").')
 
     def parse(self, obj: Any) -> Any:
         """
