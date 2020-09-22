@@ -44,19 +44,19 @@ class StatTable(Table):
     def get_data_frame(self):
         df_stat = pd.DataFrame(index=self._campaign_df.xp_ware_names)
 
-        only_solved_df = self._campaign_df.filter_by([
+        only_solved_df = self._campaign_df._filter_by([
             CampaignDFFilter.ONLY_SOLVED,
         ]).data_frame
 
-        no_common_failed = self._campaign_df.filter_by([
+        no_common_failed = self._campaign_df._filter_by([
             CampaignDFFilter.DELETE_COMMON_TIMEOUT,
         ]).data_frame
 
-        common_inputs = self._campaign_df.filter_by([
+        common_inputs = self._campaign_df._filter_by([
             CampaignDFFilter.ONLY_COMMON_SOLVED,
         ]).data_frame
 
-        no_common_solved_no_out = self._campaign_df.filter_by([
+        no_common_solved_no_out = self._campaign_df._filter_by([
             CampaignDFFilter.DELETE_COMMON_SOLVED,
             CampaignDFFilter.ONLY_SOLVED,
         ]).data_frame

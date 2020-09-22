@@ -215,7 +215,7 @@ class CactusPlot(Plot):
 
         @return: the pandas dataframe used by this figure.
         """
-        df_solved = self._campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
+        df_solved = self._campaign_df._filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
         df_cactus = df_solved.pivot(columns='experiment_ware', values=self._cactus_col)
         for col in df_cactus.columns:
             df_cactus[col] = df_cactus[col].sort_values().values
@@ -337,7 +337,7 @@ class ScatterPlot(Plot):
 
         @return: the pandas dataframe used by this figure.
         """
-        df_solved = self._campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
+        df_solved = self._campaign_df._filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
         df_scatter = df_solved.pivot_table(index=['input'], columns='experiment_ware', values=self._scatter_col,
                                            fill_value=self._campaign_df.campaign.timeout)
 

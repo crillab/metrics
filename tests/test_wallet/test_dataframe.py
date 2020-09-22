@@ -65,34 +65,34 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
         self.assertEqual(1500, len(self.campaign_df.data_frame))
 
     def test_delete_common_timeout(self):
-        df = self.campaign_df.filter_by([CampaignDFFilter.DELETE_COMMON_TIMEOUT]).data_frame
+        df = self.campaign_df._filter_by([CampaignDFFilter.DELETE_COMMON_TIMEOUT]).data_frame
 
         self.assertEqual(1173, len(df))
 
     def test_delete_timeout(self):
-        df = self.campaign_df.filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
+        df = self.campaign_df._filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
 
         self.assertEqual(1150, len(df))
 
     def test_only_common_timeout(self):
-        common_timeout_df = self.campaign_df.filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame
+        common_timeout_df = self.campaign_df._filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame
         self.assertEqual(109, len(common_timeout_df.input.unique()))
         self.assertEqual(len(common_timeout_df), 327)
 
     def test_delete_common_solved(self):
-        common_solved_df = self.campaign_df.filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame
+        common_solved_df = self.campaign_df._filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame
         full_df = self.campaign_df.data_frame
-        no_common_solved_df = self.campaign_df.filter_by([CampaignDFFilter.DELETE_COMMON_SOLVED]).data_frame
+        no_common_solved_df = self.campaign_df._filter_by([CampaignDFFilter.DELETE_COMMON_SOLVED]).data_frame
 
         self.assertEqual(len(full_df) - len(common_solved_df), len(no_common_solved_df))
 
     def test_delete_solved(self):
-        df = self.campaign_df.filter_by([CampaignDFFilter.ONLY_TIMEOUT]).data_frame
+        df = self.campaign_df._filter_by([CampaignDFFilter.ONLY_TIMEOUT]).data_frame
 
         self.assertEqual(350, len(df))
 
     def test_only_common_solved(self):
-        df = self.campaign_df.filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame
+        df = self.campaign_df._filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame
 
         self.assertEqual(374, len(df.input.unique()))
         self.assertEqual(1122, len(df.input))
@@ -116,9 +116,9 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
         self.assertEqual(names, NAMES)
 
         sub = next(sub for sub in gb if sub.name.split('>')[-1] == 'SuperSolutions')
-        self.assertEqual(8, len(sub.filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame.input.unique()))
+        self.assertEqual(8, len(sub._filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame.input.unique()))
 
-        df_no_common_solved_no_out = sub.filter_by([
+        df_no_common_solved_no_out = sub._filter_by([
             CampaignDFFilter.DELETE_COMMON_SOLVED,
             CampaignDFFilter.ONLY_SOLVED,
         ]).data_frame
@@ -126,7 +126,7 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
 
         self.assertEqual(INPUT, set(df_no_common_solved_no_out['input']))
 
-        self.assertEqual(SET_COMMON_FAILED_INPUTS, set(sub.filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame.input.unique()))
+        self.assertEqual(SET_COMMON_FAILED_INPUTS, set(sub._filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame.input.unique()))
 
 
 class TestCampaignDataFrameBuilderVBS(unittest.TestCase):
@@ -145,9 +145,9 @@ class TestCampaignDataFrameBuilderVBS(unittest.TestCase):
         self.assertCountEqual(self.campaign_df.xp_ware_names, ['ExplorationLuby', 'vbew', 'WDegCAxCD', 'CHS'])
 
     def test_delete_common_solved(self):
-        common_solved_df = self.campaign_df.filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame
+        common_solved_df = self.campaign_df._filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame
         full_df = self.campaign_df.data_frame
-        no_common_solved_df = self.campaign_df.filter_by([CampaignDFFilter.DELETE_COMMON_SOLVED]).data_frame
+        no_common_solved_df = self.campaign_df._filter_by([CampaignDFFilter.DELETE_COMMON_SOLVED]).data_frame
 
         self.assertEqual(len(full_df) - len(common_solved_df), len(no_common_solved_df))
 
@@ -157,9 +157,9 @@ class TestCampaignDataFrameBuilderVBS(unittest.TestCase):
         self.assertEqual(names, NAMES)
 
         sub = next(sub for sub in gb if sub.name.split('>')[-1] == 'SuperSolutions')
-        self.assertEqual(8, len(sub.filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame.input.unique()))
+        self.assertEqual(8, len(sub._filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame.input.unique()))
 
-        df_no_common_solved_no_out = sub.filter_by([
+        df_no_common_solved_no_out = sub._filter_by([
             CampaignDFFilter.DELETE_COMMON_SOLVED,
             CampaignDFFilter.ONLY_SOLVED,
         ]).data_frame
@@ -167,7 +167,7 @@ class TestCampaignDataFrameBuilderVBS(unittest.TestCase):
 
         self.assertEqual(INPUT, set(df_no_common_solved_no_out['input']))
 
-        self.assertEqual(SET_COMMON_FAILED_INPUTS, set(sub.filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame.input.unique()))
+        self.assertEqual(SET_COMMON_FAILED_INPUTS, set(sub._filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame.input.unique()))
 
 
 class TestCampaignDataFrameBuilderSubWare(unittest.TestCase):
@@ -188,9 +188,9 @@ class TestCampaignDataFrameBuilderSubWare(unittest.TestCase):
         self.assertCountEqual(self.campaign_df.xp_ware_names, ['WDegCAxCD', 'CHS'])
 
     def test_delete_common_solved(self):
-        common_solved_df = self.campaign_df.filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame
+        common_solved_df = self.campaign_df._filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame
         full_df = self.campaign_df.data_frame
-        no_common_solved_df = self.campaign_df.filter_by([CampaignDFFilter.DELETE_COMMON_SOLVED]).data_frame
+        no_common_solved_df = self.campaign_df._filter_by([CampaignDFFilter.DELETE_COMMON_SOLVED]).data_frame
 
         self.assertEqual(len(full_df) - len(common_solved_df), len(no_common_solved_df))
 
@@ -200,9 +200,9 @@ class TestCampaignDataFrameBuilderSubWare(unittest.TestCase):
         self.assertEqual(names, NAMES)
 
         sub = next(sub for sub in gb if sub.name.split('>')[-1] == 'SuperSolutions')
-        self.assertEqual(8, len(sub.filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame.input.unique()))
+        self.assertEqual(8, len(sub._filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED]).data_frame.input.unique()))
 
-        df_no_common_solved_no_out = sub.filter_by([
+        df_no_common_solved_no_out = sub._filter_by([
             CampaignDFFilter.DELETE_COMMON_SOLVED,
             CampaignDFFilter.ONLY_SOLVED,
         ]).data_frame
@@ -210,7 +210,7 @@ class TestCampaignDataFrameBuilderSubWare(unittest.TestCase):
 
         self.assertEqual(INPUT, set(df_no_common_solved_no_out['input']))
 
-        self.assertEqual(SET_COMMON_FAILED_INPUTS, set(sub.filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame.input.unique()))
+        self.assertEqual(SET_COMMON_FAILED_INPUTS, set(sub._filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame.input.unique()))
 
 
 if __name__ == '__main__':
