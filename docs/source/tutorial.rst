@@ -49,6 +49,28 @@ to install it, or to execute `pip` as a module, as follows.
     python3 -m pip install crillab-metrics
 
 
-Use METRICS 
+Using METRICS
 ********************************
+
+CSV Format
+------------------------------------
+
+Extracting Data with metrics-scalpel
+====================================
+
+Evaluations Format
+------------------------------------
+
+Flat-dir Format
+------------------------------------
+
+Deep-dir Format
+-----------------------------------
+
+Deep-dir-dyn Format
+------------------------------------
+
+Deep-dir-dyn Format
+------------------------------------
+
 

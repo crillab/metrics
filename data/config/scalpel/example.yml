@@ -43,7 +43,7 @@ data:
     experiment_ware:
     input:
   raw-data:
-    - file:
+    - lod-data:
       name:
       pattern:
       regex:

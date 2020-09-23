@@ -1,0 +1,34 @@
+name: abscon-campaign
+date: 23 septembre 2020
+
+setup:
+  os: Linux CentOS 7 (x86_64)
+  cpu: Intel XEON X5550
+  ram: 32GB
+  timeout: 1200
+  memout: 16384
+
+
+input-set:
+  name: benchmark
+  path-list:
+    - ./christophe_inputlist
+
+source:
+  path: data/
+  format: flat-dir
+data:
+  file-name-meta:
+    regex: ProblemFile-(.*)_(bs[012]{1})_(.*)
+    experiment_ware: 2
+    input: 1
+  raw-data:
+    - file: *.xml
+      log-data: cpu_time
+      pattern: cpu="{real}"
+    - file: *.xml
+      log-data: mem
+      regex: mem="(\d+M\d+)"
+    - file: *.xml
+      log-data: result
+      pattern: Stop="{any}"
