@@ -29,7 +29,7 @@ This module uses the DataFrame object pandas library.
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Set
+from typing import List
 
 import pandas as pd
 
@@ -123,7 +123,7 @@ class CampaignDataFrame:
         """
         return self._vbew_names
 
-    def filter_by(self, filters: List[CampaignDFFilter]):
+    def _filter_by(self, filters: List[CampaignDFFilter]):
         """
         Permits to filter the current dataframe by the list of provided filters.
         We can apply this only on a subset of experimentwares.
@@ -136,6 +136,24 @@ class CampaignDataFrame:
             df = f(self._campaign, df)
 
         return self.build_data_frame(df)
+
+    def get_only_failed(self):
+        return self._filter_by([CampaignDFFilter.ONLY_TIMEOUT])
+
+    def get_only_success(self):
+        return self._filter_by([CampaignDFFilter.ONLY_SOLVED])
+
+    def get_only_common_failed(self):
+        return self._filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT])
+
+    def get_only_common_success(self):
+        return self._filter_by([CampaignDFFilter.ONLY_COMMON_SOLVED])
+
+    def delete_common_failed(self):
+        return self._filter_by([CampaignDFFilter.DELETE_COMMON_TIMEOUT])
+
+    def delete_common_success(self):
+        return self._filter_by([CampaignDFFilter.DELETE_COMMON_SOLVED])
 
     def sub_data_frame(self, column, sub_set) -> CampaignDataFrame:
         """
