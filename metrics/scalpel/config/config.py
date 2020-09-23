@@ -43,7 +43,7 @@ from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex, \
-    AbstractUserDefinedPattern, UserDefinedPatterns
+    AbstractUserDefinedPattern, UserDefinedPatterns, NullUserDefinedPattern
 
 
 class LogData:
@@ -89,11 +89,11 @@ class ScalpelConfiguration:
     """
 
     def __init__(self, fmt: Optional[CampaignFormat], has_header: bool, quote: str, separator: str, main_file: str,
-                 data_files: Optional[List[str]] = None,
-                 log_datas: Optional[Dict[str, List[LogData]]] = None,
-                 hierarchy_depth: Optional[int] = None,
-                 experiment_ware_depth: Optional[int] = None,
-                 custom_parser: Optional[str] = None, file_name_meta: FileNameMetaConfiguration = None) -> None:
+                 data_files: Optional[List[str]],
+                 log_datas: Optional[Dict[str, List[LogData]]],
+                 hierarchy_depth: Optional[int],
+                 experiment_ware_depth: Optional[int],
+                 custom_parser: Optional[str], file_name_meta: FileNameMetaConfiguration) -> None:
         """
         Creates a new ScalpelConfiguration.
 
@@ -111,6 +111,7 @@ class ScalpelConfiguration:
         :param custom_parser: The (completely specified) class of the parser to use to
                               parse the campaign.
         """
+        assert file_name_meta is not None
         self._format = fmt
         self._has_header = has_header
         self._quote = quote
@@ -540,7 +541,7 @@ class DictionaryConfiguration:
         return self._dict.get(key)
 
 
-class FileNameMetaConfiguration(DictionaryConfiguration):
+class FileNameMetaConfiguration:
     """
     The MappingConfiguration defines the property of the raw data configuration.
     """
@@ -634,8 +635,11 @@ class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
     def get_experiment_ware_group(self) -> Optional[int]:
         raise ValueError('Empty raw data configuration!')
 
+    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
+        return NullUserDefinedPattern()
 
-class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration):
+
+class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryConfiguration):
 
     def get_simplified_pattern(self) -> Optional[str]:
         return self.get('pattern')
@@ -673,7 +677,7 @@ class ScalpelConfigurationBuilder:
         self._header = True
         self._sep = ','
         self._quote = None
-        self._file_name_meta = None
+        self._file_name_meta = EmptyFileNameMetaConfiguration()
 
     def build(self) -> ScalpelConfiguration:
         """
@@ -845,9 +849,9 @@ class ScalpelConfigurationBuilder:
         :return: The guessed format of the campaign, or None if it could
                  not be guessed.
         """
-        if path.isdir(self._main_file):
+        if path.isdir(self._main_file[0]):
             return self._guess_directory_format()
-        if path.exists(self._main_file):
+        if path.exists(self._main_file[0]):
             return self._guess_regular_format()
         return None
 
@@ -858,7 +862,7 @@ class ScalpelConfigurationBuilder:
         :return: The format of the campaign, guessed from the deepness of the
                  file hierarchy rooted at the main file of this campaign.
         """
-        for _, dirs, _ in walk(self._main_file):
+        for _, dirs, _ in walk(self._main_file[0]):
             if dirs:
                 return CampaignFormat.DEEP_LOG_DIRECTORY
         return CampaignFormat.FLAT_LOG_DIRECTORY
@@ -871,8 +875,8 @@ class ScalpelConfigurationBuilder:
                  main file, or None if it could not be guessed.
         """
         try:
-            index = self._main_file.rindex('.')
-            return CampaignFormat.value_of(self._main_file[index + 1:])
+            index = self._main_file[0].rindex('.')
+            return CampaignFormat.value_of(self._main_file[0][index + 1:])
         except ValueError:
             return None
 
@@ -1134,7 +1138,8 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         """
         :return: Return the separator
         """
-        return self._get('source').get('separator')
+        sep = self._get('source').get('separator')
+        return sep if sep is not None else ','
 
     def _get_hierarchy_depth(self) -> Optional[int]:
         """
@@ -1165,6 +1170,8 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
 
     def _get_file_name_meta(self) -> FileNameMetaConfiguration:
         file_name_meta = self._get('data').get('file_name_meta')
+        if file_name_meta is None:
+            return EmptyFileNameMetaConfiguration()
         return DictionaryFileNameMetaConfiguration(file_name_meta)
 
     def _get_raw_data(self) -> RawDataConfiguration:
