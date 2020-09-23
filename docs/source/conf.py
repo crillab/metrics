@@ -12,6 +12,9 @@
 #
 import os
 import sys
+
+import metrics
+
 sys.path.insert(0, os.path.abspath('.'))
 
 
@@ -22,7 +25,7 @@ copyright = '2020, Hugues Wattez, Romain Wallon, Thibault Falque'
 author = 'Hugues Wattez, Romain Wallon, Thibault Falque'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.4'
+release = metrics.__version__
 
 
 # -- General configuration ---------------------------------------------------
