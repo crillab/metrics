@@ -1,0 +1,20 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="664">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Pb-robin08_c18"/>
+<domains nTypes="1" nValues="1568" sizes="[2#784]"/>
+<variables count="784" degrees="[10#784]"/>
+<constraints arities="[28#224,49#32]" count="256" cpu="2.457" distribution="[SumSimpleGE#112,SumSimpleLE#144]" mem="315M326" nSpecific="256" wck="0.621"/>
+<solver cpu="2.502" guaranteedGAC="true" mem="349M405" wck="0.669">
+<preprocessing cpu="2.513" filters="0" inconsistency="false" mem="349M405" nACremovedValues="0" nTotalRemovedValues="0" wck="0.009"/>
+<run backtracks="28" decisions="170" depth="104..116" failedAssignments="10" filters="468" mem="349M405" nogoods="2" num="0" wck="0.041" wrong="31"/>
+<run backtracks="51" decisions="522" depth="286..307" failedAssignments="21" filters="1055" mem="349M405" nogoods="3" num="1" wck="0.077" wrong="64"/>
+<run backtracks="107" decisions="911" depth="271..296" failedAssignments="33" filters="2014" mem="349M405" nogoods="5" num="2" wck="0.101" wrong="122"/>
+<run backtracks="130" decisions="1308" depth="324..351" failedAssignments="46" filters="2430" mem="349M405" nogoods="7" num="3" wck="0.116" wrong="156"/>
+<run backtracks="172" decisions="1721" depth="301..323" failedAssignments="60" filters="3070" mem="349M405" nogoods="10" num="4" wck="0.128" wrong="207"/>
+<run backtracks="221" decisions="2154" depth="305..336" failedAssignments="76" filters="4217" mem="349M405" nogoods="12" num="5" wck="0.145" wrong="267"/>
+<run backtracks="271" decisions="2564" depth="294..320" failedAssignments="93" filters="5116" mem="349M405" nogoods="15" num="6" wck="0.162" wrong="323"/>
+<run backtracks="303" ccks="256" decisions="2954" depth="295..783" failedAssignments="110" filters="5852" foundSolutions="1" mem="349M405" nogoods="15" num="7" wck="0.184" wrong="361"/>
+<global Stop="REACHED_GOAL" ccks="256" cpu="2.686" filters="5852" firstSolCpu="2.678" foundSolutions="1" mem="349M405" nogoods="15" wck="0.854" wrong="361"/>
+</solver>
+</resolution>
+</resolutions>

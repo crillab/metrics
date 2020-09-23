@@ -1,0 +1,21 @@
+<resolutions configurationFileName="bs2/configurations/bs0.xml" totalWckTime="249">
+<resolution>
+<instance framework="CSP" name="ProblemFile-LangfordBin-06_c18"/>
+<domains nTypes="2" nValues="216" sizes="[6#12,12#12]"/>
+<variables count="24" degrees="[2#12,12#12]"/>
+<constraints arities="[2#6,13#12]" count="18" cpu="2.221" distribution="[EQ#6,ElementConstant#12]" mem="247M130" nSpecific="18" wck="0.372"/>
+<solver cpu="2.249" guaranteedGAC="true" mem="247M130" wck="0.402">
+<preprocessing cpu="2.252" filters="6" inconsistency="false" mem="247M130" nACremovedValues="54" nTotalRemovedValues="54" wck="0.002"/>
+<run backtracks="4" decisions="26" depth="2..4" failedAssignments="10" filters="293" mem="247M130" nogoods="2" num="0" wck="0.01" wrong="12"/>
+<run backtracks="9" decisions="59" depth="1..3" failedAssignments="21" filters="593" mem="247M130" nogoods="9" num="1" wck="0.013" wrong="28"/>
+<run backtracks="16" decisions="98" depth="1..3" failedAssignments="33" filters="936" mem="247M130" nogoods="16" num="2" wck="0.016" wrong="47"/>
+<run backtracks="25" decisions="141" depth="0..3" failedAssignments="46" filters="1361" mem="247M130" nogoods="17" num="3" wck="0.019" wrong="68"/>
+<run backtracks="32" decisions="182" depth="0..3" failedAssignments="60" filters="1767" mem="247M130" nogoods="21" num="4" wck="0.021" wrong="88"/>
+<run backtracks="41" decisions="231" depth="0..3" failedAssignments="76" filters="2195" mem="247M130" nogoods="22" num="5" wck="0.023" wrong="112"/>
+<run backtracks="49" decisions="280" depth="0..3" failedAssignments="93" filters="2609" mem="247M130" nogoods="28" num="6" wck="0.037" wrong="136"/>
+<run backtracks="62" decisions="344" depth="0..2" failedAssignments="112" filters="3184" mem="247M130" nogoods="28" num="7" wck="0.039" wrong="168"/>
+<run backtracks="72" decisions="388" depth="0..2" failedAssignments="127" filters="3674" mem="247M130" nogoods="28" num="8" wck="0.041" wrong="191"/>
+<global Stop="FULL_EXPLORATION" cpu="2.291" filters="3674" mem="247M130" nogoods="28" wck="0.443" wrong="191"/>
+</solver>
+</resolution>
+</resolutions>

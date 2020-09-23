@@ -1,0 +1,13 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="241">
+<resolution>
+<instance framework="CSP" name="ProblemFile-CarSequencing-dingbas_c18"/>
+<domains nTypes="2" nValues="160" sizes="[2#50,6#10]"/>
+<variables count="60" degrees="[2#10,3#5,4#7,5#10,6#14,7#11,8#3]"/>
+<constraints arities="[2#10,3#16,4#3,5#14,6#11,7#2,8#1,10#6]" count="63" cpu="2.005" distribution="[CardinalityConstant#1,CtrExtensionCT-Table#10,SumSimpleGE#15,SumSimpleLE#37]" mem="247M140" nExtStructures="(1,shared:9)" nSpecific="63" nTotalTuples="60" tables="[6#10]" wck="0.371"/>
+<solver cpu="2.031" guaranteedGAC="true" mem="247M140" wck="0.399">
+<preprocessing cpu="2.035" filters="0" inconsistency="false" mem="247M140" nACremovedValues="0" nTotalRemovedValues="0" wck="0.002"/>
+<run avgTableProportion="83" avgTableSize="5" backtracks="0" ccks="63" decisions="2" depth="61..59" failedAssignments="0" filters="42" foundSolutions="1" mem="247M140" nFilterCalls="37" num="0" wck="0.013" wrong="0"/>
+<global Stop="REACHED_GOAL" ccks="63" cpu="2.045" filters="42" firstSolCpu="2.039" foundSolutions="1" mem="247M140" wck="0.413" wrong="0"/>
+</solver>
+</resolution>
+</resolutions>

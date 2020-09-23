@@ -1,0 +1,13 @@
+<resolutions configurationFileName="bs2/configurations/bs0.xml" totalWckTime="1685">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Crossword-m18-ogd2008-vg-05-06_c18"/>
+<domains nTypes="1" nValues="780" sizes="[26#30]"/>
+<variables count="30" degrees="[2#30]"/>
+<constraints arities="[5#6,6#5]" count="11" cpu="2.383" distribution="[CtrExtensionCT-Table#11]" mem="315M294" nExtStructures="(2,shared:9)" nSpecific="11" nTotalTuples="299280" tables="[18485#6,37674#5]" wck="4.726"/>
+<solver cpu="2.414" guaranteedGAC="true" mem="315M294" wck="4.759">
+<preprocessing cpu="2.418" filters="0" inconsistency="false" mem="315M294" nACremovedValues="0" nTotalRemovedValues="0" wck="0.002"/>
+<run avgTableProportion="99" avgTableSize="27643" backtracks="2" ccks="11" decisions="30" depth="4..29" failedAssignments="8" filters="281" foundSolutions="1" mem="315M294" nFilterCalls="375" num="0" wck="0.025" wrong="9"/>
+<global Stop="REACHED_GOAL" ccks="11" cpu="2.44" filters="281" firstSolCpu="2.434" foundSolutions="1" mem="315M294" wck="4.785" wrong="9"/>
+</solver>
+</resolution>
+</resolutions>

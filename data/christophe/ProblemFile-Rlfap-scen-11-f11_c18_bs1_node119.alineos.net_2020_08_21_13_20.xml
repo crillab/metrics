@@ -1,0 +1,19 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="1277">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Rlfap-scen-11-f11_c18"/>
+<domains nTypes="5" nValues="20200" sizes="[6#2,18#4,22#10,27#336,33#328]"/>
+<variables count="680" degrees="[1#1,3#26,4#13,5#86...44#1,47#1,55#1,62#1]"/>
+<constraints arities="[2#4103]" count="4103" cpu="2.953" distribution="[CtrExtensionV-Bits#340,DistGE#3763]" mem="758M434" nExtStructures="(5,shared:335)" nSpecific="3763" wck="1.342"/>
+<solver cpu="2.996" guaranteedGAC="true" mem="758M434" wck="1.387">
+<preprocessing cpu="3.018" filters="334" inconsistency="false" mem="758M434" nACremovedValues="6656" nTotalRemovedValues="6656" revisions="(680,useless=12)" wck="0.02"/>
+<run backtracks="1" decisions="53" depth="30..31" failedAssignments="10" filters="1471" mem="758M434" nogoods="5" num="0" revisions="(1076,useless=278)" wck="0.034" wrong="11"/>
+<run backtracks="3" decisions="80" depth="0..1" failedAssignments="21" filters="2064" mem="758M434" nogoods="6" num="1" revisions="(1206,useless=379)" wck="0.038" wrong="24"/>
+<run backtracks="5" decisions="108" depth="0..1" failedAssignments="33" filters="2665" mem="758M434" nogoods="6" num="2" revisions="(1286,useless=430)" wck="0.04" wrong="38"/>
+<run backtracks="9" decisions="142" depth="0..1" failedAssignments="46" filters="3365" mem="758M434" nogoods="6" num="3" revisions="(1452,useless=557)" wck="0.043" wrong="55"/>
+<run backtracks="13" decisions="178" depth="0..1" failedAssignments="60" filters="4223" mem="758M434" nogoods="6" num="4" revisions="(1600,useless=664)" wck="0.047" wrong="73"/>
+<run backtracks="17" decisions="218" depth="0..1" failedAssignments="76" filters="5291" mem="758M434" nogoods="6" num="5" revisions="(1757,useless=776)" wck="0.062" wrong="93"/>
+<run backtracks="18" decisions="222" depth="0..0" failedAssignments="78" filters="5575" mem="758M434" nogoods="6" num="6" revisions="(1792,useless=802)" wck="0.063" wrong="96"/>
+<global Stop="FULL_EXPLORATION" cpu="3.061" filters="5575" mem="758M434" nogoods="6" revisions="(1792,useless=802)" wck="1.452" wrong="96"/>
+</solver>
+</resolution>
+</resolutions>

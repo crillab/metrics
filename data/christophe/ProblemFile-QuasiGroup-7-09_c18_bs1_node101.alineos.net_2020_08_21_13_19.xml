@@ -1,0 +1,20 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="432">
+<resolution>
+<instance framework="CSP" name="ProblemFile-QuasiGroup-7-09_c18"/>
+<domains nTypes="1" nValues="1377" sizes="[9#153]"/>
+<variables count="153" degrees="[2#72,19#9,20#72]"/>
+<constraints arities="[1#9,9#18,11#144]" count="171" cpu="2.085" distribution="[AllDifferent#18,CtrIntension#9,ElementVariable#144]" mem="247M147" nIntStructures="(9,shared:0)" nSpecific="162" wck="0.432"/>
+<solver cpu="2.118" guaranteedGAC="true" mem="247M147" wck="0.467">
+<preprocessing ccks="81" cpu="2.141" filters="171" inconsistency="false" mem="247M147" nACremovedValues="360" nTotalRemovedValues="360" revisions="(9,useless=0)" wck="0.021"/>
+<run backtracks="4" ccks="81" decisions="35" depth="7..9" failedAssignments="10" filters="1733" mem="247M147" nogoods="4" num="0" revisions="(9,useless=0)" wck="0.042" wrong="14"/>
+<run backtracks="13" ccks="81" decisions="78" depth="6..10" failedAssignments="21" filters="3330" mem="247M147" nogoods="7" num="1" revisions="(9,useless=0)" wck="0.056" wrong="32"/>
+<run backtracks="24" ccks="81" decisions="128" depth="7..11" failedAssignments="33" filters="5117" mem="247M147" nogoods="10" num="2" revisions="(9,useless=0)" wck="0.069" wrong="53"/>
+<run backtracks="31" ccks="81" decisions="173" depth="5..9" failedAssignments="46" filters="5996" mem="247M147" nogoods="15" num="3" revisions="(9,useless=0)" wck="0.077" wrong="71"/>
+<run backtracks="40" ccks="81" decisions="226" depth="7..10" failedAssignments="60" filters="7642" mem="247M147" nogoods="21" num="4" revisions="(9,useless=0)" wck="0.099" wrong="94"/>
+<run backtracks="56" ccks="81" decisions="296" depth="6..9" failedAssignments="76" filters="10470" mem="247M147" nogoods="28" num="5" revisions="(9,useless=0)" wck="0.111" wrong="126"/>
+<run backtracks="68" ccks="81" decisions="358" depth="6..8" failedAssignments="93" filters="12866" mem="247M147" nogoods="34" num="6" revisions="(9,useless=0)" wck="0.122" wrong="154"/>
+<run backtracks="68" ccks="252" decisions="370" depth="9..152" failedAssignments="94" filters="13376" foundSolutions="1" mem="247M147" nogoods="34" num="7" revisions="(9,useless=0)" wck="0.133" wrong="155"/>
+<global Stop="REACHED_GOAL" ccks="252" cpu="2.252" filters="13376" firstSolCpu="2.246" foundSolutions="1" mem="247M147" nogoods="34" revisions="(9,useless=0)" wck="0.602" wrong="155"/>
+</solver>
+</resolution>
+</resolutions>

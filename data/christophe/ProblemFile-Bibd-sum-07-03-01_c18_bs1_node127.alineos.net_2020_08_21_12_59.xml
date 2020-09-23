@@ -1,0 +1,13 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="223">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Bibd-sum-07-03-01_c18"/>
+<domains nTypes="1" nValues="98" sizes="[2#49]"/>
+<variables count="49" degrees="[10#4,11#20,12#25]"/>
+<constraints arities="[7#14,14#33]" count="47" cpu="1.997" distribution="[LexicographicLE#12,SumScalarBooleanEQ#21,SumSimpleEQ#14]" mem="247M134" nSpecific="47" wck="0.363"/>
+<solver cpu="2.022" guaranteedGAC="true" mem="247M134" wck="0.39">
+<preprocessing cpu="2.025" filters="0" inconsistency="false" mem="247M134" nACremovedValues="0" nTotalRemovedValues="0" wck="0.001"/>
+<run backtracks="2" ccks="47" decisions="29" depth="6..48" failedAssignments="7" filters="59" foundSolutions="1" mem="247M134" num="0" wck="0.014" wrong="8"/>
+<global Stop="REACHED_GOAL" ccks="47" cpu="2.037" filters="59" firstSolCpu="2.032" foundSolutions="1" mem="247M134" wck="0.405" wrong="8"/>
+</solver>
+</resolution>
+</resolutions>

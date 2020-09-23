@@ -1,0 +1,21 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="1315">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Rlfap-scen-11-f10_c18"/>
+<domains nTypes="5" nValues="20532" sizes="[6#2,19#4,22#10,27#336,34#328]"/>
+<variables count="680" degrees="[1#1,3#26,4#13,5#86...44#1,47#1,55#1,62#1]"/>
+<constraints arities="[2#4103]" count="4103" cpu="2.97" distribution="[CtrExtensionV-Bits#340,DistGE#3763]" mem="724M272" nExtStructures="(5,shared:335)" nSpecific="3763" wck="1.333"/>
+<solver cpu="3.015" guaranteedGAC="true" mem="724M272" wck="1.38">
+<preprocessing cpu="3.035" filters="334" inconsistency="false" mem="724M272" nACremovedValues="6324" nTotalRemovedValues="6324" revisions="(680,useless=12)" wck="0.018"/>
+<run backtracks="9" decisions="80" depth="42..51" failedAssignments="10" filters="1976" mem="724M272" nogoods="1" num="0" revisions="(1425,useless=514)" wck="0.037" wrong="19"/>
+<run backtracks="11" decisions="107" depth="0..2" failedAssignments="21" filters="2603" mem="724M272" nogoods="5" num="1" revisions="(1568,useless=602)" wck="0.04" wrong="32"/>
+<run backtracks="13" decisions="136" depth="0..2" failedAssignments="33" filters="3268" mem="724M272" nogoods="11" num="2" revisions="(1740,useless=697)" wck="0.043" wrong="46"/>
+<run backtracks="16" decisions="169" depth="0..2" failedAssignments="46" filters="3964" mem="724M272" nogoods="12" num="3" revisions="(1876,useless=761)" wck="0.046" wrong="62"/>
+<run backtracks="19" decisions="203" depth="0..2" failedAssignments="60" filters="4684" mem="724M272" nogoods="12" num="4" revisions="(2012,useless=830)" wck="0.048" wrong="79"/>
+<run backtracks="24" decisions="244" depth="0..2" failedAssignments="76" filters="5668" mem="724M272" nogoods="14" num="5" revisions="(2237,useless=953)" wck="0.064" wrong="99"/>
+<run backtracks="28" decisions="286" depth="0..1" failedAssignments="93" filters="6652" mem="724M272" nogoods="14" num="6" revisions="(2442,useless=1071)" wck="0.067" wrong="120"/>
+<run backtracks="33" decisions="335" depth="0..1" failedAssignments="112" filters="7802" mem="724M272" nogoods="15" num="7" revisions="(2672,useless=1198)" wck="0.071" wrong="144"/>
+<run backtracks="35" decisions="345" depth="0..1" failedAssignments="116" filters="8167" mem="724M272" nogoods="15" num="8" revisions="(2726,useless=1229)" wck="0.072" wrong="150"/>
+<global Stop="FULL_EXPLORATION" cpu="3.088" filters="8167" mem="724M272" nogoods="15" revisions="(2726,useless=1229)" wck="1.453" wrong="150"/>
+</solver>
+</resolution>
+</resolutions>
