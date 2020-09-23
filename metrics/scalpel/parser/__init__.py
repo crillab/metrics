@@ -59,15 +59,15 @@ def create_parser(config: ScalpelConfiguration,
 
     if campaign_format == CampaignFormat.CSV:
         return CsvCampaignParser(listener, separator=config.get_separator(), quote_char=config.get_quote_char(),
-                                 has_header=config.has_header())
+                                 has_header=config.has_header(), file_name_meta=config.get_file_name_meta())
 
     if campaign_format == CampaignFormat.CSV2:
         return CsvCampaignParser(listener, separator=';', quote_char=config.get_quote_char(),
-                                 has_header=config.has_header())
+                                 has_header=config.has_header(), file_name_meta=config.get_file_name_meta())
 
     if campaign_format == CampaignFormat.TSV:
         return CsvCampaignParser(listener, separator='\t', quote_char=config.get_quote_char(),
-                                 has_header=config.has_header())
+                                 has_header=config.has_header(), file_name_meta=config.get_file_name_meta())
 
     if campaign_format == CampaignFormat.EVALUATION:
         return EvaluationCampaignParser(listener)

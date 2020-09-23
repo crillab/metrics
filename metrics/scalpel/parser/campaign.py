@@ -94,6 +94,7 @@ class FileCampaignParser(CampaignParser):
 
     def __init__(self, listener: CampaignParserListener, file_name_meta: FileNameMetaConfiguration) -> None:
         super().__init__(listener)
+        assert file_name_meta is not None
         self._file_name_meta = file_name_meta
         self._current_experiment_ware = None
         self._current_input = None
@@ -113,10 +114,11 @@ class FileCampaignParser(CampaignParser):
         """
         compiled_pattern = self._file_name_meta.get_compiled_pattern()
         result_tuple = compiled_pattern.search(file_path)
-        if (experiment_ware_index := self._file_name_meta.get_experiment_ware_group()) is not None:
-            self._current_experiment_ware = result_tuple[experiment_ware_index]
-        if (input_index := self._file_name_meta.get_input_group()) is not None:
-            self._current_input = result_tuple[input_index]
+        if result_tuple:
+            if (experiment_ware_index := self._file_name_meta.get_experiment_ware_group()) is not None:
+                self._current_experiment_ware = result_tuple[experiment_ware_index]
+            if (input_index := self._file_name_meta.get_input_group()) is not None:
+                self._current_input = result_tuple[input_index]
         with open(file_path, 'r') as file:
             self.parse_stream(file)
 
