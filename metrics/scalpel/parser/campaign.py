@@ -34,7 +34,7 @@ from os.path import basename, splitext
 from typing import List, Optional, TextIO
 
 from metrics.scalpel.config import ScalpelConfiguration
-from metrics.scalpel.config.config import FileNameMetaConfiguration
+from metrics.scalpel.config.config import FileNameMetaConfiguration, EmptyFileNameMetaConfiguration
 from metrics.scalpel.config.format import OutputFormat
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.parser.output import CampaignOutputParser, \
@@ -115,10 +115,12 @@ class FileCampaignParser(CampaignParser):
         compiled_pattern = self._file_name_meta.get_compiled_pattern()
         result_tuple = compiled_pattern.search(file_path)
         if result_tuple:
+            index = 0
             if (experiment_ware_index := self._file_name_meta.get_experiment_ware_group()) is not None:
-                self._current_experiment_ware = result_tuple[experiment_ware_index]
+                self._current_experiment_ware = result_tuple[index]
+                index += 1
             if (input_index := self._file_name_meta.get_input_group()) is not None:
-                self._current_input = result_tuple[input_index]
+                self._current_input = result_tuple[index]
         with open(file_path, 'r') as file:
             self.parse_stream(file)
 
@@ -176,7 +178,7 @@ class CsvCampaignParser(FileCampaignParser):
         :return: The header of the CSV stream
         """
         self._reader = CsvReader(stream, self._separator, self._quote_char,
-                                 self._row_filter)
+                                 self._row_filter, self._has_header)
         return self._reader.read_header()
 
     def parse_content(self) -> None:
@@ -234,7 +236,7 @@ class DirectoryCampaignParser(CampaignParser):
     """
 
     def __init__(self, configuration: ScalpelConfiguration,
-                 listener: CampaignParserListener) -> None:
+                 listener: CampaignParserListener, file_name_meta: FileNameMetaConfiguration = None) -> None:
         """
         Creates a new DirectoryCampaignParser.
 
@@ -244,6 +246,16 @@ class DirectoryCampaignParser(CampaignParser):
         """
         super().__init__(listener)
         self._configuration = configuration
+        self._file_name_meta = file_name_meta if file_name_meta is not None else EmptyFileNameMetaConfiguration()
+        self._current_experiment_ware = None
+        self._current_input = None
+
+    def start_experiment(self) -> None:
+        super().start_experiment()
+        if self._current_experiment_ware is not None:
+            self.log_data('experiment_ware', self._current_experiment_ware)
+        if self._current_input is not None:
+            self.log_data('input', self._current_input)
 
     def parse_file(self, file_path: str) -> None:
         """
@@ -253,6 +265,8 @@ class DirectoryCampaignParser(CampaignParser):
         :param file_path: The path of the directory to explore.
         """
         self.explore(file_path)
+        self._current_input = None
+        self._current_experiment_ware = None
 
     def explore(self, root: str) -> None:
         """
@@ -263,13 +277,19 @@ class DirectoryCampaignParser(CampaignParser):
         raise NotImplementedError('Method "explore()" is abstract!')
 
     def _extract_metadata_from_file_name(self, file_path: str) -> None:
+        print(file_path)
         meta = self._configuration.get_file_name_meta()
         compiled_pattern = meta.get_compiled_pattern()
         result_tuple = compiled_pattern.search(file_path)
-        if (experiment_ware_index := meta.get_experiment_ware_group()) is not None:
-            self._current_experiment_ware = result_tuple[experiment_ware_index]
-        if (input_index := meta.get_input_group()) is not None:
-            self._current_input = result_tuple[input_index]
+        print(result_tuple)
+        if result_tuple:
+            index = 0
+            if meta.get_experiment_ware_group() is not None:
+                self._current_experiment_ware = result_tuple[index]
+                index += 1
+            if meta.get_input_group() is not None:
+                print("*******************************************************************************************")
+                self._current_input = result_tuple[index]
 
     def _get_parser_for(self, file: str, file_path: str) -> CampaignOutputParser:
         """
@@ -419,9 +439,9 @@ class FlatDirectoryCampaignParser(DirectoryCampaignParser):
         """
         with scandir(root) as root_dir:
             for file in root_dir:
+                self._extract_metadata_from_file_name(file.name)
                 self.start_experiment()
                 path_join = path.join(root, file.name)
-                self._extract_metadata_from_file_name(file.name)
                 parser = self._get_parser_for(file.name, path_join)
                 parser.parse()
                 self.end_experiment()

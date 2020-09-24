@@ -1064,20 +1064,26 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         Reads the experiment-wares that are considered in the campaign being
         parsed by Scalpel.
         """
-        for xp_ware in self._dict_config['experiment-wares']:
-            self._listener.start_experiment_ware()
-            self._listener.log_data('name', xp_ware)
-            self._listener.end_experiment_ware()
+        experiment_wares = self._dict_config.get('experiment-wares')
+        if experiment_wares is not None:
+            for xp_ware in experiment_wares:
+                self._listener.start_experiment_ware()
+                self._listener.log_data('name', xp_ware)
+                self._listener.end_experiment_ware()
 
     def read_input_set(self) -> None:
         """
         Reads the input set considered in the campaign being parsed by Scalpel.
         """
+
+        input_set = self._dict_config.get('input-set')
+        if input_set is None:
+            return
         self._listener.start_input_set()
-        fmt = InputSetFormat.value_of(self._dict_config['input-set']['type'])
-        name = self._dict_config['input-set']['name']
+        fmt = InputSetFormat.value_of(input_set['type'])
+        name = input_set['name']
         self._listener.log_data('name', name)
-        paths = DictionaryScalpelConfigurationBuilder._as_list(self._dict_config['input-set']['path-list'])
+        paths = DictionaryScalpelConfigurationBuilder._as_list(input_set['path-list'])
         kwargs = {}
 
         if 'family' in self._get('input-set'):
@@ -1126,7 +1132,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: If the input file to parse has a header.
         """
         has_header = self._get('source').get('has-header')
-        return has_header is None or has_header.lower() == 'true'
+        return has_header is None or has_header
 
     def _quote_char(self) -> str:
         """
@@ -1169,7 +1175,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         return self._get('source').get('parser')
 
     def _get_file_name_meta(self) -> FileNameMetaConfiguration:
-        file_name_meta = self._get('data').get('file_name_meta')
+        file_name_meta = self._get('data').get('file-name-meta')
         if file_name_meta is None:
             return EmptyFileNameMetaConfiguration()
         return DictionaryFileNameMetaConfiguration(file_name_meta)

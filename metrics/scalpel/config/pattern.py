@@ -137,9 +137,11 @@ class UserDefinedPattern(AbstractUserDefinedPattern):
             return tuple()
         return match.group(self._group_id),
 
+
 class NullUserDefinedPattern(AbstractUserDefinedPattern):
     def search(self, string: str) -> Tuple[str]:
         return tuple()
+
 
 def compile_regex(regex: str, group_id: int = 1) -> UserDefinedPattern:
     """
