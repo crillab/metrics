@@ -22,7 +22,7 @@ from metrics.studio.web.component.sidebar import sidebar
 from metrics.studio.web.config import external_stylesheets, OPERATOR_LIST
 
 from metrics.studio.web.util.util import create_listener, decode
-from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, ScatterPlotly
+from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, ScatterPlotly, CDFPlotly
 from metrics.wallet.figure.static_figure import StatTable, ContributionTable
 
 jsonpickle_pd.register_handlers()
@@ -205,7 +205,7 @@ def cactus_callback(session_id, xp_ware, time, input, global_experiment_ware, co
     new_df = campaign_df.sub_data_frame('experiment_ware',
                                         global_experiment_ware if global_experiment_ware is not None else [
                                             e['name'] for e in campaign.experiment_wares])
-    cdf = CactusPlotly(new_df)
+    cdf = CDFPlotly(new_df)
 
     return [dcc.Graph(figure=cdf.get_figure()), ],
 
