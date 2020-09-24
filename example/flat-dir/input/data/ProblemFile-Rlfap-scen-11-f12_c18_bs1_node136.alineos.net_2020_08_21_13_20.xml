@@ -1,0 +1,19 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="1289">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Rlfap-scen-11-f12_c18"/>
+<domains nTypes="5" nValues="19868" sizes="[6#2,17#4,22#10,27#336,32#328]"/>
+<variables count="680" degrees="[1#1,3#26,4#13,5#86...44#1,47#1,55#1,62#1]"/>
+<constraints arities="[2#4103]" count="4103" cpu="3.123" distribution="[CtrExtensionV-Bits#340,DistGE#3763]" mem="758M378" nExtStructures="(5,shared:335)" nSpecific="3763" wck="1.357"/>
+<solver cpu="3.17" guaranteedGAC="true" mem="758M378" wck="1.407">
+<preprocessing cpu="3.191" filters="334" inconsistency="false" mem="758M378" nACremovedValues="6324" nTotalRemovedValues="6324" revisions="(680,useless=12)" wck="0.019"/>
+<run backtracks="1" decisions="53" depth="30..31" failedAssignments="10" filters="1471" mem="758M378" nogoods="5" num="0" revisions="(1076,useless=278)" wck="0.034" wrong="11"/>
+<run backtracks="3" decisions="80" depth="0..1" failedAssignments="21" filters="2064" mem="758M378" nogoods="6" num="1" revisions="(1206,useless=379)" wck="0.036" wrong="24"/>
+<run backtracks="5" decisions="108" depth="0..1" failedAssignments="33" filters="2665" mem="758M378" nogoods="6" num="2" revisions="(1286,useless=430)" wck="0.038" wrong="38"/>
+<run backtracks="9" decisions="142" depth="0..1" failedAssignments="46" filters="3365" mem="758M378" nogoods="6" num="3" revisions="(1452,useless=557)" wck="0.041" wrong="55"/>
+<run backtracks="13" decisions="178" depth="0..1" failedAssignments="60" filters="4223" mem="758M378" nogoods="6" num="4" revisions="(1600,useless=664)" wck="0.044" wrong="73"/>
+<run backtracks="17" decisions="218" depth="0..1" failedAssignments="76" filters="5291" mem="758M378" nogoods="6" num="5" revisions="(1757,useless=776)" wck="0.058" wrong="93"/>
+<run backtracks="18" decisions="222" depth="0..0" failedAssignments="78" filters="5575" mem="758M378" nogoods="6" num="6" revisions="(1792,useless=802)" wck="0.059" wrong="96"/>
+<global Stop="FULL_EXPLORATION" cpu="3.231" filters="5575" mem="758M378" nogoods="6" revisions="(1792,useless=802)" wck="1.468" wrong="96"/>
+</solver>
+</resolution>
+</resolutions>

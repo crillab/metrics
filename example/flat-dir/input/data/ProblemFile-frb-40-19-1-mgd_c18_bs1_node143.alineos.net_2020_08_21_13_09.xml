@@ -1,0 +1,81 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="7357">
+<resolution>
+<instance framework="CSP" name="ProblemFile-frb-40-19-1-mgd_c18"/>
+<domains nTypes="1" nValues="760" sizes="[19#40]"/>
+<variables count="40" degrees="[10#2,11#3,12#3,13#4...21#1,22#4,23#1,25#1]"/>
+<constraints arities="[2#321]" count="321" cpu="2.243" distribution="[CtrExtensionV-Bits#321]" mem="281M280" nCftStructures="(321,shared:0)" nExtStructures="(321,shared:0)" wck="0.609"/>
+<solver cpu="2.267" guaranteedGAC="true" mem="281M280" wck="0.635">
+<preprocessing cpu="2.27" filters="0" inconsistency="false" mem="281M280" nACremovedValues="0" nTotalRemovedValues="0" wck="0.001"/>
+<run backtracks="2" decisions="30" depth="6..8" failedAssignments="10" filters="863" mem="281M280" nogoods="2" num="0" revisions="(3413,useless=2542)" wck="0.013" wrong="12"/>
+<run backtracks="7" decisions="60" depth="2..6" failedAssignments="21" filters="1796" mem="281M280" nogoods="3" num="1" revisions="(7404,useless=5600)" wck="0.018" wrong="26"/>
+<run backtracks="11" decisions="95" depth="4..6" failedAssignments="33" filters="2994" mem="281M280" nogoods="8" num="2" revisions="(12142,useless=9136)" wck="0.022" wrong="41"/>
+<run backtracks="18" decisions="139" depth="3..8" failedAssignments="46" filters="4330" mem="281M280" nogoods="13" num="3" revisions="(17925,useless=13581)" wck="0.027" wrong="60"/>
+<run backtracks="25" decisions="181" depth="4..7" failedAssignments="60" filters="5758" mem="281M280" nogoods="15" num="4" revisions="(24511,useless=18732)" wck="0.032" wrong="79"/>
+<run backtracks="32" decisions="231" depth="3..6" failedAssignments="76" filters="7110" mem="281M280" nogoods="22" num="5" revisions="(30859,useless=23722)" wck="0.05" wrong="101"/>
+<run backtracks="36" decisions="277" depth="4..8" failedAssignments="93" filters="8319" mem="281M280" nogoods="30" num="6" revisions="(36424,useless=28073)" wck="0.055" wrong="122"/>
+<run backtracks="42" decisions="328" depth="4..7" failedAssignments="112" filters="9958" mem="281M280" nogoods="38" num="7" revisions="(43248,useless=33256)" wck="0.059" wrong="145"/>
+<run backtracks="55" decisions="398" depth="4..9" failedAssignments="133" filters="12027" mem="281M280" nogoods="45" num="8" revisions="(52829,useless=40762)" wck="0.065" wrong="177"/>
+<run backtracks="66" decisions="471" depth="3..7" failedAssignments="156" filters="14575" mem="315M359" nogoods="47" num="9" revisions="(63431,useless=48805)" wck="0.072" wrong="210"/>
+<run backtracks="83" decisions="556" depth="4..8" failedAssignments="181" filters="17433" mem="315M359" nogoods="55" num="10" revisions="(75591,useless=58095)" wck="0.079" wrong="250"/>
+<run backtracks="103" decisions="647" depth="4..8" failedAssignments="209" filters="20724" mem="315M359" nogoods="65" num="11" revisions="(90598,useless=69796)" wck="0.087" wrong="293"/>
+<run backtracks="113" decisions="729" depth="3..6" failedAssignments="240" filters="23317" mem="315M359" nogoods="75" num="12" revisions="(100525,useless=77117)" wck="0.094" wrong="332"/>
+<run backtracks="127" decisions="825" depth="3..6" failedAssignments="274" filters="26777" mem="315M359" nogoods="86" num="13" revisions="(113969,useless=87087)" wck="0.102" wrong="378"/>
+<run backtracks="151" decisions="941" depth="2..6" failedAssignments="311" filters="30299" mem="315M359" nogoods="90" num="14" revisions="(129851,useless=99438)" wck="0.111" wrong="434"/>
+<run backtracks="173" decisions="1059" depth="3..8" failedAssignments="352" filters="34189" mem="315M359" nogoods="102" num="15" revisions="(146650,useless=112339)" wck="0.12" wrong="491"/>
+<run backtracks="193" decisions="1192" depth="3..7" failedAssignments="397" filters="39182" mem="315M359" nogoods="114" num="16" revisions="(165769,useless=126448)" wck="0.13" wrong="555"/>
+<run backtracks="212" decisions="1327" depth="2..6" failedAssignments="447" filters="43543" mem="315M359" nogoods="126" num="17" revisions="(184207,useless=140496)" wck="0.138" wrong="621"/>
+<run backtracks="238" decisions="1481" depth="2..6" failedAssignments="502" filters="48620" mem="315M359" nogoods="139" num="18" revisions="(205526,useless=156717)" wck="0.147" wrong="696"/>
+<run backtracks="283" decisions="1672" depth="3..8" failedAssignments="563" filters="55455" mem="315M359" nogoods="141" num="19" revisions="(234937,useless=179268)" wck="0.158" wrong="790"/>
+<run backtracks="321" decisions="1872" depth="3..8" failedAssignments="630" filters="62465" mem="315M359" nogoods="152" num="20" revisions="(264805,useless=202102)" wck="0.169" wrong="887"/>
+<run backtracks="346" decisions="2067" depth="3..8" failedAssignments="704" filters="69312" mem="315M359" nogoods="161" num="21" revisions="(293358,useless=223769)" wck="0.18" wrong="982"/>
+<run backtracks="383" decisions="2293" depth="2..6" failedAssignments="785" filters="76109" mem="315M359" nogoods="171" num="22" revisions="(321886,useless=245468)" wck="0.191" wrong="1094"/>
+<run backtracks="437" decisions="2564" depth="3..11" failedAssignments="874" filters="85490" mem="315M359" nogoods="175" num="23" revisions="(363851,useless=278023)" wck="0.206" wrong="1227"/>
+<run backtracks="477" decisions="2839" depth="3..7" failedAssignments="972" filters="95002" mem="315M359" nogoods="190" num="24" revisions="(403544,useless=308169)" wck="0.22" wrong="1362"/>
+<run backtracks="555" decisions="3195" depth="1..7" failedAssignments="1080" filters="107181" mem="315M359" nogoods="198" num="25" revisions="(456807,useless=349188)" wck="0.238" wrong="1539"/>
+<run backtracks="633" decisions="3561" depth="2..8" failedAssignments="1199" filters="119773" mem="315M359" nogoods="203" num="26" revisions="(510205,useless=389933)" wck="0.256" wrong="1720"/>
+<run backtracks="704" decisions="3935" depth="3..8" failedAssignments="1330" filters="133448" mem="315M359" nogoods="214" num="27" revisions="(565933,useless=431934)" wck="0.272" wrong="1905"/>
+<run backtracks="758" decisions="4330" depth="2..8" failedAssignments="1474" filters="147866" mem="315M359" nogoods="225" num="28" revisions="(616846,useless=468356)" wck="0.288" wrong="2101"/>
+<run backtracks="823" decisions="4749" depth="2..8" failedAssignments="1632" filters="161842" mem="315M359" nogoods="243" num="29" revisions="(674062,useless=511519)" wck="0.304" wrong="2309"/>
+<run backtracks="908" decisions="5237" depth="1..8" failedAssignments="1806" filters="179423" mem="315M359" nogoods="260" num="30" revisions="(746856,useless=566661)" wck="0.324" wrong="2551"/>
+<run backtracks="1013" decisions="5799" depth="3..8" failedAssignments="1997" filters="199615" mem="315M359" nogoods="271" num="31" revisions="(832649,useless=632157)" wck="0.352" wrong="2830"/>
+<run backtracks="1142" decisions="6443" depth="4..9" failedAssignments="2208" filters="222112" mem="315M359" nogoods="285" num="32" revisions="(933158,useless=710080)" wck="0.379" wrong="3149"/>
+<run backtracks="1252" decisions="7085" depth="1..8" failedAssignments="2440" filters="242406" mem="315M359" nogoods="301" num="33" revisions="(1019669,useless=776184)" wck="0.401" wrong="3468"/>
+<run backtracks="1372" decisions="7802" depth="2..9" failedAssignments="2695" filters="267231" mem="315M359" nogoods="324" num="34" revisions="(1122470,useless=854038)" wck="0.428" wrong="3825"/>
+<run backtracks="1524" decisions="8616" depth="1..7" failedAssignments="2976" filters="297056" mem="315M359" nogoods="332" num="35" revisions="(1241802,useless=943414)" wck="0.46" wrong="4230"/>
+<run backtracks="1687" decisions="9517" depth="1..8" failedAssignments="3285" filters="329587" mem="315M359" nogoods="340" num="36" revisions="(1373633,useless=1042577)" wck="0.494" wrong="4679"/>
+<run backtracks="1877" decisions="10511" depth="1..7" failedAssignments="3625" filters="366353" mem="315M359" nogoods="359" num="37" revisions="(1520526,useless=1152551)" wck="0.534" wrong="5174"/>
+<run backtracks="2060" decisions="11552" depth="2..9" failedAssignments="3999" filters="401121" mem="315M359" nogoods="367" num="38" revisions="(1667261,useless=1264357)" wck="0.571" wrong="5692"/>
+<run backtracks="2276" decisions="12726" depth="1..9" failedAssignments="4410" filters="441275" mem="315M359" nogoods="376" num="39" revisions="(1832004,useless=1388754)" wck="0.614" wrong="6277"/>
+<run backtracks="2545" decisions="14070" depth="2..10" failedAssignments="4862" filters="486635" mem="315M359" nogoods="395" num="40" revisions="(2029233,useless=1540432)" wck="0.664" wrong="6947"/>
+<run backtracks="2803" decisions="15480" depth="2..8" failedAssignments="5359" filters="535022" mem="349M438" nogoods="412" num="41" revisions="(2224848,useless=1687490)" wck="0.717" wrong="7650"/>
+<run backtracks="3038" decisions="16974" depth="2..9" failedAssignments="5906" filters="585363" mem="349M438" nogoods="427" num="42" revisions="(2427486,useless=1839528)" wck="0.769" wrong="8395"/>
+<run backtracks="3349" decisions="18700" depth="1..9" failedAssignments="6508" filters="645347" mem="349M438" nogoods="455" num="43" revisions="(2672431,useless=2024163)" wck="0.832" wrong="9257"/>
+<run backtracks="3648" decisions="20544" depth="2..8" failedAssignments="7170" filters="707609" mem="349M438" nogoods="472" num="44" revisions="(2924326,useless=2213469)" wck="0.895" wrong="10177"/>
+<run backtracks="4092" decisions="22712" depth="1..8" failedAssignments="7898" filters="786909" mem="349M438" nogoods="490" num="45" revisions="(3252390,useless=2461911)" wck="0.978" wrong="11259"/>
+<run backtracks="4545" decisions="25045" depth="1..9" failedAssignments="8699" filters="864336" mem="349M438" nogoods="502" num="46" revisions="(3586522,useless=2718227)" wck="1.058" wrong="12423"/>
+<run backtracks="5031" decisions="27616" depth="1..8" failedAssignments="9580" filters="956176" mem="349M438" nogoods="517" num="47" revisions="(3964375,useless=3003885)" wck="1.151" wrong="13707"/>
+<run backtracks="5531" decisions="30364" depth="1..10" failedAssignments="10550" filters="1050244" mem="383M516" nogoods="528" num="48" revisions="(4346651,useless=3291599)" wck="1.243" wrong="15079"/>
+<run backtracks="6044" decisions="33359" depth="1..9" failedAssignments="11617" filters="1157935" mem="383M516" nogoods="534" num="49" revisions="(4755586,useless=3592316)" wck="1.35" wrong="16575"/>
+<run backtracks="6581" decisions="36609" depth="1..8" failedAssignments="12790" filters="1271310" mem="383M516" nogoods="544" num="50" revisions="(5206032,useless=3928845)" wck="1.465" wrong="18198"/>
+<run backtracks="7315" decisions="40360" depth="1..8" failedAssignments="14081" filters="1408520" mem="383M516" nogoods="552" num="51" revisions="(5758425,useless=4343409)" wck="1.604" wrong="20071"/>
+<run backtracks="8055" decisions="44422" depth="1..9" failedAssignments="15501" filters="1557169" mem="417M595" nogoods="587" num="52" revisions="(6322709,useless=4758496)" wck="1.754" wrong="22101"/>
+<run backtracks="8910" decisions="48926" depth="0..9" failedAssignments="17063" filters="1722382" mem="417M595" nogoods="600" num="53" revisions="(6972159,useless=5242038)" wck="1.922" wrong="24352"/>
+<run backtracks="9906" decisions="53941" depth="2..11" failedAssignments="18781" filters="1897785" mem="417M595" nogoods="628" num="54" revisions="(7704069,useless=5797920)" wck="2.1" wrong="26857"/>
+<run backtracks="10837" decisions="59290" depth="1..9" failedAssignments="20671" filters="2081346" mem="451M674" nogoods="650" num="55" revisions="(8459836,useless=6369199)" wck="2.286" wrong="29529"/>
+<run backtracks="12040" decisions="65445" depth="1..9" failedAssignments="22750" filters="2298417" mem="451M674" nogoods="672" num="56" revisions="(9370770,useless=7062151)" wck="2.509" wrong="32605"/>
+<run backtracks="13327" decisions="72172" depth="1..10" failedAssignments="25037" filters="2535012" mem="451M674" nogoods="693" num="57" revisions="(10348215,useless=7801909)" wck="2.75" wrong="35967"/>
+<run backtracks="14513" decisions="79202" depth="1..9" failedAssignments="27553" filters="2781019" mem="485M753" nogoods="711" num="58" revisions="(11309970,useless=8516429)" wck="2.993" wrong="39481"/>
+<run backtracks="16079" decisions="87286" depth="0..9" failedAssignments="30321" filters="3074892" mem="519M831" nogoods="729" num="59" revisions="(12491411,useless=9402740)" wck="3.289" wrong="43521"/>
+<run backtracks="17629" decisions="95899" depth="1..8" failedAssignments="33365" filters="3383522" mem="519M831" nogoods="759" num="60" revisions="(13732906,useless=10334138)" wck="3.6" wrong="47826"/>
+<run backtracks="19301" decisions="105373" depth="0..11" failedAssignments="36714" filters="3711836" mem="553M910" nogoods="779" num="61" revisions="(15048477,useless=11319926)" wck="3.927" wrong="52561"/>
+<run backtracks="21303" decisions="115876" depth="0..9" failedAssignments="40398" filters="4094470" mem="587M989" nogoods="832" num="62" revisions="(16571865,useless=12459263)" wck="4.314" wrong="57811"/>
+<run backtracks="23564" decisions="127642" depth="1..11" failedAssignments="44450" filters="4507101" mem="587M989" nogoods="865" num="63" revisions="(18202681,useless=13675667)" wck="4.729" wrong="63693"/>
+<run backtracks="25805" decisions="140165" depth="0..10" failedAssignments="48907" filters="4950700" mem="622M68" nogoods="893" num="64" revisions="(19948816,useless=14976293)" wck="5.174" wrong="69953"/>
+<run backtracks="28546" decisions="154340" depth="0..11" failedAssignments="53810" filters="5469872" mem="656M146" nogoods="903" num="65" revisions="(22012354,useless=16518374)" wck="5.698" wrong="77037"/>
+<run backtracks="31126" decisions="169314" depth="0..9" failedAssignments="59204" filters="5978355" mem="690M225" nogoods="958" num="66" revisions="(24075692,useless=18070937)" wck="6.212" wrong="84522"/>
+<run backtracks="34209" decisions="186186" depth="0..10" failedAssignments="65137" filters="6582141" mem="724M304" nogoods="978" num="67" revisions="(26436256,useless=19824998)" wck="6.819" wrong="92956"/>
+<run backtracks="34573" ccks="321" decisions="188215" depth="1..39" failedAssignments="65847" filters="6651744" foundSolutions="1" mem="758M383" nogoods="978" num="68" revisions="(26711346,useless=20030190)" wck="6.896" wrong="93965"/>
+<global Stop="REACHED_GOAL" ccks="321" cpu="9.16" filters="6651744" firstSolCpu="9.155" foundSolutions="1" mem="758M383" nogoods="978" revisions="(26711346,useless=20030190)" wck="7.532" wrong="93965"/>
+</solver>
+</resolution>
+</resolutions>

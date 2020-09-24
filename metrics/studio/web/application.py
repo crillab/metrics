@@ -1,7 +1,6 @@
 import base64
 import datetime
 import io
-import itertools
 import os
 import uuid
 
@@ -17,11 +16,14 @@ from dash.exceptions import PreventUpdate
 from flask_caching import Cache
 
 from metrics.scalpel.parser import CsvCampaignParser
-from metrics.studio.web.analysis import AnalysisWeb
-from metrics.studio.web.config import external_stylesheets, PLOTLY_LOGO, OPERATOR_LIST
-from metrics.studio.web.layout import data_loading, plots, table
-from metrics.studio.web.util import create_listener, decode
-from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, ScatterPlotly
+from metrics.studio.web.util.analysis import AnalysisWeb
+from metrics.studio.web.component.content import content
+from metrics.studio.web.component.sidebar import sidebar
+from metrics.studio.web.config import external_stylesheets, OPERATOR_LIST
+
+from metrics.studio.web.util.util import create_listener, decode
+from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, ScatterPlotly, CDFPlotly
+from metrics.wallet.figure.static_figure import StatTable, ContributionTable
 
 jsonpickle_pd.register_handlers()
 
@@ -34,37 +36,13 @@ cache = Cache(app.server, config={
     'CACHE_THRESHOLD': 200
 })
 
-MAIN_MENU_TABS = {'Data loading': data_loading, 'Plots': plots, 'Table': table}
-
-navbar = dbc.Navbar(
-    [
-        html.A(
-            # Use row and col to control vertical alignment of logo / brand
-            dbc.Row(
-                [
-                    dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
-                    dbc.Col(dbc.NavbarBrand("STUDIO", className="ml-1")),
-                ],
-                align="center",
-                no_gutters=True,
-            ),
-            href="/", className="mr-2"
-        ),
-
-        dbc.NavbarToggler(id="navbar-toggler"),
-    ]
-)
-
 
 def serve_layout():
     session_id = str(uuid.uuid4())
-    return html.Div(className='container', children=[
+    return html.Div(children=[
         html.Div(session_id, id='session-id', style={'display': 'none'}),
-        navbar,
-        dcc.Tabs(id="main-menu", value='Data loading', className="mt-5", children=[
-            dcc.Tab(label=k, value=k, children=v()) for k, v in MAIN_MENU_TABS.items()
-
-        ]),
+        sidebar,
+        content
     ])
 
 
@@ -73,9 +51,11 @@ app.layout = serve_layout
 
 def get_campaign(session_id, contents, input, sep, time, xp_ware):
     @cache.memoize()
-    def query_and_serialize_data(session_id, contents, input, sep, time, xp_ware):
+    def query_and_serialize_data(session_id, contents, input, separator, time, xp_ware):
+        if separator is None:
+            separator = ','
         listener = create_listener(xp_ware, input, time)
-        csv_parser = CsvCampaignParser(listener, separator=sep)
+        csv_parser = CsvCampaignParser(listener, separator=separator)
         csv_parser.parse_stream(decode(contents))
         campaign = listener.get_campaign()
         analysis_web = AnalysisWeb(campaign)
@@ -89,31 +69,8 @@ def get_header(session_id, contents, sep):
     @cache.memoize()
     def query_and_serialize_data(session_id, contents, sep):
         pass
-        # listener = create_listener()
-        # csv_parser = CsvCampaignParser(listener, separator=sep)
-        # header = csv_parser.parse_header(decode(contents))
-        # campaign = listener.get_campaign()
-        # analysis_web = AnalysisWeb(campaign)
-        # campaign_df = analysis_web.campaign_df
-        # return campaign_df, campaign
 
     return query_and_serialize_data(session_id, contents, sep)
-
-
-def create_data_table(df, filename, date):
-    return html.Div([
-        html.H5(filename),
-        html.H6(datetime.datetime.fromtimestamp(date)),
-
-        dash_table.DataTable(
-            data=df.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in df.columns],
-            filter_action="native",
-            sort_action="native",
-            sort_mode="multi",
-            column_selectable="single",
-        ),
-    ])
 
 
 def parse_contents(contents, separator=','):
@@ -135,7 +92,7 @@ def parse_contents(contents, separator=','):
         ]), list()
 
 
-@app.callback([Output('output-data-upload', 'children'), Output('xp-ware', 'options'),
+@app.callback([Output('xp-ware', 'options'),
                Output('time', 'options'),
                Output('input', 'options')],
               [Input('upload-data', 'contents')],
@@ -145,9 +102,8 @@ def update_output(list_of_contents, list_of_names, list_of_dates, sep):
     if list_of_contents is None:
         raise PreventUpdate
     df = parse_contents(list_of_contents, sep)
-    children = [create_data_table(df, list_of_names, list_of_dates)]
     options = [{'label': i, 'value': i} for i in df.columns]
-    return children, options, options, options
+    return options, options, options
 
 
 @app.callback(Output('is_success', 'children'),
@@ -178,30 +134,28 @@ def is_success_form(n_clicks, children, contents, sep):
 
 
 @app.callback([
-    Output('cactus-experiment-ware', 'options'),
-    Output('experiment-ware-1', 'options'), Output('experiment-ware-2', 'options'),
-    Output('box-experiment-ware', 'options')],
+    Output('global-experiment-ware', 'options'),
+    Output('experiment-ware-1', 'options'), Output('experiment-ware-2', 'options')],
     [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
      Input('input', 'value'), Input('is_success', 'children')],
     [State('upload-data', 'contents'), State('sep', 'value')])
 def campaign_callback(session_id, xp_ware, time, input, children, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, input,sep,time,xp_ware)
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
 
     experiment_ware = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
-    print(children)
-    return experiment_ware, experiment_ware, experiment_ware, experiment_ware
+    return experiment_ware, experiment_ware, experiment_ware
 
 
 @app.callback([Output('loading-icon-box', 'children')],
               [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
-               Input('input', 'value'), Input('box-experiment-ware', 'value')],
+               Input('input', 'value'), Input('global-experiment-ware', 'value')],
               [State('upload-data', 'contents'), State('sep', 'value')])
 def box_callback(session_id, xp_ware, time, input, box_experiment_ware, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, input,sep,time,xp_ware)
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
     newdf = campaign_df.sub_data_frame('experiment_ware',
                                        box_experiment_ware if box_experiment_ware is not None else [
                                            e['name'] for e in campaign.experiment_wares])
@@ -215,10 +169,10 @@ def box_callback(session_id, xp_ware, time, input, box_experiment_ware, contents
                Input('input', 'value'), Input('experiment-ware-1', 'value'),
                Input('experiment-ware-2', 'value')],
               [State('upload-data', 'contents'), State('sep', 'value')])
-def cactus_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
+def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None or xp1 is None or xp2 is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, input,sep,time,xp_ware)
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
     scatter = ScatterPlotly(campaign_df, xp1, xp2)
 
     return [dcc.Graph(figure=scatter.get_figure()), ],
@@ -226,15 +180,89 @@ def cactus_callback(session_id, xp_ware, time, input, xp1, xp2, contents, sep):
 
 @app.callback([Output('loading-icon-cactus', 'children')],
               [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
-               Input('input', 'value'), Input('cactus-experiment-ware', 'value'), ],
+               Input('input', 'value'), Input('global-experiment-ware', 'value'), ],
               [State('upload-data', 'contents'), State('sep', 'value')])
-def scatter_callback(session_id, xp_ware, time, input, cactus_experiment_ware, contents, sep):
+def cactus_callback(session_id, xp_ware, time, input, cactus_experiment_ware, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, input, sep,time,xp_ware)
-    newdf = campaign_df.sub_data_frame('experiment_ware',
-                                       cactus_experiment_ware if cactus_experiment_ware is not None else [
-                                           e['name'] for e in campaign.experiment_wares])
-    cactus = CactusPlotly(newdf)
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    new_df = campaign_df.sub_data_frame('experiment_ware',
+                                        cactus_experiment_ware if cactus_experiment_ware is not None else [
+                                            e['name'] for e in campaign.experiment_wares])
+    cactus = CactusPlotly(new_df)
 
     return [dcc.Graph(figure=cactus.get_figure()), ],
+
+
+@app.callback([Output('loading-cdf', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('global-experiment-ware', 'value'), ],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def cactus_callback(session_id, xp_ware, time, input, global_experiment_ware, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    new_df = campaign_df.sub_data_frame('experiment_ware',
+                                        global_experiment_ware if global_experiment_ware is not None else [
+                                            e['name'] for e in campaign.experiment_wares])
+    cdf = CDFPlotly(new_df)
+
+    return [dcc.Graph(figure=cdf.get_figure()), ],
+
+
+@app.callback([Output('loading-summary', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('global-experiment-ware', 'value')],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def stat_table_callback(session_id, xp_ware, time, input, global_experiment_ware, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    newdf = campaign_df.sub_data_frame('experiment_ware',
+                                       global_experiment_ware if global_experiment_ware is not None else [
+                                           e['name'] for e in campaign.experiment_wares])
+    stat_table = StatTable(
+        newdf,
+        dollars_for_number=True,  # 123456789 -> $123456789$
+        commas_for_number=True,  # 123456789 -> 123,456,789
+
+        xp_ware_name_map=None,  # a map to rename experimentwares
+    )
+    df = stat_table.get_figure()
+    df['experiment_ware'] = df.index
+    return [dash_table.DataTable(data=df.to_dict('records'),
+                                 columns=[{'name': 'experiment_ware', 'id': 'experiment_ware'}] + [
+                                     {'name': col, 'id': col} for col in df.columns if col != 'experiment_ware']
+                                 , filter_action="native",
+                                 sort_action="native",
+                                 sort_mode="multi",
+                                 column_selectable="single")]
+
+
+@app.callback([Output('loading-icon-contribution', 'children')],
+              [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+               Input('input', 'value'), Input('global-experiment-ware', 'value'), Input('deltas', 'value')],
+              [State('upload-data', 'contents'), State('sep', 'value')])
+def contribution_table_callback(session_id, xp_ware, time, input, global_experiment_ware, global_deltas, contents, sep):
+    if contents is None or input is None or time is None or xp_ware is None or global_deltas is None:
+        raise PreventUpdate
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    new_df = campaign_df.sub_data_frame('experiment_ware',
+                                        global_experiment_ware if global_experiment_ware is not None else [
+                                            e['name'] for e in campaign.experiment_wares])
+    contribution_table = ContributionTable(
+        new_df,
+        deltas=[int(a) for a in global_deltas],
+        dollars_for_number=True,  # 123456789 -> $123456789$
+        commas_for_number=True,  # 123456789 -> 123,456,789
+
+        xp_ware_name_map=None,  # a map to rename experimentwares
+    )
+    df = contribution_table.get_figure()
+    df['experiment_ware'] = df.index
+    return [
+        dash_table.DataTable(data=df.to_dict('records'), columns=[{'name': 'experiment_ware', 'id': 'experiment_ware'}] + [{'name': col, 'id': col} for col in df.columns],
+                             filter_action="native",
+                             sort_action="native",
+                             sort_mode="multi",
+                             column_selectable="single")]

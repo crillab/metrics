@@ -237,7 +237,7 @@ class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         answers = prompt(questions)
         return answers['format']
 
-    def _get_campaign_path(self) -> str:
+    def _get_campaign_path(self) -> Iterable[str]:
         answers = dict(campaign_path='')
         while len(answers['campaign_path']) == 0 and os.path.exists(answers['campaign_path']):
             questions = [

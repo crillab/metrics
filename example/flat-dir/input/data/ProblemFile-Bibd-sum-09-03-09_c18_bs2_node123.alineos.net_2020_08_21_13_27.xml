@@ -1,0 +1,47 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="1528">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Bibd-sum-09-03-09_c18"/>
+<domains nTypes="1" nValues="1944" sizes="[2#972]"/>
+<variables count="972" degrees="[12#4,13#226,14#742]"/>
+<constraints arities="[9#108,18#107,108#9,216#44]" count="268" cpu="2.174" distribution="[LexicographicLE#115,SumScalarBooleanEQ#36,SumSimpleEQ#117]" mem="178M959" nSpecific="268" wck="0.57"/>
+<solver cpu="2.218" guaranteedGAC="true" mem="178M959" wck="0.617">
+<preprocessing cpu="2.228" filters="0" inconsistency="false" mem="178M959" nACremovedValues="0" nTotalRemovedValues="0" wck="0.008"/>
+<run backtracks="26" decisions="188" depth="134..144" failedAssignments="10" filters="264" mem="178M959" nogoods="1" num="0" wck="0.057" wrong="27"/>
+<run backtracks="26" decisions="267" depth="1..67" failedAssignments="21" filters="924" mem="178M959" nogoods="12" num="1" wck="0.071" wrong="38"/>
+<run backtracks="36" decisions="363" depth="6..70" failedAssignments="33" filters="1436" mem="178M959" nogoods="21" num="2" wck="0.092" wrong="60"/>
+<run backtracks="41" decisions="453" depth="1..71" failedAssignments="46" filters="2010" mem="178M959" nogoods="31" num="3" wck="0.113" wrong="76"/>
+<run backtracks="53" decisions="545" depth="1..59" failedAssignments="60" filters="2626" mem="178M959" nogoods="42" num="4" wck="0.125" wrong="99"/>
+<run backtracks="81" decisions="650" depth="1..43" failedAssignments="76" filters="3220" mem="178M959" nogoods="47" num="5" wck="0.137" wrong="133"/>
+<run backtracks="90" decisions="712" depth="7..23" failedAssignments="93" filters="4599" mem="178M959" nogoods="57" num="6" wck="0.157" wrong="158"/>
+<run backtracks="108" decisions="781" depth="1..26" failedAssignments="112" filters="5457" mem="178M959" nogoods="62" num="7" wck="0.169" wrong="187"/>
+<run backtracks="124" decisions="865" depth="1..25" failedAssignments="133" filters="6518" mem="178M959" nogoods="72" num="8" wck="0.184" wrong="221"/>
+<run backtracks="137" decisions="998" depth="6..85" failedAssignments="156" filters="7224" mem="178M959" nogoods="91" num="9" wck="0.195" wrong="254"/>
+<run backtracks="154" decisions="1121" depth="4..74" failedAssignments="181" filters="7974" mem="178M959" nogoods="105" num="10" wck="0.206" wrong="288"/>
+<run backtracks="168" decisions="1239" depth="2..61" failedAssignments="209" filters="8835" mem="178M959" nogoods="122" num="11" wck="0.216" wrong="326"/>
+<run backtracks="197" decisions="1379" depth="2..73" failedAssignments="240" filters="9818" mem="178M959" nogoods="142" num="12" wck="0.229" wrong="375"/>
+<run backtracks="237" decisions="1531" depth="1..43" failedAssignments="274" filters="11401" mem="178M959" nogoods="160" num="13" wck="0.246" wrong="438"/>
+<run backtracks="307" decisions="1740" depth="1..50" failedAssignments="311" filters="12886" mem="178M959" nogoods="177" num="14" wck="0.263" wrong="525"/>
+<run backtracks="380" decisions="1960" depth="1..70" failedAssignments="352" filters="14713" mem="178M959" nogoods="190" num="15" wck="0.284" wrong="615"/>
+<run backtracks="438" decisions="2193" depth="1..101" failedAssignments="397" filters="16132" mem="178M959" nogoods="217" num="16" wck="0.3" wrong="702"/>
+<run backtracks="481" decisions="2418" depth="1..93" failedAssignments="447" filters="17488" mem="178M959" nogoods="249" num="17" wck="0.315" wrong="783"/>
+<run backtracks="555" decisions="2665" depth="1..72" failedAssignments="502" filters="19057" mem="178M959" nogoods="271" num="18" wck="0.334" wrong="881"/>
+<run backtracks="676" decisions="3063" depth="1..128" failedAssignments="563" filters="21691" mem="178M959" nogoods="294" num="19" wck="0.364" wrong="1032"/>
+<run backtracks="711" decisions="3359" depth="1..166" failedAssignments="630" filters="23116" mem="178M959" nogoods="347" num="20" wck="0.381" wrong="1123"/>
+<run backtracks="781" decisions="3712" depth="1..159" failedAssignments="704" filters="24825" mem="178M959" nogoods="390" num="21" wck="0.401" wrong="1245"/>
+<run backtracks="864" decisions="4093" depth="1..145" failedAssignments="785" filters="26710" mem="178M959" nogoods="439" num="22" wck="0.423" wrong="1387"/>
+<run backtracks="1054" decisions="4659" depth="1..149" failedAssignments="874" filters="29045" mem="178M959" nogoods="465" num="23" wck="0.449" wrong="1614"/>
+<run backtracks="1200" decisions="5134" depth="2..132" failedAssignments="972" filters="31436" mem="178M959" nogoods="512" num="24" wck="0.476" wrong="1812"/>
+<run backtracks="1351" decisions="5631" depth="3..139" failedAssignments="1080" filters="33992" mem="178M959" nogoods="559" num="25" wck="0.507" wrong="2022"/>
+<run backtracks="1545" decisions="6210" depth="1..120" failedAssignments="1199" filters="36624" mem="178M959" nogoods="599" num="26" wck="0.537" wrong="2280"/>
+<run backtracks="1795" decisions="6911" depth="3..145" failedAssignments="1330" filters="39313" mem="178M959" nogoods="626" num="27" wck="0.569" wrong="2581"/>
+<run backtracks="2159" decisions="7791" depth="5..95" failedAssignments="1474" filters="42853" mem="178M959" nogoods="639" num="28" wck="0.612" wrong="2986"/>
+<run backtracks="2501" decisions="8633" depth="2..93" failedAssignments="1632" filters="54593" mem="178M959" nogoods="658" num="29" wck="0.735" wrong="3390"/>
+<run backtracks="2803" decisions="9425" depth="5..58" failedAssignments="1806" filters="58374" mem="178M959" nogoods="673" num="30" wck="0.774" wrong="3770"/>
+<run backtracks="3255" decisions="10485" depth="1..78" failedAssignments="1997" filters="66030" mem="178M959" nogoods="689" num="31" wck="0.855" wrong="4279"/>
+<run backtracks="3688" decisions="11551" depth="3..116" failedAssignments="2208" filters="71573" mem="178M959" nogoods="713" num="32" wck="0.924" wrong="4777"/>
+<run backtracks="4194" decisions="12931" depth="1..219" failedAssignments="2440" filters="78287" mem="178M959" nogoods="763" num="33" wck="1.0" wrong="5385"/>
+<run backtracks="4493" ccks="268" decisions="13782" depth="2..971" failedAssignments="2607" filters="82090" foundSolutions="1" mem="178M959" nogoods="763" num="34" wck="1.055" wrong="5750"/>
+<global Stop="REACHED_GOAL" ccks="268" cpu="3.274" filters="82090" firstSolCpu="3.266" foundSolutions="1" mem="178M959" nogoods="763" wck="1.674" wrong="5750"/>
+</solver>
+</resolution>
+</resolutions>

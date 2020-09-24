@@ -1,0 +1,18 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="242">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Haystacks-ext-04_c18"/>
+<domains nTypes="1" nValues="64" sizes="[4#16]"/>
+<variables count="16" degrees="[3#10,4#6]"/>
+<constraints arities="[2#27]" count="27" cpu="1.951" distribution="[CtrExtensionV-Bits#27]" mem="178M954" nCftStructures="(4,shared:23)" nExtStructures="(4,shared:23)" wck="0.341"/>
+<solver cpu="1.972" guaranteedGAC="true" mem="178M954" wck="0.363">
+<preprocessing cpu="1.974" filters="0" inconsistency="false" mem="178M954" nACremovedValues="0" nTotalRemovedValues="0" wck="0.0"/>
+<run backtracks="8" decisions="41" depth="0..6" failedAssignments="10" filters="155" mem="178M954" nogoods="5" num="0" revisions="(208,useless=53)" wck="0.006" wrong="18"/>
+<run backtracks="19" decisions="85" depth="0..4" failedAssignments="21" filters="361" mem="178M954" nogoods="7" num="1" revisions="(468,useless=107)" wck="0.009" wrong="38"/>
+<run backtracks="29" decisions="127" depth="1..5" failedAssignments="33" filters="577" mem="178M954" nogoods="13" num="2" revisions="(751,useless=174)" wck="0.012" wrong="58"/>
+<run backtracks="41" decisions="175" depth="0..4" failedAssignments="46" filters="819" mem="178M954" nogoods="14" num="3" revisions="(1057,useless=238)" wck="0.014" wrong="81"/>
+<run backtracks="53" decisions="226" depth="0..5" failedAssignments="60" filters="1079" mem="178M954" nogoods="17" num="4" revisions="(1403,useless=324)" wck="0.016" wrong="105"/>
+<run backtracks="66" decisions="276" depth="0..4" failedAssignments="75" filters="1330" mem="178M954" nogoods="17" num="5" revisions="(1754,useless=424)" wck="0.017" wrong="131"/>
+<global Stop="FULL_EXPLORATION" cpu="1.991" filters="1330" mem="178M954" nogoods="17" revisions="(1754,useless=424)" wck="0.381" wrong="131"/>
+</solver>
+</resolution>
+</resolutions>

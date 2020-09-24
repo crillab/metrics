@@ -1,0 +1,20 @@
+<resolutions configurationFileName="bs2/configurations/bs0.xml" totalWckTime="203">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Haystacks-ext-04_c18"/>
+<domains nTypes="1" nValues="64" sizes="[4#16]"/>
+<variables count="16" degrees="[3#10,4#6]"/>
+<constraints arities="[2#27]" count="27" cpu="1.964" distribution="[CtrExtensionV-Bits#27]" mem="247M131" nCftStructures="(4,shared:23)" nExtStructures="(4,shared:23)" wck="0.34"/>
+<solver cpu="1.985" guaranteedGAC="true" mem="247M131" wck="0.362">
+<preprocessing cpu="1.987" filters="0" inconsistency="false" mem="247M131" nACremovedValues="0" nTotalRemovedValues="0" wck="0.0"/>
+<run backtracks="8" decisions="41" depth="0..6" failedAssignments="10" filters="155" mem="247M131" nogoods="5" num="0" revisions="(208,useless=53)" wck="0.006" wrong="18"/>
+<run backtracks="21" decisions="85" depth="0..3" failedAssignments="21" filters="423" mem="247M131" nogoods="5" num="1" revisions="(528,useless=105)" wck="0.01" wrong="40"/>
+<run backtracks="36" decisions="136" depth="1..5" failedAssignments="33" filters="666" mem="247M131" nogoods="7" num="2" revisions="(843,useless=177)" wck="0.013" wrong="65"/>
+<run backtracks="49" decisions="188" depth="0..4" failedAssignments="46" filters="865" mem="247M131" nogoods="7" num="3" revisions="(1113,useless=248)" wck="0.015" wrong="91"/>
+<run backtracks="64" decisions="243" depth="0..5" failedAssignments="60" filters="1154" mem="247M131" nogoods="11" num="4" revisions="(1494,useless=339)" wck="0.016" wrong="118"/>
+<run backtracks="80" decisions="307" depth="0..5" failedAssignments="76" filters="1497" mem="247M131" nogoods="13" num="5" revisions="(1963,useless=465)" wck="0.018" wrong="149"/>
+<run backtracks="95" decisions="365" depth="0..4" failedAssignments="93" filters="1806" mem="247M131" nogoods="13" num="6" revisions="(2402,useless=594)" wck="0.02" wrong="178"/>
+<run backtracks="108" decisions="411" depth="0..3" failedAssignments="105" filters="2063" mem="247M131" nogoods="13" num="7" revisions="(2771,useless=706)" wck="0.021" wrong="202"/>
+<global Stop="FULL_EXPLORATION" cpu="2.008" filters="2063" mem="247M131" nogoods="13" revisions="(2771,useless=706)" wck="0.385" wrong="202"/>
+</solver>
+</resolution>
+</resolutions>

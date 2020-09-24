@@ -1,0 +1,21 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="246">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Haystacks-ext-04_c18"/>
+<domains nTypes="1" nValues="64" sizes="[4#16]"/>
+<variables count="16" degrees="[3#10,4#6]"/>
+<constraints arities="[2#27]" count="27" cpu="2.005" distribution="[CtrExtensionV-Bits#27]" mem="178M954" nCftStructures="(4,shared:23)" nExtStructures="(4,shared:23)" wck="0.344"/>
+<solver cpu="2.026" guaranteedGAC="true" mem="178M954" wck="0.367">
+<preprocessing cpu="2.028" filters="0" inconsistency="false" mem="178M954" nACremovedValues="0" nTotalRemovedValues="0" wck="0.001"/>
+<run backtracks="8" decisions="41" depth="0..6" failedAssignments="10" filters="155" mem="178M954" nogoods="5" num="0" revisions="(208,useless=53)" wck="0.007" wrong="18"/>
+<run backtracks="20" decisions="85" depth="0..4" failedAssignments="21" filters="347" mem="178M954" nogoods="6" num="1" revisions="(452,useless=105)" wck="0.01" wrong="39"/>
+<run backtracks="31" decisions="128" depth="1..4" failedAssignments="33" filters="599" mem="178M954" nogoods="8" num="2" revisions="(787,useless=188)" wck="0.013" wrong="60"/>
+<run backtracks="42" decisions="171" depth="1..5" failedAssignments="46" filters="814" mem="178M954" nogoods="10" num="3" revisions="(1075,useless=261)" wck="0.014" wrong="81"/>
+<run backtracks="54" decisions="222" depth="1..5" failedAssignments="60" filters="1151" mem="178M954" nogoods="12" num="4" revisions="(1505,useless=353)" wck="0.016" wrong="106"/>
+<run backtracks="63" decisions="269" depth="1..4" failedAssignments="76" filters="1385" mem="178M954" nogoods="19" num="5" revisions="(1825,useless=439)" wck="0.018" wrong="129"/>
+<run backtracks="74" decisions="324" depth="0..5" failedAssignments="93" filters="1705" mem="178M954" nogoods="20" num="6" revisions="(2249,useless=543)" wck="0.02" wrong="156"/>
+<run backtracks="91" decisions="392" depth="0..3" failedAssignments="112" filters="2055" mem="178M954" nogoods="21" num="7" revisions="(2768,useless=711)" wck="0.022" wrong="189"/>
+<run backtracks="100" decisions="422" depth="0..4" failedAssignments="123" filters="2215" mem="178M954" nogoods="21" num="8" revisions="(3003,useless=785)" wck="0.023" wrong="205"/>
+<global Stop="FULL_EXPLORATION" cpu="2.05" filters="2215" mem="178M954" nogoods="21" revisions="(3003,useless=785)" wck="0.391" wrong="205"/>
+</solver>
+</resolution>
+</resolutions>

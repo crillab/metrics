@@ -1,0 +1,28 @@
+<resolutions configurationFileName="bs2/configurations/bs0.xml" totalWckTime="406">
+<resolution>
+<instance framework="CSP" name="ProblemFile-GracefulGraph-K04-P02_c18"/>
+<domains nTypes="2" nValues="392" sizes="[16#16,17#8]"/>
+<variables count="24" degrees="[2#16,5#8]"/>
+<constraints arities="[3#16,8#1,16#1]" count="18" cpu="2.03" distribution="[AllDifferent#2,CtrIntension#16]" mem="247M141" nCftStructures="(1,shared:15,unbuilt:2)" nIntStructures="(1,shared:15)" nSpecific="2" wck="0.373"/>
+<solver cpu="2.056" guaranteedGAC="true" mem="247M141" wck="0.401">
+<preprocessing ccks="4624" cpu="2.059" filters="0" inconsistency="false" mem="247M141" nACremovedValues="0" nTotalRemovedValues="0" wck="0.002"/>
+<run backtracks="0" ccks="30070" decisions="23" depth="3..4" failedAssignments="10" filters="212" mem="247M141" nogoods="10" num="0" revisions="(446,useless=220)" wck="0.021" wrong="10"/>
+<run backtracks="0" ccks="58328" decisions="48" depth="3..3" failedAssignments="21" filters="547" mem="247M141" nogoods="21" num="1" revisions="(1164,useless=598)" wck="0.032" wrong="21"/>
+<run backtracks="4" ccks="81676" decisions="83" depth="3..4" failedAssignments="33" filters="959" mem="247M141" nogoods="26" num="2" revisions="(1934,useless=957)" wck="0.04" wrong="37"/>
+<run backtracks="5" ccks="108664" decisions="115" depth="3..4" failedAssignments="46" filters="1263" mem="247M141" nogoods="34" num="3" revisions="(2652,useless=1365)" wck="0.047" wrong="51"/>
+<run backtracks="5" ccks="129395" decisions="146" depth="3..4" failedAssignments="60" filters="1521" mem="247M141" nogoods="48" num="4" revisions="(3274,useless=1699)" wck="0.053" wrong="65"/>
+<run backtracks="7" ccks="153340" decisions="186" depth="3..4" failedAssignments="76" filters="1962" mem="247M141" nogoods="55" num="5" revisions="(4070,useless=2059)" wck="0.06" wrong="83"/>
+<run backtracks="13" ccks="180536" decisions="236" depth="3..4" failedAssignments="93" filters="2520" mem="247M141" nogoods="64" num="6" revisions="(5119,useless=2531)" wck="0.08" wrong="106"/>
+<run backtracks="15" ccks="203031" decisions="282" depth="3..5" failedAssignments="112" filters="3022" mem="247M141" nogoods="76" num="7" revisions="(5916,useless=2819)" wck="0.088" wrong="127"/>
+<run backtracks="18" ccks="227289" decisions="332" depth="3..5" failedAssignments="133" filters="3578" mem="247M141" nogoods="83" num="8" revisions="(6793,useless=3138)" wck="0.096" wrong="150"/>
+<run backtracks="28" ccks="266301" decisions="402" depth="2..5" failedAssignments="156" filters="4364" mem="247M141" nogoods="86" num="9" revisions="(8159,useless=3696)" wck="0.108" wrong="183"/>
+<run backtracks="30" ccks="311242" decisions="459" depth="2..4" failedAssignments="181" filters="5097" mem="247M141" nogoods="101" num="10" revisions="(9574,useless=4336)" wck="0.119" wrong="210"/>
+<run backtracks="42" ccks="354280" decisions="543" depth="2..5" failedAssignments="209" filters="6049" mem="247M141" nogoods="107" num="11" revisions="(11177,useless=4958)" wck="0.131" wrong="250"/>
+<run backtracks="48" ccks="398319" decisions="621" depth="3..5" failedAssignments="240" filters="6935" mem="247M141" nogoods="112" num="12" revisions="(12674,useless=5554)" wck="0.143" wrong="287"/>
+<run backtracks="53" ccks="451863" decisions="701" depth="2..5" failedAssignments="274" filters="7895" mem="247M141" nogoods="117" num="13" revisions="(14420,useless=6314)" wck="0.155" wrong="325"/>
+<run backtracks="60" ccks="495682" decisions="792" depth="3..4" failedAssignments="311" filters="8806" mem="247M141" nogoods="124" num="14" revisions="(16177,useless=7069)" wck="0.166" wrong="369"/>
+<run backtracks="65" ccks="538993" decisions="867" depth="3..23" failedAssignments="342" filters="9531" foundSolutions="1" mem="247M141" nogoods="124" num="15" revisions="(17728,useless=7862)" wck="0.182" wrong="404"/>
+<global Stop="REACHED_GOAL" ccks="538993" cpu="2.239" filters="9531" firstSolCpu="2.234" foundSolutions="1" mem="247M141" nogoods="124" revisions="(17728,useless=7862)" wck="0.584" wrong="404"/>
+</solver>
+</resolution>
+</resolutions>

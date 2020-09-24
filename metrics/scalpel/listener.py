@@ -56,10 +56,10 @@ class KeyMapping:
         :param scalpel_key: The key expected by Scalpel.
         :param campaign_key: The key defined in the campaign.
         """
-        if isinstance(campaign_key, str):
-            self._dict_representation[scalpel_key] = [campaign_key]
+        if isinstance(campaign_key, list):
+            self._dict_representation[scalpel_key] = [str(v) for v in campaign_key]
         else:
-            self._dict_representation[scalpel_key] = campaign_key
+            self._dict_representation[scalpel_key] = [str(campaign_key)]
 
     def __getitem__(self, campaign_key: str) -> Tuple[str, int]:
         """
@@ -139,6 +139,7 @@ class CampaignParserListener:
         """
         Notifies this listener that a new input set is going to be parsed.
         """
+        print("toto")
         self._input_set_builder = self._campaign_builder.add_input_set_builder()
         self._current_builder = self._input_set_builder
 
@@ -185,11 +186,15 @@ class CampaignParserListener:
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
+
+        if isinstance(value, tuple):
+            for v in value:
+                self.log_data(key, v)
+            return
         # Adding the read value.
         scalpel_key, nb = self._key_mapping[key]
         read_values = self._pending_keys[scalpel_key]
         read_values[key] = str(value)
-
         # If all the values of the mapping have been read, we can commit them.
         if len(read_values) == nb:
             values = ['' if read_values[v] is None else read_values[v] for v in

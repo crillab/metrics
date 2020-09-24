@@ -16,7 +16,8 @@ MODULE_NAME = metrics
 DOCKER_ORGANIZATION = thibaultfalque
 
 # The version of the package to build.
-VERSION = 0.2.3
+
+VERSION = 0.3.0
 
 
 # The directory of the unit tests for the package to build.

@@ -1,0 +1,17 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="439">
+<resolution>
+<instance framework="CSP" name="ProblemFile-SportsScheduling-10_c18"/>
+<domains nTypes="2" nValues="3025" sizes="[10#100,45#45]"/>
+<variables count="145" degrees="[3#50,4#95]"/>
+<constraints arities="[1#5,2#5,3#45,5#9,10#10,18#5,20#5,45#1]" count="85" cpu="2.165" distribution="[AllDifferent#11,CardinalityConstant#10,CtrExtensionCT-Table#45,CtrIntension#5,Exactly1#9,LE#5]" mem="247M135" nExtStructures="(1,shared:44)" nIntStructures="(5,shared:0)" nSpecific="80" nTotalTuples="2025" tables="[45#45]" wck="0.433"/>
+<solver cpu="2.198" guaranteedGAC="true" mem="247M135" wck="0.467">
+<preprocessing ccks="95" cpu="2.221" filters="118" inconsistency="false" mem="247M135" nACremovedValues="680" nTotalRemovedValues="680" revisions="(5,useless=1)" wck="0.023"/>
+<run avgTableProportion="97" avgTableSize="44" backtracks="5" ccks="95" decisions="51" depth="19..26" failedAssignments="10" filters="718" mem="247M135" nFilterCalls="596" nogoods="4" num="0" revisions="(5,useless=1)" wck="0.053" wrong="15"/>
+<run avgTableProportion="97" avgTableSize="44" backtracks="6" ccks="95" decisions="89" depth="3..16" failedAssignments="21" filters="1244" mem="247M135" nFilterCalls="1130" nogoods="13" num="1" revisions="(5,useless=1)" wck="0.072" wrong="27"/>
+<run avgTableProportion="97" avgTableSize="44" backtracks="10" ccks="95" decisions="135" depth="7..23" failedAssignments="33" filters="1833" mem="247M135" nFilterCalls="1698" nogoods="19" num="2" revisions="(5,useless=1)" wck="0.091" wrong="41"/>
+<run avgTableProportion="97" avgTableSize="44" backtracks="14" ccks="95" decisions="186" depth="0..22" failedAssignments="46" filters="2603" mem="247M135" nFilterCalls="2363" nogoods="23" num="3" revisions="(5,useless=1)" wck="0.112" wrong="57"/>
+<run avgTableProportion="97" avgTableSize="44" backtracks="14" ccks="180" decisions="215" depth="16..144" failedAssignments="48" filters="3022" foundSolutions="1" mem="247M135" nFilterCalls="2866" nogoods="23" num="4" revisions="(5,useless=1)" wck="0.144" wrong="59"/>
+<global Stop="REACHED_GOAL" ccks="180" cpu="2.342" filters="3022" firstSolCpu="2.335" foundSolutions="1" mem="247M135" nogoods="23" revisions="(5,useless=1)" wck="0.612" wrong="59"/>
+</solver>
+</resolution>
+</resolutions>

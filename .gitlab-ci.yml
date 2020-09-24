@@ -1,7 +1,6 @@
 before_script:
   - export http_proxy=$HTTP_PROXY
   - export https_proxy=$HTTP_PROXY
-  #- echo -n $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
 test:
     script:
@@ -16,21 +15,3 @@ sonar:
         - pylint
         - sonar
     stage: test
-build:
-    script:
-        - make docker-build
-    tags:
-        - docker
-    stage: build
-deploy_cril:
-    stage: deploy
-    tags:
-        - docker
-    script:
-        - cat $HOME/.docker/config.json
-        - make docker-push
-    needs: ["build"]
-    environment:
-        name: staging
-    only:
-        - web

@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?><testsuite name="nosetests" tests="11" errors="7" failures="0" skip="0"><testcase classname="test_parser.ParserTestCase" name="test_failed_yaml_case" time="0.003"><system-err><![CDATA[usage: nosetests [-h] -i INPUT [-p PLOT_CONFIG] (--from-json | --from-yaml)
+nosetests: error: the following arguments are required: -i/--input
+]]></system-err></testcase><testcase classname="test_parser.ParserTestCase" name="test_json_case_with_plot_config" time="0.001"></testcase><testcase classname="test_parser.ParserTestCase" name="test_json_case_without_plot_config" time="0.001"><system-out><![CDATA[Namespace(from_json=True, from_yaml=True, input='./data/xcsp17.json', plot_config=None)
+]]></system-out></testcase><testcase classname="test_parser.ParserTestCase" name="test_yaml_case" time="0.001"></testcase><testcase classname="nose.failure.Failure" name="runTest" time="0.000"><error type="builtins.SyntaxError" message="future feature annotations is not defined (builder.py, line 30)"><![CDATA[Traceback (most recent call last):
+  File "/usr/lib/python3.6/unittest/case.py", line 59, in testPartExecutor
+    yield
+  File "/usr/lib/python3.6/unittest/case.py", line 605, in run
+    testMethod()
+  File "/usr/local/lib/python3.6/dist-packages/nose/failure.py", line 39, in runTest
+    raise self.exc_val.with_traceback(self.tb)
+  File "/usr/local/lib/python3.6/dist-packages/nose/loader.py", line 418, in loadTestsFromName
+    addr.filename, addr.module)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 47, in importFromPath
+    return self.importFromDir(dir_path, fqname)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 94, in importFromDir
+    mod = load_module(part_fqname, fh, filename, desc)
+  File "/usr/lib/python3.6/imp.py", line 235, in load_module
+    return load_source(name, filename, file)
+  File "/usr/lib/python3.6/imp.py", line 172, in load_source
+    module = _load(spec)
+  File "<frozen importlib._bootstrap>", line 684, in _load
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_core/test_campaign.py", line 4, in <module>
+    from metrics.core.builder.builder import CampaignBuilder, AttributeManagerSets
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/core/builder/__init__.py", line 26, in <module>
+    from metrics.core.builder.builder import CampaignBuilder
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/core/builder/builder.py", line 30
+    from __future__ import annotations
+                                     ^
+SyntaxError: future feature annotations is not defined
+]]></error></testcase><testcase classname="nose.failure.Failure" name="runTest" time="0.000"><error type="builtins.SyntaxError" message="future feature annotations is not defined (builder.py, line 30)"><![CDATA[Traceback (most recent call last):
+  File "/usr/lib/python3.6/unittest/case.py", line 59, in testPartExecutor
+    yield
+  File "/usr/lib/python3.6/unittest/case.py", line 605, in run
+    testMethod()
+  File "/usr/local/lib/python3.6/dist-packages/nose/failure.py", line 39, in runTest
+    raise self.exc_val.with_traceback(self.tb)
+  File "/usr/local/lib/python3.6/dist-packages/nose/loader.py", line 418, in loadTestsFromName
+    addr.filename, addr.module)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 47, in importFromPath
+    return self.importFromDir(dir_path, fqname)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 94, in importFromDir
+    mod = load_module(part_fqname, fh, filename, desc)
+  File "/usr/lib/python3.6/imp.py", line 235, in load_module
+    return load_source(name, filename, file)
+  File "/usr/lib/python3.6/imp.py", line 172, in load_source
+    module = _load(spec)
+  File "<frozen importlib._bootstrap>", line 684, in _load
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_core/test_global.py", line 4, in <module>
+    from tests.test_core.json_reader import JsonReader
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_core/json_reader.py", line 6, in <module>
+    from metrics.core.builder.builder import AttributeManagerSets, CampaignBuilder
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/core/builder/__init__.py", line 26, in <module>
+    from metrics.core.builder.builder import CampaignBuilder
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/core/builder/builder.py", line 30
+    from __future__ import annotations
+                                     ^
+SyntaxError: future feature annotations is not defined
+]]></error></testcase><testcase classname="nose.failure.Failure" name="runTest" time="0.000"><error type="builtins.SyntaxError" message="future feature annotations is not defined (builder.py, line 30)"><![CDATA[Traceback (most recent call last):
+  File "/usr/lib/python3.6/unittest/case.py", line 59, in testPartExecutor
+    yield
+  File "/usr/lib/python3.6/unittest/case.py", line 605, in run
+    testMethod()
+  File "/usr/local/lib/python3.6/dist-packages/nose/failure.py", line 39, in runTest
+    raise self.exc_val.with_traceback(self.tb)
+  File "/usr/local/lib/python3.6/dist-packages/nose/loader.py", line 418, in loadTestsFromName
+    addr.filename, addr.module)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 47, in importFromPath
+    return self.importFromDir(dir_path, fqname)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 94, in importFromDir
+    mod = load_module(part_fqname, fh, filename, desc)
+  File "/usr/lib/python3.6/imp.py", line 235, in load_module
+    return load_source(name, filename, file)
+  File "/usr/lib/python3.6/imp.py", line 172, in load_source
+    module = _load(spec)
+  File "<frozen importlib._bootstrap>", line 684, in _load
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_core/test_typing.py", line 3, in <module>
+    from metrics.core.builder.attribute_manager import AttributeManagerSet
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/core/builder/__init__.py", line 26, in <module>
+    from metrics.core.builder.builder import CampaignBuilder
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/core/builder/builder.py", line 30
+    from __future__ import annotations
+                                     ^
+SyntaxError: future feature annotations is not defined
+]]></error></testcase><testcase classname="nose.failure.Failure" name="runTest" time="0.000"><error type="builtins.SyntaxError" message="future feature annotations is not defined (config.py, line 33)"><![CDATA[Traceback (most recent call last):
+  File "/usr/lib/python3.6/unittest/case.py", line 59, in testPartExecutor
+    yield
+  File "/usr/lib/python3.6/unittest/case.py", line 605, in run
+    testMethod()
+  File "/usr/local/lib/python3.6/dist-packages/nose/failure.py", line 39, in runTest
+    raise self.exc_val.with_traceback(self.tb)
+  File "/usr/local/lib/python3.6/dist-packages/nose/loader.py", line 418, in loadTestsFromName
+    addr.filename, addr.module)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 47, in importFromPath
+    return self.importFromDir(dir_path, fqname)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 94, in importFromDir
+    mod = load_module(part_fqname, fh, filename, desc)
+  File "/usr/lib/python3.6/imp.py", line 235, in load_module
+    return load_source(name, filename, file)
+  File "/usr/lib/python3.6/imp.py", line 172, in load_source
+    module = _load(spec)
+  File "<frozen importlib._bootstrap>", line 684, in _load
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_scalpel/test_listener.py", line 34, in <module>
+    from metrics.scalpel.listener import CampaignParserListener
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/scalpel/__init__.py", line 36, in <module>
+    from metrics.scalpel.config import read_configuration
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/scalpel/config/__init__.py", line 32, in <module>
+    from metrics.scalpel.config.config import MappingConfiguration, \
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/scalpel/config/config.py", line 33
+    from __future__ import annotations
+                                     ^
+SyntaxError: future feature annotations is not defined
+]]></error></testcase><testcase classname="nose.failure.Failure" name="runTest" time="0.000"><error type="builtins.SyntaxError" message="future feature annotations is not defined (config.py, line 33)"><![CDATA[Traceback (most recent call last):
+  File "/usr/lib/python3.6/unittest/case.py", line 59, in testPartExecutor
+    yield
+  File "/usr/lib/python3.6/unittest/case.py", line 605, in run
+    testMethod()
+  File "/usr/local/lib/python3.6/dist-packages/nose/failure.py", line 39, in runTest
+    raise self.exc_val.with_traceback(self.tb)
+  File "/usr/local/lib/python3.6/dist-packages/nose/loader.py", line 418, in loadTestsFromName
+    addr.filename, addr.module)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 47, in importFromPath
+    return self.importFromDir(dir_path, fqname)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 94, in importFromDir
+    mod = load_module(part_fqname, fh, filename, desc)
+  File "/usr/lib/python3.6/imp.py", line 235, in load_module
+    return load_source(name, filename, file)
+  File "/usr/lib/python3.6/imp.py", line 172, in load_source
+    module = _load(spec)
+  File "<frozen importlib._bootstrap>", line 684, in _load
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_scalpel/test_pattern.py", line 34, in <module>
+    from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/scalpel/__init__.py", line 36, in <module>
+    from metrics.scalpel.config import read_configuration
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/scalpel/config/__init__.py", line 32, in <module>
+    from metrics.scalpel.config.config import MappingConfiguration, \
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/scalpel/config/config.py", line 33
+    from __future__ import annotations
+                                     ^
+SyntaxError: future feature annotations is not defined
+]]></error></testcase><testcase classname="nose.failure.Failure" name="runTest" time="0.000"><error type="builtins.SyntaxError" message="future feature annotations is not defined (test_dataframe.py, line 1)"><![CDATA[Traceback (most recent call last):
+  File "/usr/lib/python3.6/unittest/case.py", line 59, in testPartExecutor
+    yield
+  File "/usr/lib/python3.6/unittest/case.py", line 605, in run
+    testMethod()
+  File "/usr/local/lib/python3.6/dist-packages/nose/failure.py", line 39, in runTest
+    raise self.exc_val.with_traceback(self.tb)
+  File "/usr/local/lib/python3.6/dist-packages/nose/loader.py", line 418, in loadTestsFromName
+    addr.filename, addr.module)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 47, in importFromPath
+    return self.importFromDir(dir_path, fqname)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 94, in importFromDir
+    mod = load_module(part_fqname, fh, filename, desc)
+  File "/usr/lib/python3.6/imp.py", line 235, in load_module
+    return load_source(name, filename, file)
+  File "/usr/lib/python3.6/imp.py", line 172, in load_source
+    module = _load(spec)
+  File "<frozen importlib._bootstrap>", line 684, in _load
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 674, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 781, in get_code
+  File "<frozen importlib._bootstrap_external>", line 741, in source_to_code
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_wallet/test_dataframe.py", line 1
+    from __future__ import annotations
+                                     ^
+SyntaxError: future feature annotations is not defined
+]]></error></testcase><testcase classname="nose.failure.Failure" name="runTest" time="0.000"><error type="builtins.SyntaxError" message="future feature annotations is not defined (builder.py, line 30)"><![CDATA[Traceback (most recent call last):
+  File "/usr/lib/python3.6/unittest/case.py", line 59, in testPartExecutor
+    yield
+  File "/usr/lib/python3.6/unittest/case.py", line 605, in run
+    testMethod()
+  File "/usr/local/lib/python3.6/dist-packages/nose/failure.py", line 39, in runTest
+    raise self.exc_val.with_traceback(self.tb)
+  File "/usr/local/lib/python3.6/dist-packages/nose/loader.py", line 418, in loadTestsFromName
+    addr.filename, addr.module)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 47, in importFromPath
+    return self.importFromDir(dir_path, fqname)
+  File "/usr/local/lib/python3.6/dist-packages/nose/importer.py", line 94, in importFromDir
+    mod = load_module(part_fqname, fh, filename, desc)
+  File "/usr/lib/python3.6/imp.py", line 235, in load_module
+    return load_source(name, filename, file)
+  File "/usr/lib/python3.6/imp.py", line 172, in load_source
+    module = _load(spec)
+  File "<frozen importlib._bootstrap>", line 684, in _load
+  File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_wallet/test_figure.py", line 6, in <module>
+    from tests.test_core.json_reader import JsonReader
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/tests/test_core/json_reader.py", line 6, in <module>
+    from metrics.core.builder.builder import AttributeManagerSets, CampaignBuilder
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/core/builder/__init__.py", line 26, in <module>
+    from metrics.core.builder.builder import CampaignBuilder
+  File "/home/thibault/Travail/Doctorat/workspace/metrics/metrics/core/builder/builder.py", line 30
+    from __future__ import annotations
+                                     ^
+SyntaxError: future feature annotations is not defined
+]]></error></testcase></testsuite>

@@ -1,0 +1,16 @@
+<resolutions configurationFileName="bs2/configurations/bs0.xml" totalWckTime="413">
+<resolution>
+<instance framework="CSP" name="ProblemFile-SportsScheduling-08_c18"/>
+<domains nTypes="2" nValues="1296" sizes="[8#64,28#28]"/>
+<variables count="92" degrees="[3#32,4#60]"/>
+<constraints arities="[1#4,2#4,3#28,4#7,8#8,14#4,16#4,28#1]" count="60" cpu="2.106" distribution="[AllDifferent#9,CardinalityConstant#8,CtrExtensionCT-Table#28,CtrIntension#4,Exactly1#7,LE#4]" mem="178M957" nExtStructures="(1,shared:27)" nIntStructures="(4,shared:0)" nSpecific="56" nTotalTuples="784" tables="[28#28]" wck="0.457"/>
+<solver cpu="2.135" guaranteedGAC="true" mem="178M957" wck="0.488">
+<preprocessing ccks="50" cpu="2.151" filters="74" inconsistency="false" mem="178M957" nACremovedValues="364" nTotalRemovedValues="364" revisions="(4,useless=1)" wck="0.016"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="9" ccks="50" decisions="43" depth="9..12" failedAssignments="10" filters="853" mem="178M957" nFilterCalls="505" nogoods="3" num="0" revisions="(4,useless=1)" wck="0.044" wrong="17"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="13" ccks="50" decisions="83" depth="8..12" failedAssignments="21" filters="1309" mem="178M957" nFilterCalls="836" nogoods="10" num="1" revisions="(4,useless=1)" wck="0.056" wrong="32"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="16" ccks="50" decisions="122" depth="0..13" failedAssignments="33" filters="1734" mem="178M957" nFilterCalls="1155" nogoods="18" num="2" revisions="(4,useless=1)" wck="0.067" wrong="46"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="17" ccks="110" decisions="150" depth="0..91" failedAssignments="40" filters="2127" foundSolutions="1" mem="178M957" nFilterCalls="1459" nogoods="18" num="3" revisions="(4,useless=1)" wck="0.086" wrong="54"/>
+<global Stop="REACHED_GOAL" ccks="110" cpu="2.22" filters="2127" firstSolCpu="2.213" foundSolutions="1" mem="178M957" nogoods="18" revisions="(4,useless=1)" wck="0.576" wrong="54"/>
+</solver>
+</resolution>
+</resolutions>

@@ -1,0 +1,13 @@
+<resolutions configurationFileName="bs2/configurations/bs0.xml" totalWckTime="1128">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Pb-fpga45-45-sat_c18"/>
+<domains nTypes="1" nValues="6076" sizes="[2#3038]"/>
+<variables count="3038" degrees="[3#2025,46#1013]"/>
+<constraints arities="[22#22,23#1013,24#1035,45#90]" count="2160" cpu="2.688" distribution="[SumSimpleGE#45,SumSimpleLE#90,SumWeightedGE#2025]" mem="485M745" nSpecific="2160" wck="1.078"/>
+<solver cpu="2.779" guaranteedGAC="true" mem="519M824" wck="1.172">
+<preprocessing cpu="2.801" filters="0" inconsistency="false" mem="519M824" nACremovedValues="0" nTotalRemovedValues="0" wck="0.02"/>
+<run backtracks="0" ccks="2160" decisions="1474" depth="3039..3037" failedAssignments="0" filters="177" foundSolutions="1" mem="519M824" num="0" wck="0.144" wrong="0"/>
+<global Stop="REACHED_GOAL" ccks="2160" cpu="2.924" filters="177" firstSolCpu="2.906" foundSolutions="1" mem="519M824" wck="1.317" wrong="0"/>
+</solver>
+</resolution>
+</resolutions>
