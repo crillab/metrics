@@ -1,4 +1,4 @@
-/home/evaluation/evaluation/pub/bench/sc2020/main/009-80-8|SAT 318.0
+/home/evaluation/evaluation/pub/bench/sc2020/main/009-80-8 SAT 318.0
 /home/evaluation/evaluation/pub/bench/sc2020/main/01-integer-programming-20-30-40 SAT 2224.0
 /home/evaluation/evaluation/pub/bench/sc2020/main/01-integer-programming-5-10-100 UNKNOWN 10000.0
 /home/evaluation/evaluation/pub/bench/sc2020/main/170055892 SAT 0.0
