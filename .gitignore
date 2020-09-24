@@ -25,3 +25,5 @@ dist
 
 # Read the docs outputs
 /docs/rst
+
+bin/cache-directory
