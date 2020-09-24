@@ -22,3 +22,6 @@ dist
 .DS_Store
 .ipynb_checkpoints
 .idea/inspectionProfiles/Project_Default.xml
+
+# Read the docs outputs
+/docs/rst
