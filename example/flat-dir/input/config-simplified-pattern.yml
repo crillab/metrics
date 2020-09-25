@@ -13,7 +13,7 @@ source:
   format: flat-dir
 data:
   file-name-meta:
-    regex: ProblemFile-(.*)_(bs[012]{1})_(.*)
+    pattern: ProblemFile-{any}_{word}_{any}
     experiment_ware: 2
     input_group: 1
   raw-data:

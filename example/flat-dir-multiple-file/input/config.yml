@@ -1,0 +1,28 @@
+name: flat-dir-multiple-file-campaign
+date: 23 septembre 2020
+
+setup:
+  os: Linux CentOS 7 (x86_64)
+  cpu: Intel XEON X5550
+  ram: 32GB
+  timeout: 3600
+  memout: 16384
+
+source:
+  path: /home/thibault/Travail/Doctorat/Tools/metrics/example/flat-dir-multiple-file/input/data/
+  format: flat-dir-mult
+data:
+  file-name-meta:
+    regex: ([-a-z]+)_(.*)
+    experiment_ware: 1
+    input_group: 2
+  raw-data:
+    - log-data: cpu_time
+      file: "*.err"
+      regex: "\\[runlim\\]\\s+real:\\s+(\\d+.\\d+)\\s+seconds"
+    - log-data: derivation-step
+      file: "*.out"
+      pattern: "c number of derivation steps : {integer}"
+    - log-data: conflicts
+      file: "*.out"
+      pattern: "c conflicts	: {integer}"

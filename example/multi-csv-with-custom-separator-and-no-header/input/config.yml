@@ -1,4 +1,4 @@
-name: abscon-campaign
+name: multi-csv-with-custom-separator-and-no-header-campaign
 date: 23 septembre 2020
 
 setup:
@@ -7,13 +7,6 @@ setup:
   ram: 32GB
   timeout: 1200
   memout: 16384
-
-
-#input-set:
-#  name: benchmark
-#  type: file
-#  path-list:
-#    - ./christophe_inputlist
 
 source:
   format: csv
