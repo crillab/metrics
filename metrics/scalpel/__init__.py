@@ -69,7 +69,8 @@ def read_yaml(yaml_configuration: str) -> Campaign:
     parser_listener = CampaignParserListener()
     configuration = read_configuration(yaml_configuration, parser_listener)
     campaign_parser = create_parser(configuration, parser_listener)
-    campaign_parser.parse_file(configuration.get_main_file())
+    for file in configuration.get_main_file():
+        campaign_parser.parse_file(file)
     return parser_listener.get_campaign()
 
 

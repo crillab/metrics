@@ -1,0 +1,14 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="321">
+<resolution>
+<instance framework="CSP" name="ProblemFile-Eternity-04-04_c18"/>
+<domains nTypes="2" nValues="496" sizes="[6#40,16#16]"/>
+<variables count="56" degrees="[1#3,2#52,5#1]"/>
+<constraints arities="[1#16,5#16,16#1]" count="33" cpu="2.32" distribution="[AllDifferent#1,CtrExtensionCT-Table#16,CtrIntension#16]" mem="315M305" nExtStructures="(16,shared:0)" nIntStructures="(1,shared:15)" nSpecific="17" nTotalTuples="1024" tables="[64#16]" wck="0.449"/>
+<solver cpu="2.347" guaranteedGAC="true" mem="315M305" wck="0.477">
+<preprocessing ccks="74" cpu="2.352" filters="47" inconsistency="false" mem="315M305" nACremovedValues="324" nTotalRemovedValues="324" revisions="(16,useless=2)" wck="0.005"/>
+<run avgTableProportion="98" avgTableSize="63" backtracks="8" ccks="74" decisions="35" depth="1..6" failedAssignments="10" filters="320" mem="315M305" nFilterCalls="310" nogoods="4" num="0" revisions="(16,useless=2)" wck="0.019" wrong="16"/>
+<run avgTableProportion="98" avgTableSize="63" backtracks="8" ccks="107" decisions="41" depth="57..55" failedAssignments="10" filters="370" foundSolutions="1" mem="315M305" nFilterCalls="356" nogoods="4" num="1" revisions="(16,useless=2)" wck="0.03" wrong="16"/>
+<global Stop="REACHED_GOAL" ccks="107" cpu="2.376" filters="370" firstSolCpu="2.37" foundSolutions="1" mem="315M305" nogoods="4" revisions="(16,useless=2)" wck="0.508" wrong="16"/>
+</solver>
+</resolution>
+</resolutions>

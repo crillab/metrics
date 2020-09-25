@@ -1,0 +1,13 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="728">
+<resolution>
+<instance framework="CSP" name="ProblemFile-SocialGolfers-4-4-5-cp_c18"/>
+<domains nTypes="1" nValues="320" sizes="[4#80]"/>
+<variables count="80" degrees="[63#2,64#22,65#56]"/>
+<constraints arities="[1#16,4#1200,10#15,16#5,32#4]" count="1240" cpu="2.438" distribution="[CardinalityConstant#5,CtrIntension#1216,LexicographicLE#19]" mem="383M504" nCftStructures="(1,shared:1199,unbuilt:40)" nIntStructures="(5,shared:1211)" nSpecific="24" wck="0.825"/>
+<solver cpu="2.472" guaranteedGAC="true" mem="383M504" wck="0.861">
+<preprocessing ccks="3659" cpu="2.486" filters="16" inconsistency="false" mem="383M504" nACremovedValues="48" nTotalRemovedValues="48" revisions="(976,useless=963)" wck="0.013"/>
+<run backtracks="0" ccks="16161" decisions="26" depth="81..79" failedAssignments="0" filters="139" foundSolutions="1" mem="383M504" num="0" revisions="(11365,useless=11237)" wck="0.037" wrong="0"/>
+<global Stop="REACHED_GOAL" ccks="16161" cpu="2.509" filters="139" firstSolCpu="2.504" foundSolutions="1" mem="383M504" revisions="(11365,useless=11237)" wck="0.898" wrong="0"/>
+</solver>
+</resolution>
+</resolutions>

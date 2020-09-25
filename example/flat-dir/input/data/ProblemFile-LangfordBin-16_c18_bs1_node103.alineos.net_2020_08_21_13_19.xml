@@ -1,0 +1,17 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="327">
+<resolution>
+<instance framework="CSP" name="ProblemFile-LangfordBin-16_c18"/>
+<domains nTypes="2" nValues="1536" sizes="[16#32,32#32]"/>
+<variables count="64" degrees="[2#32,32#32]"/>
+<constraints arities="[2#16,33#32]" count="48" cpu="2.085" distribution="[EQ#16,ElementConstant#32]" mem="178M954" nSpecific="48" wck="0.422"/>
+<solver cpu="2.111" guaranteedGAC="true" mem="178M954" wck="0.45">
+<preprocessing cpu="2.117" filters="16" inconsistency="false" mem="178M954" nACremovedValues="304" nTotalRemovedValues="304" wck="0.004"/>
+<run backtracks="0" decisions="33" depth="13..13" failedAssignments="10" filters="872" mem="178M954" nogoods="10" num="0" wck="0.017" wrong="10"/>
+<run backtracks="1" decisions="68" depth="10..11" failedAssignments="21" filters="1579" mem="178M954" nogoods="12" num="1" wck="0.025" wrong="22"/>
+<run backtracks="4" decisions="112" depth="13..16" failedAssignments="33" filters="2501" mem="178M954" nogoods="16" num="2" wck="0.029" wrong="37"/>
+<run backtracks="12" decisions="164" depth="9..12" failedAssignments="46" filters="3620" mem="178M954" nogoods="19" num="3" wck="0.034" wrong="58"/>
+<run backtracks="12" ccks="48" decisions="176" depth="65..63" failedAssignments="46" filters="3947" foundSolutions="1" mem="178M954" nogoods="19" num="4" wck="0.042" wrong="58"/>
+<global Stop="REACHED_GOAL" ccks="48" cpu="2.149" filters="3947" firstSolCpu="2.144" foundSolutions="1" mem="178M954" nogoods="19" wck="0.493" wrong="58"/>
+</solver>
+</resolution>
+</resolutions>

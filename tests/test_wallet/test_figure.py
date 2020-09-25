@@ -4,7 +4,7 @@ import unittest
 import matplotlib.pyplot as plt
 
 from tests.test_core.json_reader import JsonReader
-from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
+from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder, Analysis
 from metrics.wallet.figure.static_figure import StatTable, CactusMPL, BoxMPL, ScatterMPL, LINE_STYLES, \
     ContributionTable, DEFAULT_COLORS
 
@@ -131,28 +131,20 @@ class MyTestCase(unittest.TestCase):
         self.campaign = jr.campaign
 
     def test_stat_table_no_vbs(self):
-        campaign_df = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
-        campaign_df.data_frame['success'] = campaign_df.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
-        stat = StatTable(campaign_df)
-        self.assertEqual(self.STAT_TABLE_RESULT_NO_VBS, stat.get_figure().T.to_dict())
+        analysis = Analysis(campaign=self.campaign)
+        self.assertEqual(self.STAT_TABLE_RESULT_NO_VBS, analysis.get_stat_table().T.to_dict())
 
     def test_stat_table_vbs(self):
-        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().add_vbew(['CHS', 'WDegCAxCD'], 'cpu_time')
-        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
-        stat = StatTable(cdfb)
-        self.assertEqual(self.STAT_TABLE_RESULT_VBS, stat.get_figure().T.to_dict())
+        analysis = Analysis(campaign=self.campaign).add_vbew(['CHS', 'WDegCAxCD'], 'cpu_time')
+        self.assertEqual(self.STAT_TABLE_RESULT_VBS, analysis.get_stat_table().T.to_dict())
 
     def test_stat_table_sub_set_inputs(self):
-        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().sub_data_frame('input', self.SUB_INPUT_SET)
-        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
-        stat = StatTable(cdfb)
-        self.assertEqual(self.STAT_TABLE_RESULT_SUB_INPUT_SET,stat.get_figure().T.to_dict())
+        analysis = Analysis(campaign=self.campaign).sub_analysis('input', self.SUB_INPUT_SET)
+        self.assertEqual(self.STAT_TABLE_RESULT_SUB_INPUT_SET, analysis.get_stat_table().T.to_dict())
 
     def test_stat_table_sub_set_xpware(self):
-        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign().sub_data_frame('experiment_ware', self.SUB_XP_WARE_SET)
-        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
-        stat = StatTable(cdfb)
-        self.assertEqual(stat.get_figure().T.to_dict(), self.STAT_TABLE_RESULT_SUB_XP_WARE_SET)
+        analysis = Analysis(campaign=self.campaign).sub_analysis('experiment_ware', self.SUB_XP_WARE_SET)
+        self.assertEqual(analysis.get_stat_table().T.to_dict(), self.STAT_TABLE_RESULT_SUB_XP_WARE_SET)
 
     def test_contribution_table(self):
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
@@ -161,7 +153,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual('WDegCAxCD', contrib.get_figure().iloc[0].name)
         self.assertEqual(168, contrib.get_figure().iloc[0]['vbew 0s'])
 
-    def test_static_cactus(self):
+    def test_static_cactus_and_cdf(self):
         color_map = {
             'CHS': DEFAULT_COLORS[0],
             'WDegCAxCD': DEFAULT_COLORS[1],
@@ -183,27 +175,22 @@ class MyTestCase(unittest.TestCase):
             'vbew': 'vbew',
         }
 
-        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
-        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
-        cdfb = cdfb.add_vbew({'CHS', 'WDegCAxCD'}, opti_col='cpu_time')
-        cactus = CactusMPL(cdfb, x_min=300, cumulated=True, color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map)
-        cactus.get_figure()
-
-        #plt.savefig('cactus.pdf', transparent=True, bbox_inches='tight', figsize=(7, 2))
+        analysis = Analysis(campaign=self.campaign).add_vbew({'CHS', 'WDegCAxCD'}, opti_col='cpu_time')
+        analysis.get_cactus_plot(x_min=300, cumulated=True, color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map)
         plt.show()
 
+        analysis.get_cdf(color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map, y_min=0.6, y_max=0.8)
+        plt.show()
+
+
     def test_box(self):
-        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
-        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
-        box = BoxMPL(cdfb)
-        box.get_figure()
+        analysis = Analysis(campaign=self.campaign)
+        analysis.get_box_plot()
         plt.show()
 
     def test_scatter(self):
-        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
-        cdfb.data_frame['success'] = cdfb.data_frame.apply((lambda x: x['cpu_time'] < self.campaign.timeout), axis=1)
-        scatter = ScatterMPL(cdfb, 'CHS', 'WDegCAxCD')
-        scatter.get_figure()
+        analysis = Analysis(campaign=self.campaign)
+        analysis.get_scatter_plot(xp_ware_x='CHS', xp_ware_y='WDegCAxCD')
         plt.show()
 
 

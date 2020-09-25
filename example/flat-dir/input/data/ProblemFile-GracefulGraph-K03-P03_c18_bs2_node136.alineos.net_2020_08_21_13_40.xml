@@ -1,0 +1,14 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="255">
+<resolution>
+<instance framework="CSP" name="ProblemFile-GracefulGraph-K03-P03_c18"/>
+<domains nTypes="2" nValues="369" sizes="[15#15,16#9]"/>
+<variables count="24" degrees="[2#15,4#6,5#3]"/>
+<constraints arities="[3#15,9#1,15#1]" count="17" cpu="2.005" distribution="[AllDifferent#2,CtrIntension#15]" mem="247M130" nCftStructures="(1,shared:14,unbuilt:2)" nIntStructures="(1,shared:14)" nSpecific="2" wck="0.364"/>
+<solver cpu="2.032" guaranteedGAC="true" mem="247M130" wck="0.393">
+<preprocessing ccks="3840" cpu="2.034" filters="0" inconsistency="false" mem="247M130" nACremovedValues="0" nTotalRemovedValues="0" wck="0.0"/>
+<run backtracks="0" ccks="19141" decisions="22" depth="2..2" failedAssignments="10" filters="165" mem="247M130" nogoods="10" num="0" revisions="(305,useless=134)" wck="0.017" wrong="10"/>
+<run backtracks="0" ccks="35538" decisions="47" depth="3..23" failedAssignments="20" filters="489" foundSolutions="1" mem="247M130" nogoods="10" num="1" revisions="(891,useless=406)" wck="0.034" wrong="20"/>
+<global Stop="REACHED_GOAL" ccks="35538" cpu="2.067" filters="489" firstSolCpu="2.062" foundSolutions="1" mem="247M130" nogoods="10" revisions="(891,useless=406)" wck="0.428" wrong="20"/>
+</solver>
+</resolution>
+</resolutions>

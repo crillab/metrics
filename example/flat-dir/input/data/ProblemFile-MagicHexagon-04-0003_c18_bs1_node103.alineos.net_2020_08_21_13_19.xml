@@ -1,0 +1,28 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="408">
+<resolution>
+<instance framework="CSP" name="ProblemFile-MagicHexagon-04-0003_c18"/>
+<domains nTypes="1" nValues="1369" sizes="[37#37]"/>
+<variables count="37" degrees="[4#31,5#3,6#2,9#1]"/>
+<constraints arities="[2#6,4#6,5#6,6#6,7#3,37#1]" count="28" cpu="2.038" distribution="[AllDifferent#1,LE#6,SumSimpleEQ#21]" mem="178M954" nSpecific="28" wck="0.395"/>
+<solver cpu="2.066" guaranteedGAC="false" mem="178M954" wck="0.425">
+<preprocessing cpu="2.071" filters="7" inconsistency="false" mem="178M954" nACremovedValues="9" nTotalRemovedValues="9" wck="0.004"/>
+<run backtracks="0" decisions="27" depth="1..7" failedAssignments="10" filters="79" mem="178M954" nogoods="10" num="0" wck="0.023" wrong="10"/>
+<run backtracks="0" decisions="52" depth="1..3" failedAssignments="21" filters="122" mem="178M954" nogoods="21" num="1" wck="0.031" wrong="21"/>
+<run backtracks="0" decisions="76" depth="0..0" failedAssignments="33" filters="158" mem="178M954" nogoods="21" num="2" wck="0.037" wrong="33"/>
+<run backtracks="6" decisions="121" depth="0..14" failedAssignments="46" filters="402" mem="178M954" nogoods="29" num="3" wck="0.045" wrong="50"/>
+<run backtracks="12" decisions="161" depth="2..5" failedAssignments="60" filters="559" mem="178M954" nogoods="33" num="4" wck="0.053" wrong="68"/>
+<run backtracks="14" decisions="199" depth="1..2" failedAssignments="76" filters="718" mem="178M954" nogoods="44" num="5" wck="0.059" wrong="86"/>
+<run backtracks="18" decisions="249" depth="1..9" failedAssignments="93" filters="877" mem="178M954" nogoods="57" num="6" wck="0.079" wrong="107"/>
+<run backtracks="22" decisions="306" depth="1..11" failedAssignments="112" filters="1108" mem="178M954" nogoods="71" num="7" wck="0.09" wrong="130"/>
+<run backtracks="28" decisions="370" depth="1..15" failedAssignments="133" filters="1398" mem="178M954" nogoods="75" num="8" wck="0.097" wrong="156"/>
+<run backtracks="36" decisions="441" depth="4..13" failedAssignments="156" filters="1829" mem="178M954" nogoods="83" num="9" wck="0.103" wrong="186"/>
+<run backtracks="50" decisions="516" depth="1..4" failedAssignments="181" filters="2126" mem="178M954" nogoods="96" num="10" wck="0.11" wrong="223"/>
+<run backtracks="57" decisions="595" depth="5..12" failedAssignments="209" filters="2617" mem="178M954" nogoods="117" num="11" wck="0.117" wrong="257"/>
+<run backtracks="65" decisions="682" depth="1..10" failedAssignments="240" filters="3039" mem="178M954" nogoods="139" num="12" wck="0.122" wrong="296"/>
+<run backtracks="76" decisions="782" depth="1..14" failedAssignments="274" filters="3533" mem="178M954" nogoods="149" num="13" wck="0.128" wrong="340"/>
+<run backtracks="87" decisions="889" depth="1..16" failedAssignments="311" filters="4015" mem="178M954" nogoods="164" num="14" wck="0.133" wrong="386"/>
+<run backtracks="96" ccks="49" decisions="954" depth="1..36" failedAssignments="330" filters="4430" foundSolutions="1" mem="178M954" nogoods="164" num="15" wck="0.144" wrong="411"/>
+<global Stop="REACHED_GOAL" ccks="49" cpu="2.208" filters="4430" firstSolCpu="2.203" foundSolutions="1" mem="178M954" nogoods="164" wck="0.571" wrong="411"/>
+</solver>
+</resolution>
+</resolutions>

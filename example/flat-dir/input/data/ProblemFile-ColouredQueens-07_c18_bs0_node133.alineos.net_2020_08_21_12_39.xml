@@ -1,0 +1,14 @@
+<resolutions configurationFileName="bs2/configurations/bs0.xml" totalWckTime="2518">
+<resolution>
+<instance framework="CSP" name="ProblemFile-ColouredQueens-07_c18"/>
+<domains nTypes="1" nValues="343" sizes="[7#49]"/>
+<variables count="49" degrees="[3#4,4#45]"/>
+<constraints arities="[2#4,3#4,4#4,5#4,6#4,7#16]" count="36" cpu="2.061" distribution="[AllDifferent#36]" mem="178M952" nSpecific="36" wck="5.245"/>
+<solver cpu="2.095" guaranteedGAC="true" mem="178M952" wck="5.28">
+<preprocessing cpu="2.099" filters="0" inconsistency="false" mem="178M952" nACremovedValues="0" nTotalRemovedValues="0" wck="0.003"/>
+<run backtracks="7" decisions="42" depth="8..11" failedAssignments="10" filters="393" mem="178M952" nogoods="3" num="0" wck="0.05" wrong="17"/>
+<run backtracks="7" ccks="36" decisions="56" depth="5..48" failedAssignments="12" filters="513" foundSolutions="1" mem="178M952" nogoods="3" num="1" wck="0.074" wrong="19"/>
+<global Stop="REACHED_GOAL" ccks="36" cpu="2.129" filters="513" firstSolCpu="2.123" foundSolutions="1" mem="178M952" nogoods="3" wck="5.355" wrong="19"/>
+</solver>
+</resolution>
+</resolutions>

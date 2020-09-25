@@ -1,0 +1,13 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="1464">
+<resolution>
+<instance framework="CSP" name="ProblemFile-CarSequencing-70-02_c18"/>
+<domains nTypes="2" nValues="6600" sizes="[2#1000,23#200]"/>
+<variables count="1200" degrees="[2#200,3#5,4#5,5#6...54#3,55#4,56#4,57#42]"/>
+<constraints arities="[2#199,3#396,5#392,6#200...196#1,197#2,198#1,200#6]" count="1397" cpu="3.123" distribution="[CardinalityConstant#1,CtrExtensionCT-Table#200,SumSimpleGE#209,SumSimpleLE#987]" mem="451M665" nExtStructures="(1,shared:199)" nSpecific="1397" nTotalTuples="4600" tables="[23#200]" wck="1.278"/>
+<solver cpu="3.201" guaranteedGAC="true" mem="451M665" wck="1.359">
+<preprocessing cpu="3.243" filters="0" inconsistency="false" mem="451M665" nACremovedValues="0" nTotalRemovedValues="0" wck="0.039"/>
+<run avgTableProportion="95" avgTableSize="22" backtracks="2" ccks="1397" decisions="193" depth="180..1199" failedAssignments="3" filters="994" foundSolutions="1" mem="451M665" nFilterCalls="2299" num="0" wck="0.294" wrong="5"/>
+<global Stop="REACHED_GOAL" ccks="1397" cpu="3.496" filters="994" firstSolCpu="3.461" foundSolutions="1" mem="451M665" wck="1.654" wrong="5"/>
+</solver>
+</resolution>
+</resolutions>

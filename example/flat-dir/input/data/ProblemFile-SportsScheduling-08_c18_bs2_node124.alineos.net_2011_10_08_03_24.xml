@@ -1,0 +1,18 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="452">
+<resolution>
+<instance framework="CSP" name="ProblemFile-SportsScheduling-08_c18"/>
+<domains nTypes="2" nValues="1296" sizes="[8#64,28#28]"/>
+<variables count="92" degrees="[3#32,4#60]"/>
+<constraints arities="[1#4,2#4,3#28,4#7,8#8,14#4,16#4,28#1]" count="60" cpu="2.275" distribution="[AllDifferent#9,CardinalityConstant#8,CtrExtensionCT-Table#28,CtrIntension#4,Exactly1#7,LE#4]" mem="178M957" nExtStructures="(1,shared:27)" nIntStructures="(4,shared:0)" nSpecific="56" nTotalTuples="784" tables="[28#28]" wck="0.441"/>
+<solver cpu="2.305" guaranteedGAC="true" mem="178M957" wck="0.473">
+<preprocessing ccks="50" cpu="2.322" filters="74" inconsistency="false" mem="178M957" nACremovedValues="364" nTotalRemovedValues="364" revisions="(4,useless=1)" wck="0.015"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="9" ccks="50" decisions="43" depth="9..12" failedAssignments="10" filters="853" mem="178M957" nFilterCalls="505" nogoods="3" num="0" revisions="(4,useless=1)" wck="0.043" wrong="17"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="17" ccks="50" decisions="88" depth="8..13" failedAssignments="21" filters="1449" mem="178M957" nFilterCalls="900" nogoods="8" num="1" revisions="(4,useless=1)" wck="0.058" wrong="35"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="26" ccks="50" decisions="136" depth="3..13" failedAssignments="33" filters="2368" mem="178M957" nFilterCalls="1437" nogoods="15" num="2" revisions="(4,useless=1)" wck="0.076" wrong="55"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="35" ccks="50" decisions="184" depth="6..12" failedAssignments="46" filters="3117" mem="178M957" nFilterCalls="1865" nogoods="20" num="3" revisions="(4,useless=1)" wck="0.09" wrong="74"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="42" ccks="50" decisions="232" depth="0..13" failedAssignments="60" filters="3698" mem="178M957" nFilterCalls="2225" nogoods="25" num="4" revisions="(4,useless=1)" wck="0.114" wrong="93"/>
+<run avgTableProportion="96" avgTableSize="27" backtracks="45" ccks="110" decisions="255" depth="0..91" failedAssignments="64" filters="4057" foundSolutions="1" mem="178M957" nFilterCalls="2478" nogoods="25" num="5" revisions="(4,useless=1)" wck="0.129" wrong="99"/>
+<global Stop="REACHED_GOAL" ccks="110" cpu="2.435" filters="4057" firstSolCpu="2.429" foundSolutions="1" mem="178M957" nogoods="25" revisions="(4,useless=1)" wck="0.604" wrong="99"/>
+</solver>
+</resolution>
+</resolutions>

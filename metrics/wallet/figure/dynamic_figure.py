@@ -27,7 +27,7 @@ This module provides classes for dynamic plots.
 
 import plotly.graph_objects as go
 
-from metrics.wallet.figure.abstract_figure import CactusPlot, ScatterPlot, BoxPlot
+from metrics.wallet.figure.abstract_figure import CactusPlot, ScatterPlot, BoxPlot, CDFPlot
 import plotly.io as pio
 pio.templates.default = 'none'
 
@@ -58,6 +58,41 @@ class CactusPlotly(CactusPlot):
             'line.width': 2,
             'x': self.df_cactus.index,
             'y': self.df_cactus[col],
+        } for i, col in enumerate(solvers)]
+
+    def _get_layout(self):
+        return {
+            'title.text': self.get_title(),
+            'xaxis.title.text': self.get_x_axis_name(),
+            'yaxis.title.text': self.get_y_axis_name(),
+        }
+
+class CDFPlotly(CDFPlot):
+    """
+    Creation of a dynamic CDF.
+    """
+
+    def get_figure(self):
+        """
+
+        @return: the figure.
+        """
+        return go.Figure({
+            'data': self._get_data(),
+            'layout': self._get_layout()
+        })
+
+    def _get_data(self):
+        self.df_cactus = self.get_data_frame()
+        solvers = list(self.df_cactus.columns)
+
+        return [{
+            'name': col,
+            'mode': 'lines',
+            'marker.symbol': i % 10,
+            'line.width': 2,
+            'x': self.df_cactus[col],
+            'y': self.df_cactus.index / len(self.df_cactus.index),
         } for i, col in enumerate(solvers)]
 
     def _get_layout(self):

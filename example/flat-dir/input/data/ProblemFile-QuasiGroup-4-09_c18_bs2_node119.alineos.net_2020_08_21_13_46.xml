@@ -1,0 +1,16 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="534">
+<resolution>
+<instance framework="CSP" name="ProblemFile-QuasiGroup-4-09_c18"/>
+<domains nTypes="2" nValues="6561" sizes="[9#81,81#72]"/>
+<variables count="153" degrees="[2#72,75#9,76#72]"/>
+<constraints arities="[1#9,3#72,9#18,82#72]" count="171" cpu="2.128" distribution="[AllDifferent#18,CtrIntension#9,ElementConstant#72,SumWeightedEQ#72]" mem="178M959" nIntStructures="(9,shared:0)" nSpecific="162" wck="0.535"/>
+<solver cpu="2.159" guaranteedGAC="false" mem="178M959" wck="0.568">
+<preprocessing ccks="81" cpu="2.177" filters="711" inconsistency="false" mem="178M959" nACremovedValues="2106" nTotalRemovedValues="2106" revisions="(9,useless=0)" wck="0.017"/>
+<run backtracks="8" ccks="81" decisions="45" depth="9..12" failedAssignments="10" filters="3790" mem="178M959" nogoods="3" num="0" revisions="(9,useless=0)" wck="0.041" wrong="17"/>
+<run backtracks="16" ccks="81" decisions="86" depth="0..12" failedAssignments="21" filters="6700" mem="178M959" nogoods="5" num="1" revisions="(9,useless=0)" wck="0.054" wrong="33"/>
+<run backtracks="30" ccks="81" decisions="142" depth="8..12" failedAssignments="33" filters="11292" mem="178M959" nogoods="7" num="2" revisions="(9,useless=0)" wck="0.069" wrong="57"/>
+<run backtracks="40" ccks="324" decisions="190" depth="10..152" failedAssignments="44" filters="15474" foundSolutions="1" mem="178M959" nogoods="7" num="3" revisions="(9,useless=0)" wck="0.102" wrong="76"/>
+<global Stop="REACHED_GOAL" ccks="324" cpu="2.262" filters="15474" firstSolCpu="2.256" foundSolutions="1" mem="178M959" nogoods="7" revisions="(9,useless=0)" wck="0.671" wrong="76"/>
+</solver>
+</resolution>
+</resolutions>

@@ -29,7 +29,6 @@ This module provides utility classes wrapping standard readers to better fit
 Scalpel's needs.
 """
 
-
 from csv import reader as load_csv
 from typing import Callable, Iterable, List, Optional, TextIO, Tuple
 
@@ -42,7 +41,7 @@ class CsvReader:
 
     def __init__(self, stream: TextIO, separator: str = ',',
                  quote_char: Optional[str] = None,
-                 row_filter: Callable[[List[str]], bool] = lambda r: True) -> None:
+                 row_filter: Callable[[List[str]], bool] = lambda r: True, has_header: bool = True) -> None:
         """
         Creates a new CsvReader.
 
@@ -58,7 +57,9 @@ class CsvReader:
         self._quote_char = quote_char
         self._row_filter = row_filter
         self._line_iterator = None
+        self._has_header = has_header
         self._keys = []
+        self._cache=None
 
     def read(self) -> Iterable[List[Tuple[str, str]]]:
         """
@@ -76,7 +77,12 @@ class CsvReader:
         :return: The header of the CSV stream.
         """
         self._line_iterator = iter(self._internal_read())
-        self._keys = next(self._line_iterator)
+        if self._has_header:
+            self._keys = next(self._line_iterator)
+        else:
+            self._cache = next(self._line_iterator)
+            self._keys = [str(i) for i in range(len(self._cache))]
+
         return self._keys
 
     def read_content(self) -> Iterable[List[Tuple[str, str]]]:
@@ -85,6 +91,8 @@ class CsvReader:
 
         :return: The content of the CSV stream.
         """
+        if self._cache is not None:
+            yield zip(self._keys,self._cache)
         for line in self._line_iterator:
             line = list(map(str.strip, line))
             if self._row_filter(line):

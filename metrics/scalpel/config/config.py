@@ -42,7 +42,8 @@ from yaml import safe_load as load_yaml
 from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex
+from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex, \
+    AbstractUserDefinedPattern, UserDefinedPatterns, NullUserDefinedPattern
 
 
 class LogData:
@@ -87,17 +88,20 @@ class ScalpelConfiguration:
     relevant values to retrieve from this campaign.
     """
 
-    def __init__(self, fmt: Optional[CampaignFormat], main_file: str,
-                 data_files: Optional[List[str]] = None,
-                 log_datas: Optional[Dict[str, List[LogData]]] = None,
-                 hierarchy_depth: Optional[int] = None,
-                 experiment_ware_depth: Optional[int] = None,
-                 custom_parser: Optional[str] = None, ) -> None:
+    def __init__(self, fmt: Optional[CampaignFormat], has_header: bool, quote: str, separator: str, main_file: str,
+                 data_files: Optional[List[str]],
+                 log_datas: Optional[Dict[str, List[LogData]]],
+                 hierarchy_depth: Optional[int],
+                 experiment_ware_depth: Optional[int],
+                 custom_parser: Optional[str], file_name_meta: FileNameMetaConfiguration) -> None:
         """
         Creates a new ScalpelConfiguration.
 
         :param fmt: The format in which the results of the campaign are stored.
                     If None, the format will be guessed on a best effort basis.
+        :param has_header:
+        :param quote:
+        :param separator:
         :param main_file: The path of the main file containing data about the
                           campaign.
         :param data_files: The names of the files to be considered for each experiment
@@ -107,13 +111,18 @@ class ScalpelConfiguration:
         :param custom_parser: The (completely specified) class of the parser to use to
                               parse the campaign.
         """
+        assert file_name_meta is not None
         self._format = fmt
+        self._has_header = has_header
+        self._quote = quote
+        self._sep = separator
         self._main_file = main_file
         self._data_files = data_files
         self._log_datas = log_datas
         self._custom_parser = custom_parser
         self._hierarchy_depth = hierarchy_depth
         self._experiment_ware_depth = experiment_ware_depth
+        self._file_name_meta = file_name_meta
 
     def get_main_file(self) -> str:
         """
@@ -134,6 +143,15 @@ class ScalpelConfiguration:
                  guessing the format of the campaign has failed.
         """
         return self._format
+
+    def has_header(self) -> bool:
+        return self._has_header
+
+    def get_quote_char(self) -> str:
+        return self._quote
+
+    def get_separator(self) -> str:
+        return self._sep
 
     def is_to_be_parsed(self, file: str) -> bool:
         """
@@ -195,6 +213,9 @@ class ScalpelConfiguration:
         :return: The class of the custom parser to use, if any.
         """
         return self._custom_parser
+
+    def get_file_name_meta(self) -> FileNameMetaConfiguration:
+        return self._file_name_meta
 
 
 class ConfigurationIterator:
@@ -512,6 +533,127 @@ class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfigura
         return self.current().get('group')
 
 
+class DictionaryConfiguration:
+    def __init__(self, dic):
+        self._dict = dic
+
+    def get(self, key: str):
+        return self._dict.get(key)
+
+
+class FileNameMetaConfiguration:
+    """
+    The MappingConfiguration defines the property of the raw data configuration.
+    """
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        """
+        Gives the simplified pattern identifying the current filename.
+
+        :return: The simplified pattern for the raw data, if any.
+        """
+        raise NotImplementedError('Method "get_simplified_pattern()" is abstract!')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        """
+        Gives the regular expression identifying the current filename.
+
+        :return: The regular expression for the raw data, if any.
+        """
+        raise NotImplementedError('Method "get_regex_pattern()" is abstract!')
+
+    def get_input_group(self) -> Optional[int]:
+        """
+        Gives the group identifying the input name in the regular expression.
+
+        :return: The group in the regular expression, if any.
+        """
+        raise NotImplementedError('Method "get_regex_group()" is abstract!')
+
+    def get_experiment_ware_group(self) -> Optional[int]:
+        """
+        Gives the group identifying the experiment ware in the regular expression.
+
+        :return: The group in the regular expression, if any.
+        """
+        raise NotImplementedError('Method "get_regex_group()" is abstract!')
+
+    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
+        """
+        Gives the compiled pattern identifying the current raw data.
+
+        :return: The compiled pattern.
+
+        :raises ValueError: A ValueError is raised if no simplified pattern nor
+                            regular expression was specified for the raw data.
+        """
+        # First, we look for a named pattern.
+        simplified_pattern = self.get_simplified_pattern()
+        if simplified_pattern is not None:
+            return compile_named_pattern(simplified_pattern)
+
+        # There is no look pattern: trying a regular expression.
+        regex = self.get_regex_pattern()
+        experiment_ware_group = self.get_experiment_ware_group()
+        input_group = self.get_input_group()
+        if regex is not None:
+            user_defined_patterns = UserDefinedPatterns()
+            if experiment_ware_group is not None:
+                user_defined_patterns.add(compile_regex(regex, experiment_ware_group))
+            if input_group is not None:
+                user_defined_patterns.add(compile_regex(regex, input_group))
+            return user_defined_patterns
+
+        # The description of the data is missing!
+        raise ValueError('A pattern or regex is missing!')
+
+
+class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
+    """
+    The EmptyFileNameMetaConfiguration is a RawDataConfiguration with no element.
+    """
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        """
+        Gives the simplified pattern identifying the current raw data.
+
+        :return: The simplified pattern for the raw data, if any.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        """
+        Gives the regular expression identifying the current raw data.
+
+        :return: The regular expression for the raw data, if any.
+        """
+        raise ValueError('Empty raw data configuration!')
+
+    def get_input_group(self) -> Optional[int]:
+        raise ValueError('Empty raw data configuration!')
+
+    def get_experiment_ware_group(self) -> Optional[int]:
+        raise ValueError('Empty raw data configuration!')
+
+    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
+        return NullUserDefinedPattern()
+
+
+class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryConfiguration):
+
+    def get_simplified_pattern(self) -> Optional[str]:
+        return self.get('pattern')
+
+    def get_regex_pattern(self) -> Optional[str]:
+        return self.get('regex')
+
+    def get_input_group(self) -> Optional[int]:
+        return self.get('input_group')
+
+    def get_experiment_ware_group(self) -> Optional[int]:
+        return self.get('experiment_ware')
+
+
 class ScalpelConfigurationBuilder:
     """
     The ScalpelConfigurationBuilder allows to build Scalpel's configuration.
@@ -532,6 +674,10 @@ class ScalpelConfigurationBuilder:
         self._data_files = None
         self._log_datas = defaultdict(list)
         self._custom_parser = None
+        self._header = True
+        self._sep = ','
+        self._quote = None
+        self._file_name_meta = EmptyFileNameMetaConfiguration()
 
     def build(self) -> ScalpelConfiguration:
         """
@@ -546,12 +692,12 @@ class ScalpelConfigurationBuilder:
         self.read_experiment_wares()
         self.read_input_set()
         self.read_source()
-        self.read_data_files()
-        return ScalpelConfiguration(self._format, self._main_file,
+        self.read_data()
+        return ScalpelConfiguration(self._format, self._header, self._quote, self._sep, self._main_file,
                                     self._data_files, self._log_datas,
                                     self._hierarchy_depth,
                                     self._experiment_ware_depth,
-                                    self._custom_parser)
+                                    self._custom_parser, self._file_name_meta)
 
     def read_mapping(self) -> None:
         """
@@ -671,11 +817,14 @@ class ScalpelConfigurationBuilder:
         self._main_file = self._get_campaign_path()
         self._format = self._guess_format()
         self._format = self._get_format()
+        self._header = self._has_header()
+        self._quote = self._quote_char()
+        self._sep = self._separator()
         self._hierarchy_depth = self._get_hierarchy_depth()
         self._experiment_ware_depth = self._get_experiment_ware_depth()
         self._custom_parser = self._get_custom_parser()
 
-    def _get_campaign_path(self) -> str:
+    def _get_campaign_path(self) -> Iterable[str]:
         """
         Gives the path of the file containing all the data about the campaign.
         This file may be either a regular file or a directory.
@@ -700,9 +849,9 @@ class ScalpelConfigurationBuilder:
         :return: The guessed format of the campaign, or None if it could
                  not be guessed.
         """
-        if path.isdir(self._main_file):
+        if path.isdir(self._main_file[0]):
             return self._guess_directory_format()
-        if path.exists(self._main_file):
+        if path.exists(self._main_file[0]):
             return self._guess_regular_format()
         return None
 
@@ -713,7 +862,7 @@ class ScalpelConfigurationBuilder:
         :return: The format of the campaign, guessed from the deepness of the
                  file hierarchy rooted at the main file of this campaign.
         """
-        for _, dirs, _ in walk(self._main_file):
+        for _, dirs, _ in walk(self._main_file[0]):
             if dirs:
                 return CampaignFormat.DEEP_LOG_DIRECTORY
         return CampaignFormat.FLAT_LOG_DIRECTORY
@@ -726,10 +875,30 @@ class ScalpelConfigurationBuilder:
                  main file, or None if it could not be guessed.
         """
         try:
-            index = self._main_file.rindex('.')
-            return CampaignFormat.value_of(self._main_file[index + 1:])
+            index = self._main_file[0].rindex('.')
+            return CampaignFormat.value_of(self._main_file[0][index + 1:])
         except ValueError:
             return None
+
+    def _has_header(self) -> bool:
+        """
+        Checks whether the input file to parse has a header.
+
+        :return: If the input file to parse has a header.
+        """
+        raise NotImplementedError('Method "_has_header()" is abstract!')
+
+    def _quote_char(self) -> str:
+        """
+        :return: Return the quote char
+        """
+        raise NotImplementedError('Method "_quote_char()" is abstract!')
+
+    def _separator(self) -> str:
+        """
+        :return: Return the separator
+        """
+        raise NotImplementedError('Method "_separator()" is abstract!')
 
     def _get_hierarchy_depth(self) -> Optional[int]:
         """
@@ -758,7 +927,7 @@ class ScalpelConfigurationBuilder:
         """
         raise NotImplementedError('Method "_get_custom_parser()" is abstract!')
 
-    def read_data_files(self) -> None:
+    def read_data(self) -> None:
         """
         Reads the files from which Scalpel will extract relevant data for the
         analysis.
@@ -766,6 +935,7 @@ class ScalpelConfigurationBuilder:
         directory.
         """
         raw_data = self._get_raw_data()
+        self._file_name_meta = self._get_file_name_meta()
         while raw_data.has_next():
             file = raw_data.get_file()
             name = raw_data.get_name()
@@ -773,6 +943,9 @@ class ScalpelConfigurationBuilder:
             self._log_datas[file].append(LogData(name, pattern))
             raw_data.next()
         self._data_files = self._get_data_files()
+
+    def _get_file_name_meta(self) -> FileNameMetaConfiguration:
+        raise NotImplementedError('Method "_get_file_name_meta()" is abstract!')
 
     def _get_raw_data(self) -> RawDataConfiguration:
         """
@@ -891,24 +1064,28 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         Reads the experiment-wares that are considered in the campaign being
         parsed by Scalpel.
         """
-        if 'experiment-wares' not in self._dict_config:
-            return
-        for xp_ware in self._dict_config['experiment-wares']:
-            self._listener.start_experiment_ware()
-            self._listener.log_data('name', xp_ware)
-            self._listener.end_experiment_ware()
+
+        experiment_wares = self._dict_config.get('experiment-wares')
+        if experiment_wares is not None:
+            for xp_ware in experiment_wares:
+                self._listener.start_experiment_ware()
+                self._listener.log_data('name', xp_ware)
+                self._listener.end_experiment_ware()
+
 
     def read_input_set(self) -> None:
         """
         Reads the input set considered in the campaign being parsed by Scalpel.
         """
-        if 'input-set' not in self._dict_config:
+
+        input_set = self._dict_config.get('input-set')
+        if input_set is None:
             return
         self._listener.start_input_set()
-        fmt = InputSetFormat.value_of(self._dict_config['input-set']['type'])
-        name = self._dict_config['input-set']['name']
+        fmt = InputSetFormat.value_of(input_set['type'])
+        name = input_set['name']
         self._listener.log_data('name', name)
-        paths = DictionaryScalpelConfigurationBuilder._as_list(self._dict_config['input-set']['path-list'])
+        paths = DictionaryScalpelConfigurationBuilder._as_list(input_set['path-list'])
         kwargs = {}
 
         if 'family' in self._get('input-set'):
@@ -924,14 +1101,19 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         create_input_set_reader(fmt, **kwargs)(self._listener, paths)
         self._listener.end_input_set()
 
-    def _get_campaign_path(self) -> str:
+    def _get_campaign_path(self) -> Iterable[str]:
         """
         Gives the path of the file containing all the data about the campaign.
         This file may be either a regular file or a directory.
 
         :return: The path to the main file of the campaign.
         """
-        return self._get('source').get('path')
+        campaign_path = self._get('source').get('path')
+        if campaign_path is None:
+            raise ValueError
+        if isinstance(campaign_path, list):
+            return campaign_path
+        return [campaign_path]
 
     def _get_format(self) -> Optional[CampaignFormat]:
         """
@@ -944,6 +1126,28 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         if fmt is None:
             return self._format
         return CampaignFormat.value_of(fmt)
+
+    def _has_header(self) -> bool:
+        """
+        Checks whether the input file to parse has a header.
+
+        :return: If the input file to parse has a header.
+        """
+        has_header = self._get('source').get('has-header')
+        return has_header is None or has_header
+
+    def _quote_char(self) -> str:
+        """
+        :return: Return the quote char
+        """
+        return self._get('source').get('quote-char')
+
+    def _separator(self) -> str:
+        """
+        :return: Return the separator
+        """
+        sep = self._get('source').get('separator')
+        return sep if sep is not None else ','
 
     def _get_hierarchy_depth(self) -> Optional[int]:
         """
@@ -971,6 +1175,12 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: The class of the parser to use
         """
         return self._get('source').get('parser')
+
+    def _get_file_name_meta(self) -> FileNameMetaConfiguration:
+        file_name_meta = self._get('data').get('file-name-meta')
+        if file_name_meta is None:
+            return EmptyFileNameMetaConfiguration()
+        return DictionaryFileNameMetaConfiguration(file_name_meta)
 
     def _get_raw_data(self) -> RawDataConfiguration:
         """

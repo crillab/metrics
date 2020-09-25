@@ -1,0 +1,24 @@
+<resolutions configurationFileName="bs2/configurations/bs1.xml" totalWckTime="1490">
+<resolution>
+<instance framework="CSP" name="ProblemFile-StripPacking-1a_c18"/>
+<domains nTypes="14" nValues="430" sizes="[1#2,2#34,15#24]"/>
+<variables count="60" degrees="[1#12,12#24,13#24]"/>
+<constraints arities="[2#24,3#12,8#66]" count="102" cpu="2.104" distribution="[CtrExtensionCT-Table#12,CtrIntension#90]" mem="178M957" nCftStructures="(12,shared:12,unbuilt:78)" nExtStructures="(12,shared:0)" nIntStructures="(78,shared:12)" nSpecific="12" nTotalTuples="24" tables="[2#12]" wck="0.487"/>
+<solver cpu="2.127" guaranteedGAC="true" mem="178M957" wck="0.512">
+<preprocessing ccks="26312" cpu="2.153" filters="24" inconsistency="false" mem="178M957" nACremovedValues="62" nTotalRemovedValues="62" revisions="(1082,useless=1058)" wck="0.024"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="4" ccks="69484" decisions="37" depth="9..13" failedAssignments="10" filters="300" mem="178M957" nFilterCalls="30" nogoods="1" num="0" revisions="(6410,useless=6103)" wck="0.057" wrong="14"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="5" ccks="158832" decisions="69" depth="8..9" failedAssignments="21" filters="407" mem="178M957" nFilterCalls="34" nogoods="7" num="1" revisions="(8568,useless=8157)" wck="0.097" wrong="26"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="8" ccks="386160" decisions="103" depth="4..6" failedAssignments="33" filters="570" mem="178M957" nFilterCalls="51" nogoods="13" num="2" revisions="(14857,useless=14286)" wck="0.194" wrong="41"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="14" ccks="662174" decisions="141" depth="1..5" failedAssignments="46" filters="694" mem="178M957" nFilterCalls="60" nogoods="16" num="3" revisions="(20649,useless=19960)" wck="0.307" wrong="59"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="21" ccks="881886" decisions="185" depth="4..6" failedAssignments="60" filters="903" mem="178M957" nFilterCalls="68" nogoods="21" num="4" revisions="(28783,useless=27873)" wck="0.396" wrong="79"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="31" ccks="1114719" decisions="230" depth="1..8" failedAssignments="76" filters="1035" mem="178M957" nFilterCalls="80" nogoods="24" num="5" revisions="(34735,useless=33696)" wck="0.497" wrong="101"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="35" ccks="1217635" decisions="275" depth="3..7" failedAssignments="93" filters="1144" mem="178M957" nFilterCalls="85" nogoods="28" num="6" revisions="(40620,useless=39473)" wck="0.54" wrong="122"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="45" ccks="1438708" decisions="330" depth="1..7" failedAssignments="112" filters="1304" mem="178M957" nFilterCalls="100" nogoods="31" num="7" revisions="(48052,useless=46751)" wck="0.626" wrong="149"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="60" ccks="1699321" decisions="402" depth="2..6" failedAssignments="133" filters="1494" mem="178M957" nFilterCalls="105" nogoods="32" num="8" revisions="(56892,useless=55390)" wck="0.727" wrong="184"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="77" ccks="2242183" decisions="475" depth="0..6" failedAssignments="156" filters="1741" mem="178M957" nFilterCalls="135" nogoods="34" num="9" revisions="(67708,useless=65963)" wck="0.928" wrong="220"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="91" ccks="2680972" decisions="549" depth="0..6" failedAssignments="181" filters="2020" mem="178M957" nFilterCalls="181" nogoods="34" num="10" revisions="(79055,useless=77047)" wck="1.094" wrong="257"/>
+<run avgTableProportion="50" avgTableSize="1" backtracks="96" ccks="2729791" decisions="571" depth="0..4" failedAssignments="190" filters="2089" mem="178M957" nFilterCalls="188" nogoods="34" num="11" revisions="(82299,useless=80222)" wck="1.113" wrong="269"/>
+<global Stop="FULL_EXPLORATION" ccks="2729791" cpu="3.239" filters="2089" mem="178M957" nogoods="34" revisions="(82299,useless=80222)" wck="1.627" wrong="269"/>
+</solver>
+</resolution>
+</resolutions>

@@ -1,0 +1,13 @@
+<resolutions configurationFileName="bs2/configurations/bs2.xml" totalWckTime="1094">
+<resolution>
+<instance framework="CSP" name="ProblemFile-MisteryShopper-10c_c18"/>
+<domains nTypes="3" nValues="27750" sizes="[5#250,6#250,50#500]"/>
+<variables count="1000" degrees="[2#500,6#2,7#91,8#134,9#11,10#12,53#250]"/>
+<constraints arities="[2#525,5#100,10#49,50#20,51#250,100#4]" count="948" cpu="2.459" distribution="[AllDifferent#120,CtrExtensionV-Bits#500,ElementConstant#250,LE#25,LexicographicLE#53]" mem="383M511" nCftStructures="(500,shared:0,unbuilt:448)" nExtStructures="(500,shared:0)" nSpecific="448" wck="0.839"/>
+<solver cpu="2.511" guaranteedGAC="true" mem="383M511" wck="0.893">
+<preprocessing cpu="2.575" filters="198" inconsistency="false" mem="383M511" nACremovedValues="1553" nTotalRemovedValues="1553" revisions="(71,useless=16)" wck="0.061"/>
+<run backtracks="0" ccks="948" decisions="207" depth="1001..999" failedAssignments="0" filters="4953" foundSolutions="1" mem="383M511" num="0" revisions="(9763,useless=8113)" wck="0.37" wrong="0"/>
+<global Stop="REACHED_GOAL" ccks="948" cpu="2.883" filters="4953" firstSolCpu="2.859" foundSolutions="1" mem="383M511" revisions="(9763,useless=8113)" wck="1.266" wrong="0"/>
+</solver>
+</resolution>
+</resolutions>
