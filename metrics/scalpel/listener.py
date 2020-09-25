@@ -139,7 +139,6 @@ class CampaignParserListener:
         """
         Notifies this listener that a new input set is going to be parsed.
         """
-        print("toto")
         self._input_set_builder = self._campaign_builder.add_input_set_builder()
         self._current_builder = self._input_set_builder
 
@@ -186,7 +185,6 @@ class CampaignParserListener:
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
-
         if isinstance(value, tuple):
             for v in value:
                 self.log_data(key, v)

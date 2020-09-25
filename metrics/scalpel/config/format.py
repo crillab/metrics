@@ -29,7 +29,6 @@ This module provides the enumerations representing the formats recognized by
 Scalpel.
 """
 
-
 from __future__ import annotations
 
 from enum import Enum
@@ -106,6 +105,7 @@ class CampaignFormat(FormatEnum):
     RAW_LOG = 'raw', 'raw-log'
     FLAT_LOG_DIRECTORY = 'flat-dir'
     DEEP_LOG_DIRECTORY = 'deep-dir'
+    FLAT_LOG_DIRECTORY_MULTIPLE_FILES = 'flat-dir-multiple-files', 'flat-dir-mult'
 
 
 class OutputFormat(FormatEnum):

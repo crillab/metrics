@@ -162,7 +162,7 @@ class ScalpelConfiguration:
         :return: Whether the file must be parsed.
         """
         if self._log_datas is not None:
-            if file in self._log_datas.keys():
+            if any(fnmatch(file, data_file) for data_file in self._log_datas.keys()):
                 return True
 
         if self._data_files is not None:
@@ -192,7 +192,10 @@ class ScalpelConfiguration:
         """
         if None in self._log_datas:
             return self._log_datas[None]
-        return self._log_datas[filename]
+        for k, v in self._log_datas.items():
+            if fnmatch(filename, k):
+                return v
+        return []
 
     def get_hierarchy_depth(self):
         depth = self._hierarchy_depth
@@ -589,13 +592,19 @@ class FileNameMetaConfiguration:
         """
         # First, we look for a named pattern.
         simplified_pattern = self.get_simplified_pattern()
+        experiment_ware_group = self.get_experiment_ware_group()
+        input_group = self.get_input_group()
+
         if simplified_pattern is not None:
-            return compile_named_pattern(simplified_pattern)
+            user_defined_patterns = UserDefinedPatterns()
+            if experiment_ware_group is not None:
+                user_defined_patterns.add(compile_named_pattern(simplified_pattern, experiment_ware_group))
+            if input_group is not None:
+                user_defined_patterns.add(compile_named_pattern(simplified_pattern, input_group))
+            return user_defined_patterns
 
         # There is no look pattern: trying a regular expression.
         regex = self.get_regex_pattern()
-        experiment_ware_group = self.get_experiment_ware_group()
-        input_group = self.get_input_group()
         if regex is not None:
             user_defined_patterns = UserDefinedPatterns()
             if experiment_ware_group is not None:
@@ -1071,7 +1080,6 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
                 self._listener.start_experiment_ware()
                 self._listener.log_data('name', xp_ware)
                 self._listener.end_experiment_ware()
-
 
     def read_input_set(self) -> None:
         """

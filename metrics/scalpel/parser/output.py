@@ -30,7 +30,6 @@ containing the output of experiment-wares produced during a campaign, so as to
 extract the data they contain.
 """
 
-
 from json import load as load_json
 from typing import Any, Optional, TextIO
 
@@ -200,6 +199,7 @@ class RawCampaignOutputParser(CampaignOutputParser):
         super().__init__(listener, file_path)
         self._configuration = configuration
         self._file_name = file
+        self._cpu = False
 
     def _internal_parse(self, stream: TextIO) -> None:
         """
@@ -209,6 +209,9 @@ class RawCampaignOutputParser(CampaignOutputParser):
         """
         for line in stream:
             self._parse_line(line)
+        if not self._cpu and self._file_name.endswith('.err'):
+            print(self._file_name)
+        self._cpu = False
 
     def _parse_line(self, line: str) -> None:
         """
@@ -217,6 +220,10 @@ class RawCampaignOutputParser(CampaignOutputParser):
         :param line: The line to read.
         """
         for log_data in self._configuration.get_data_in(self._file_name):
+            # print(self._file_name,log_data._name,log_data._pattern)
             value = log_data.extract_value_from(line)
-            if value is not None:
+            # print(value)
+            if value:
                 self.log_data(log_data.get_name(), value)
+                if log_data.get_name() == 'cpu_time':
+                    self._cpu = True

@@ -57,7 +57,7 @@ class NamedPattern(Enum):
         self._escaped_identifier = escape(identifier)
         self._regex = regex
 
-    def compile(self, string: str) -> Optional[Pattern]:
+    def _compile(self, string: str) -> Tuple[str, bool]:
         """
         Replaces this named pattern in the given string by the corresponding
         regular expression, and compiles it.
@@ -67,12 +67,20 @@ class NamedPattern(Enum):
         :return: The compiled pattern, or None if this named pattern does not
                  appear in the specified string.
         """
-        if self._identifier in string:
-            escaped = escape(string)
-            escaped = sub(r'(\\\s)+', r'\\s+', escaped)
-            regex = escaped.replace(self._escaped_identifier, self._regex, 1)
-            return compile(regex)
-        return None
+        if self._escaped_identifier in string:
+            return string.replace(self._escaped_identifier, self._regex), True
+
+        return string, False
+
+    @staticmethod
+    def compile(string: str) -> Optional[Pattern]:
+        escaped = escape(string)
+        escaped = sub(r'(\\\s)+', r'\\s+', escaped)
+        any_found = False
+        for name_pattern in NamedPattern:
+            escaped, found = name_pattern._compile(escaped)
+            any_found = any_found or found
+        return compile(escaped) if any_found else None
 
 
 class AbstractUserDefinedPattern:
@@ -162,20 +170,19 @@ def compile_regex(regex: str, group_id: int = 1) -> UserDefinedPattern:
     raise ValueError(f'"{regex}" must define at least {group_id} group(s) ({pattern.groups} found)')
 
 
-def compile_named_pattern(string: str) -> UserDefinedPattern:
+def compile_named_pattern(string: str, group_id: int = 1) -> UserDefinedPattern:
     """
     Compiles a string as a simplified regular expression allowing to identify a
     value with a named pattern.
 
     :param string: The string to compile as a simplified regular expression.
-
+    :param group_id:
     :return: The compiled pattern.
 
     :raises: A ValueError is raised if the string does not contain a
-             named pattern.
+             named pattern.x
     """
-    for named_pattern in NamedPattern:
-        pattern = named_pattern.compile(string)
-        if pattern is not None:
-            return UserDefinedPattern(pattern)
+    pattern = NamedPattern.compile(string)
+    if pattern is not None:
+        return UserDefinedPattern(pattern, group_id)
     raise ValueError(f'"{string}" does not contain a recognized named pattern')

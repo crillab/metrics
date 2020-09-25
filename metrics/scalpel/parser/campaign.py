@@ -236,7 +236,7 @@ class DirectoryCampaignParser(CampaignParser):
     """
 
     def __init__(self, configuration: ScalpelConfiguration,
-                 listener: CampaignParserListener, file_name_meta: FileNameMetaConfiguration = None) -> None:
+                 listener: CampaignParserListener) -> None:
         """
         Creates a new DirectoryCampaignParser.
 
@@ -246,7 +246,7 @@ class DirectoryCampaignParser(CampaignParser):
         """
         super().__init__(listener)
         self._configuration = configuration
-        self._file_name_meta = file_name_meta if file_name_meta is not None else EmptyFileNameMetaConfiguration()
+        #        self._file_name_meta = file_name_meta if file_name_meta is not None else EmptyFileNameMetaConfiguration()
         self._current_experiment_ware = None
         self._current_input = None
 
@@ -277,18 +277,15 @@ class DirectoryCampaignParser(CampaignParser):
         raise NotImplementedError('Method "explore()" is abstract!')
 
     def _extract_metadata_from_file_name(self, file_path: str) -> None:
-        print(file_path)
         meta = self._configuration.get_file_name_meta()
         compiled_pattern = meta.get_compiled_pattern()
         result_tuple = compiled_pattern.search(file_path)
-        print(result_tuple)
         if result_tuple:
             index = 0
             if meta.get_experiment_ware_group() is not None:
                 self._current_experiment_ware = result_tuple[index]
                 index += 1
             if meta.get_input_group() is not None:
-                print("*******************************************************************************************")
                 self._current_input = result_tuple[index]
 
     def _get_parser_for(self, file: str, file_path: str) -> CampaignOutputParser:
@@ -474,8 +471,10 @@ class MultipleFilesCampaignParser(DirectoryCampaignParser):
         names = set()
         with scandir(root) as root_dir:
             for file in root_dir:
-                names.add(self._get_extension(file.name))
+                if self._configuration.is_to_be_parsed(file.name):
+                    names.add(self._get_extension(file.name))
         for n in names:
+            self._extract_metadata_from_file_name(n)
             self.start_experiment()
             for file in glob.glob(f'{path.join(root, n)}.*'):
                 if self._configuration.is_to_be_parsed(file):

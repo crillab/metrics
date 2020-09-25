@@ -71,6 +71,8 @@ class ValueManager:
         elt = [self._attribute_manager.parse(e) for e in self._elt]
         if not self._attribute_manager.empty and not elt:
             raise TypeError(f'{self._attribute_manager.name} must contain at least one element.')
+        if not elt:
+            return None
         return elt if len(elt) > 1 or self._attribute_manager.is_list else elt[0]
 
     def __str__(self):
@@ -140,7 +142,8 @@ class CampaignBuilder(ModelBuilder):
         It gives to its constructor the experimentware attribute set.
         @return: the created experimentware builder.
         """
-        experiments_ware = self['experiment_wares'] = ExperimentWareBuilder(self._attribute_manager_sets.xp_ware_attr_set)
+        experiments_ware = self['experiment_wares'] = ExperimentWareBuilder(
+            self._attribute_manager_sets.xp_ware_attr_set)
         return experiments_ware
 
     def add_experiment_builder(self) -> ExperimentBuilder:
@@ -257,30 +260,38 @@ class AttributeManagerSets:
         self._init_experiment_builder_attribute_set()
 
     def _init_campaign_builder_attribute_set(self):
-        self._campaign_attr_set.add_attribute_manager_for_typing(name='name', ordered_typing=[TypingStrategyEnum.STRING],
+        self._campaign_attr_set.add_attribute_manager_for_typing(name='name',
+                                                                 ordered_typing=[TypingStrategyEnum.STRING],
                                                                  is_list=False, empty=False,
                                                                  nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_typing(name='timeout', ordered_typing=[TypingStrategyEnum.FLOAT],
+        self._campaign_attr_set.add_attribute_manager_for_typing(name='timeout',
+                                                                 ordered_typing=[TypingStrategyEnum.FLOAT],
                                                                  is_list=False, empty=False,
                                                                  nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_typing(name='memout', ordered_typing=[TypingStrategyEnum.FLOAT],
+        self._campaign_attr_set.add_attribute_manager_for_typing(name='memout',
+                                                                 ordered_typing=[TypingStrategyEnum.FLOAT],
                                                                  is_list=False, empty=False,
                                                                  nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_builder(name='experiment_wares', builder_type=ExperimentWareBuilder,
+        self._campaign_attr_set.add_attribute_manager_for_builder(name='experiment_wares',
+                                                                  builder_type=ExperimentWareBuilder,
                                                                   is_list=True, empty=False,
                                                                   nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_builder(name='input_set', builder_type=InputSetBuilder, is_list=False,
+        self._campaign_attr_set.add_attribute_manager_for_builder(name='input_set', builder_type=InputSetBuilder,
+                                                                  is_list=False,
                                                                   empty=False,
                                                                   nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_builder(name='experiments', builder_type=ExperimentBuilder, is_list=True,
+        self._campaign_attr_set.add_attribute_manager_for_builder(name='experiments', builder_type=ExperimentBuilder,
+                                                                  is_list=True,
                                                                   empty=False,
                                                                   nullable=False)
 
     def _init_input_set_builder_attribute_set(self):
-        self._input_set_attr_set.add_attribute_manager_for_typing(name='name', ordered_typing=[TypingStrategyEnum.STRING],
+        self._input_set_attr_set.add_attribute_manager_for_typing(name='name',
+                                                                  ordered_typing=[TypingStrategyEnum.STRING],
                                                                   is_list=False, empty=False,
                                                                   nullable=False)
-        self._input_set_attr_set.add_attribute_manager_for_builder(name='inputs', builder_type=InputBuilder, is_list=True,
+        self._input_set_attr_set.add_attribute_manager_for_builder(name='inputs', builder_type=InputBuilder,
+                                                                   is_list=True,
                                                                    empty=False,
                                                                    nullable=False)
 
@@ -295,10 +306,12 @@ class AttributeManagerSets:
                                                                 nullable=False, unique=True)
 
     def _init_experiment_builder_attribute_set(self):
-        self._xp_attr_set.add_attribute_manager_for_typing(name='input', ordered_typing=[TypingStrategyEnum.STRING], is_list=False,
+        self._xp_attr_set.add_attribute_manager_for_typing(name='input', ordered_typing=[TypingStrategyEnum.STRING],
+                                                           is_list=False,
                                                            empty=False,
                                                            nullable=False)
-        self._xp_attr_set.add_attribute_manager_for_typing(name='experiment_ware', ordered_typing=[TypingStrategyEnum.STRING],
+        self._xp_attr_set.add_attribute_manager_for_typing(name='experiment_ware',
+                                                           ordered_typing=[TypingStrategyEnum.STRING],
                                                            is_list=False, empty=False,
                                                            nullable=False)
         self._xp_attr_set.add_attribute_manager_for_typing(name='cpu_time', ordered_typing=[TypingStrategyEnum.FLOAT],
@@ -344,4 +357,3 @@ class AttributeManagerSets:
         @return: the attribute manager for experiments
         """
         return self._xp_attr_set
-

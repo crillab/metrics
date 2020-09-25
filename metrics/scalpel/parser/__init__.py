@@ -35,7 +35,7 @@ from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration, CampaignFormat
 from metrics.scalpel.parser.campaign import CampaignParser, \
     CsvCampaignParser, EvaluationCampaignParser, \
-    FlatDirectoryCampaignParser, DeepDirectoryCampaignParser
+    FlatDirectoryCampaignParser, DeepDirectoryCampaignParser, MultipleFilesCampaignParser
 
 
 def create_parser(config: ScalpelConfiguration,
@@ -77,5 +77,7 @@ def create_parser(config: ScalpelConfiguration,
 
     if campaign_format == CampaignFormat.DEEP_LOG_DIRECTORY:
         return DeepDirectoryCampaignParser(config, listener)
+    if campaign_format == CampaignFormat.FLAT_LOG_DIRECTORY_MULTIPLE_FILES:
+        return MultipleFilesCampaignParser(config, listener)
 
     raise ValueError(f'Unrecognized input format: {campaign_format}')
