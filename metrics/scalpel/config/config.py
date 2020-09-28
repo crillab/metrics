@@ -1222,6 +1222,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: The configuration for the specified key, or an empty dictionary
                  if the configuration is not specified.
         """
+        print(self._dict_config)
         config = self._dict_config.get(key)
         return {} if config is None else config
 
@@ -1248,6 +1249,7 @@ def read_configuration(yaml_file: str, listener: CampaignParserListener) -> Scal
     :return: The read configuration.
     """
     with open(yaml_file, 'r') as yaml_stream:
+        print(yaml_file)
         yaml = load_yaml(yaml_stream)
         builder = DictionaryScalpelConfigurationBuilder(yaml, listener)
         return builder.build()

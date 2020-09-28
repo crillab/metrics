@@ -66,9 +66,9 @@ input-set:
   name: sat-race-2019
   type: file
   path-list:
-    - input/sat2019.input
+    - example/sat-competition/input/data/sat2019.input
 source:
-  path: input/sat2019.csv
+  path: example/sat-competition/input/data/sat2019.csv
 data:
   mapping:
     input: benchmark

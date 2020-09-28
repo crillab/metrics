@@ -116,10 +116,10 @@ class FileCampaignParser(CampaignParser):
         result_tuple = compiled_pattern.search(file_path)
         if result_tuple:
             index = 0
-            if (experiment_ware_index := self._file_name_meta.get_experiment_ware_group()) is not None:
+            if self._file_name_meta.get_experiment_ware_group() is not None:
                 self._current_experiment_ware = result_tuple[index]
                 index += 1
-            if (input_index := self._file_name_meta.get_input_group()) is not None:
+            if self._file_name_meta.get_input_group() is not None:
                 self._current_input = result_tuple[index]
         with open(file_path, 'r') as file:
             self.parse_stream(file)

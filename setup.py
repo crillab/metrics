@@ -136,7 +136,7 @@ setup(
     ],
 
     classifiers=[
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent'
