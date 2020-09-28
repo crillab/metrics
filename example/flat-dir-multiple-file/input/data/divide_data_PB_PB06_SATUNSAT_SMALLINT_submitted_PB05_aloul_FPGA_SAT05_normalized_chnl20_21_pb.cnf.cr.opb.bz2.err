@@ -1,0 +1,17 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/divide/start.sh
+[runlim] argv[1]:		/data/PB/PB06/SATUNSAT-SMALLINT/submitted-PB05/aloul/FPGA_SAT05/normalized-chnl20_21_pb.cnf.cr.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/divide/results/data_PB_PB06_SATUNSAT_SMALLINT_submitted_PB05_aloul_FPGA_SAT05_normalized_chnl20_21_pb.cnf.cr.opb.bz2
+[runlim] start:			Wed Feb  5 18:54:41 2020
+[runlim] main pid:		120071
+[runlim] end:			Wed Feb  5 18:54:42 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		6
+[runlim] real:			1.37 seconds
+[runlim] time:			1.03 seconds
+[runlim] space:			153.8 MB
+[runlim] samples:		6

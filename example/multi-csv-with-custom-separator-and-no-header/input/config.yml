@@ -13,8 +13,8 @@ source:
   separator: ' '
   has-header: false
   path:
-    - /home/thibault/Travail/Doctorat/Tools/metrics/example/gilles/input/data/glu.txt
-    - /home/thibault/Travail/Doctorat/Tools/metrics/example/gilles/input/data/kissat.txt
+    - /home/thibault/Travail/Doctorat/Tools/metrics/example/multi-csv-with-custom-separator-and-no-header/input/data/glu.txt
+    - /home/thibault/Travail/Doctorat/Tools/metrics/example/multi-csv-with-custom-separator-and-no-header/input/data/kissat.txt
 data:
   file-name-meta:
     regex: (\w+)\.txt

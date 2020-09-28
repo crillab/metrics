@@ -1,0 +1,65 @@
+c launch: 3600 1800 32768 /home/cril/wallon/new-cdcl/weaken-to-clash /data/PB/PB06/SATUNSAT-SMALLINT/submitted-PB05/aloul/FPGA_SAT05/normalized-chnl20_25_pb.cnf.cr.opb.bz2 /home/cril/wallon/new-cdcl/weaken-to-clash/results/data_PB_PB06_SATUNSAT_SMALLINT_submitted_PB05_aloul_FPGA_SAT05_normalized_chnl20_25_pb.cnf.cr.opb.bz2
+c CPU timeout: 3600
+c wall timeout: 1800
+c memout: 32768
+c executable: /home/cril/wallon/new-cdcl/weaken-to-clash/start.sh
+c job: /data/PB/PB06/SATUNSAT-SMALLINT/submitted-PB05/aloul/FPGA_SAT05/normalized-chnl20_25_pb.cnf.cr.opb.bz2
+c output directory: /home/cril/wallon/new-cdcl/weaken-to-clash/results/data_PB_PB06_SATUNSAT_SMALLINT_submitted_PB05_aloul_FPGA_SAT05_normalized_chnl20_25_pb.cnf.cr.opb.bz2
+c SAT4J PB solver for KTH experiments
+c version CUSTOM.v20200207
+c Cutting planes based inference (org.sat4j.pb.core.PBSolverCP)
+c  - never skip resolution steps
+c  - Auto-division on coefficients is disabled
+c  - No postprocessing
+c  - Conflict is considered as is when resolving
+c  - Weaken reason to find a multiple of the pivot
+c  - Weaken first using unassigned literals
+c --- Begin Solver configuration ---
+c org.sat4j.pb.constraints.PBMaxClauseCardConstrDataStructure@2d8f65a4
+c Learn all clauses as in MiniSAT
+c LOGGER=java.util.logging.Logger@6ee52dcd claDecay=0.999 varDecay=0.95 conflictBoundIncFactor=1.5 initConflictBound=100 
+c VSIDS like heuristics from MiniSAT using a heap phase appearing in latest learned clause taking into account the objective function
+c No reason simplification
+c Armin Biere (Picosat) restarts strategy
+c Glucose 2 learned constraints deletion strategy (LBD updated on propagation) with timer check every 1000 if the learned constraints reach increasing bounds: 5000 step 1000
+c timeout=2147483s
+c DB Simplification allowed=false
+c Listener: org.sat4j.minisat.core.VoidTracing@5faeada1
+c --- End Solver configuration ---
+s UNSATISFIABLE
+c starts		: 1
+c conflicts		: 1
+c decisions		: 191
+c propagations		: 496
+c inspects		: 496
+c shortcuts		: 0
+c learnt literals	: 0
+c learnt binary clauses	: 0
+c learnt ternary clauses	: 0
+c learnt constraints	: 0
+c ignored constraints	: 0
+c root simplifications	: 0
+c removed literals (reason simplification)	: 0
+c reason swapping (by a shorter reason)	: 0
+c Calls to reduceDB	: 0
+c Number of update (reduction) of LBD	: 0
+c Imported unit clauses	: 0
+c number of reductions to clauses (during analyze)	: 0
+c number of learned constraints concerned by reduction	: 0
+c number of learning phase by resolution	: 0
+c number of learning phase by cutting planes	: 0
+c number of rounding to 1 operations	: 0
+c number of easy rounding to 1 operations (no literal elimination needed)	: 0
+c number of reductions of the coefficients by power 2 	: 0
+c number of right shift for reduction by power 2 	: 0
+c number of reductions of the coefficients by GCD over coefficients 	: 0
+c number of ending skipping 	: 0
+c number of internal skipping 	: 0
+c number of derivation steps 	: 43
+c number of skipped derivation steps 	: 0
+c number of remaining unassigned 	: 0
+c number of remaining assigned 	: 0
+c number of falsified literals weakened from reason	: 0
+c number of falsified literals weakened from conflict	: 0
+c speed (assignments/second)	: 17103.44827586207
+c non guided choices	: 191

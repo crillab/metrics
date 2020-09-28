@@ -1,0 +1,17 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/divide/start.sh
+[runlim] argv[1]:		/data/PB/PB10/DEC-SMALLINT-LIN/leberre/opb-paranoid/misc2010/datasets/caixa/normalized-1096.cudf.paranoid.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/divide/results/data_PB_PB10_DEC_SMALLINT_LIN_leberre_opb_paranoid_misc2010_datasets_caixa_normalized_1096.cudf.paranoid.opb.bz2
+[runlim] start:			Wed Feb  5 19:19:49 2020
+[runlim] main pid:		120598
+[runlim] end:			Wed Feb  5 19:19:50 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		5
+[runlim] real:			1.31 seconds
+[runlim] time:			0.75 seconds
+[runlim] space:			149.3 MB
+[runlim] samples:		5

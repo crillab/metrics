@@ -1,0 +1,86 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/weaken-to-clash/start.sh
+[runlim] argv[1]:		/data/PB/PB06/SATUNSAT-SMALLINT/submitted-PB05/aloul/FPGA_SAT05/normalized-fpga35_33_sat_pb.cnf.cr.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/weaken-to-clash/results/data_PB_PB06_SATUNSAT_SMALLINT_submitted_PB05_aloul_FPGA_SAT05_normalized_fpga35_33_sat_pb.cnf.cr.opb.bz2
+[runlim] start:			Sat Feb  8 20:50:51 2020
+[runlim] main pid:		64634
+[runlim] sample:		13.3 time, 10.5 real, 1246.1 MB
+[runlim] sample:		23.8 time, 20.5 real, 1421.9 MB
+[runlim] sample:		34.2 time, 30.5 real, 1953.9 MB
+[runlim] sample:		44.4 time, 40.5 real, 3727.9 MB
+[runlim] sample:		54.9 time, 50.5 real, 4022.2 MB
+[runlim] sample:		65.0 time, 60.5 real, 4674.6 MB
+[runlim] sample:		75.2 time, 70.5 real, 4858.8 MB
+[runlim] sample:		85.2 time, 80.5 real, 5004.8 MB
+[runlim] sample:		95.3 time, 90.5 real, 6800.8 MB
+[runlim] sample:		105.4 time, 100.5 real, 6802.8 MB
+[runlim] sample:		115.5 time, 110.5 real, 7048.8 MB
+[runlim] sample:		125.7 time, 120.5 real, 7342.8 MB
+[runlim] sample:		135.7 time, 130.5 real, 7342.8 MB
+[runlim] sample:		145.7 time, 140.5 real, 9120.8 MB
+[runlim] sample:		155.9 time, 150.5 real, 10970.9 MB
+[runlim] sample:		165.9 time, 160.5 real, 10970.9 MB
+[runlim] sample:		176.0 time, 170.5 real, 10980.9 MB
+[runlim] sample:		186.2 time, 180.5 real, 11607.0 MB
+[runlim] sample:		196.2 time, 190.5 real, 11607.0 MB
+[runlim] sample:		206.2 time, 200.5 real, 11611.0 MB
+[runlim] sample:		216.4 time, 210.5 real, 12225.1 MB
+[runlim] sample:		226.6 time, 220.5 real, 12227.2 MB
+[runlim] sample:		236.7 time, 230.5 real, 12227.2 MB
+[runlim] sample:		246.9 time, 240.5 real, 12667.2 MB
+[runlim] sample:		256.9 time, 250.5 real, 12667.2 MB
+[runlim] sample:		267.0 time, 260.5 real, 12667.2 MB
+[runlim] sample:		277.3 time, 270.5 real, 12683.2 MB
+[runlim] sample:		287.3 time, 280.5 real, 12683.2 MB
+[runlim] sample:		297.3 time, 290.5 real, 12683.2 MB
+[runlim] sample:		307.5 time, 300.5 real, 12689.2 MB
+[runlim] sample:		317.6 time, 310.5 real, 12689.2 MB
+[runlim] sample:		327.6 time, 320.5 real, 12689.2 MB
+[runlim] sample:		337.8 time, 330.5 real, 12719.2 MB
+[runlim] sample:		347.9 time, 340.5 real, 12719.2 MB
+[runlim] sample:		357.9 time, 350.5 real, 12719.2 MB
+[runlim] sample:		367.9 time, 360.5 real, 12719.2 MB
+[runlim] sample:		378.1 time, 370.5 real, 12725.3 MB
+[runlim] sample:		388.2 time, 380.5 real, 12725.3 MB
+[runlim] sample:		398.2 time, 390.5 real, 12725.3 MB
+[runlim] sample:		408.4 time, 400.5 real, 12737.3 MB
+[runlim] sample:		418.5 time, 410.5 real, 12737.3 MB
+[runlim] sample:		428.5 time, 420.5 real, 12737.3 MB
+[runlim] sample:		438.7 time, 430.5 real, 12749.3 MB
+[runlim] sample:		448.8 time, 440.5 real, 12749.3 MB
+[runlim] sample:		458.8 time, 450.5 real, 12749.3 MB
+[runlim] sample:		469.1 time, 460.5 real, 12759.3 MB
+[runlim] sample:		479.1 time, 470.5 real, 12759.3 MB
+[runlim] sample:		489.1 time, 480.5 real, 12759.3 MB
+[runlim] sample:		499.4 time, 490.5 real, 12775.3 MB
+[runlim] sample:		509.4 time, 500.5 real, 12775.3 MB
+[runlim] sample:		519.4 time, 510.5 real, 12775.3 MB
+[runlim] sample:		529.4 time, 520.5 real, 12775.3 MB
+java.util.NoSuchElementException
+	at org.sat4j.core.VecInt.remove(VecInt.java:321)
+	at org.sat4j.pb.constraints.pb.ConflictMap.removeCoef(ConflictMap.java:952)
+	at org.sat4j.pb.constraints.pb.MapPb.cuttingPlaneStep(MapPb.java:256)
+	at org.sat4j.pb.constraints.pb.MapPb.cuttingPlane(MapPb.java:219)
+	at org.sat4j.pb.constraints.pb.ConflictMap.resolve(ConflictMap.java:399)
+	at org.sat4j.pb.core.PBSolverCP.analyzeCP(PBSolverCP.java:153)
+	at org.sat4j.pb.core.PBSolverCP.analyze(PBSolverCP.java:134)
+	at org.sat4j.minisat.core.Solver.search(Solver.java:1320)
+	at org.sat4j.minisat.core.Solver.isSatisfiable(Solver.java:1824)
+	at org.sat4j.tools.SolverDecorator.isSatisfiable(SolverDecorator.java:115)
+	at org.sat4j.pb.PseudoOptDecorator.isSatisfiable(PseudoOptDecorator.java:137)
+	at org.sat4j.pb.PseudoOptDecorator.isSatisfiable(PseudoOptDecorator.java:163)
+	at org.sat4j.tools.SolverDecorator.isSatisfiable(SolverDecorator.java:314)
+	at org.sat4j.pb.OptToPBSATAdapter.isSatisfiable(OptToPBSATAdapter.java:95)
+	at org.sat4j.pb.OptToPBSATAdapter.isSatisfiable(OptToPBSATAdapter.java:75)
+	at org.sat4j.sat.KTHLauncher.main(KTHLauncher.java:351)
+[runlim] end:			Sat Feb  8 20:59:37 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		5264
+[runlim] real:			526.86 seconds
+[runlim] time:			536.01 seconds
+[runlim] space:			12783.3 MB
+[runlim] samples:		5263

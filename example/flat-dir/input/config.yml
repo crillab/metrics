@@ -9,7 +9,7 @@ setup:
   memout: 16384
 
 source:
-  path: /home/thibault/Travail/Doctorat/Tools/metrics/example/flat-dir/input/data2/
+  path: example/flat-dir/input/data2/
   format: flat-dir
 data:
   file-name-meta:

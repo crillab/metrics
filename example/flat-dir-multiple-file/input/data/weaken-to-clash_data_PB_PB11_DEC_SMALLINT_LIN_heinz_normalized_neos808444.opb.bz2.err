@@ -1,0 +1,18 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/weaken-to-clash/start.sh
+[runlim] argv[1]:		/data/PB/PB11/DEC-SMALLINT-LIN/heinz/normalized-neos808444.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/weaken-to-clash/results/data_PB_PB11_DEC_SMALLINT_LIN_heinz_normalized_neos808444.opb.bz2
+[runlim] start:			Sat Feb  8 23:58:04 2020
+[runlim] main pid:		99310
+[runlim] sample:		16.7 time, 10.5 real, 1251.3 MB
+[runlim] end:			Sat Feb  8 23:58:18 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		148
+[runlim] real:			14.60 seconds
+[runlim] time:			24.18 seconds
+[runlim] space:			1291.2 MB
+[runlim] samples:		140

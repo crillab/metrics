@@ -1,0 +1,17 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/divide/start.sh
+[runlim] argv[1]:		/data/PB/PB06/SATUNSAT-SMALLINT/reduced/submitted-PB06/manquiho/Aardal_1/normalized-reduced-prob5.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/divide/results/data_PB_PB06_SATUNSAT_SMALLINT_reduced_submitted_PB06_manquiho_Aardal_1_normalized_reduced_prob5.opb.bz2
+[runlim] start:			Wed Feb  5 18:53:32 2020
+[runlim] main pid:		67378
+[runlim] end:			Wed Feb  5 18:53:32 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		5
+[runlim] real:			0.76 seconds
+[runlim] time:			0.76 seconds
+[runlim] space:			149.0 MB
+[runlim] samples:		5

@@ -1,0 +1,25 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/divide/start.sh
+[runlim] argv[1]:		/data/PB/PB11/DEC-SMALLINT-LIN/heinz/normalized-neos-849702.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/divide/results/data_PB_PB11_DEC_SMALLINT_LIN_heinz_normalized_neos_849702.opb.bz2
+[runlim] start:			Wed Feb  5 22:00:35 2020
+[runlim] main pid:		186019
+[runlim] sample:		15.0 time, 10.6 real, 1252.2 MB
+[runlim] sample:		26.7 time, 20.6 real, 1308.1 MB
+[runlim] sample:		37.5 time, 30.6 real, 1341.6 MB
+[runlim] sample:		48.5 time, 40.6 real, 1484.5 MB
+[runlim] sample:		59.3 time, 50.6 real, 1732.5 MB
+[runlim] sample:		69.9 time, 60.6 real, 2528.6 MB
+[runlim] sample:		80.6 time, 70.6 real, 2871.8 MB
+[runlim] sample:		92.0 time, 80.6 real, 3066.6 MB
+[runlim] end:			Wed Feb  5 22:02:00 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		855
+[runlim] real:			85.91 seconds
+[runlim] time:			97.52 seconds
+[runlim] space:			4022.7 MB
+[runlim] samples:		853

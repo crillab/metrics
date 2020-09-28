@@ -1,0 +1,17 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/weaken-to-clash/start.sh
+[runlim] argv[1]:		/data/PB/PB06/SATUNSAT-SMALLINT/reduced/submitted-PB06/manquiho/Aardal_1/normalized-reduced-cuww2.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/weaken-to-clash/results/data_PB_PB06_SATUNSAT_SMALLINT_reduced_submitted_PB06_manquiho_Aardal_1_normalized_reduced_cuww2.opb.bz2
+[runlim] start:			Sat Feb  8 20:50:17 2020
+[runlim] main pid:		15755
+[runlim] end:			Sat Feb  8 20:50:18 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		9
+[runlim] real:			1.76 seconds
+[runlim] time:			2.06 seconds
+[runlim] space:			183.2 MB
+[runlim] samples:		9

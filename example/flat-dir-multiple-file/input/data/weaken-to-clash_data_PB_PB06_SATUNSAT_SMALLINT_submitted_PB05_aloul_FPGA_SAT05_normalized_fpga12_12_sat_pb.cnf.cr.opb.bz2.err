@@ -1,0 +1,17 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/weaken-to-clash/start.sh
+[runlim] argv[1]:		/data/PB/PB06/SATUNSAT-SMALLINT/submitted-PB05/aloul/FPGA_SAT05/normalized-fpga12_12_sat_pb.cnf.cr.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/weaken-to-clash/results/data_PB_PB06_SATUNSAT_SMALLINT_submitted_PB05_aloul_FPGA_SAT05_normalized_fpga12_12_sat_pb.cnf.cr.opb.bz2
+[runlim] start:			Sat Feb  8 20:50:51 2020
+[runlim] main pid:		191024
+[runlim] end:			Sat Feb  8 20:50:52 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		6
+[runlim] real:			1.60 seconds
+[runlim] time:			1.05 seconds
+[runlim] space:			152.1 MB
+[runlim] samples:		6

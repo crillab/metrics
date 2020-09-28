@@ -1,0 +1,18 @@
+[runlim] version:		1.8
+[runlim] time limit:		1800 seconds
+[runlim] real time limit:	3600 seconds
+[runlim] space limit:		32768 MB
+[runlim] argv[0]:		/home/cril/wallon/new-cdcl/divide/start.sh
+[runlim] argv[1]:		/data/PB/PB06/SATUNSAT-SMALLINT/submitted-PB06/liu/dbst/normalized-dbst_v50_e1000_d25_mw10_5.opb.PB06.opb.bz2
+[runlim] argv[2]:		/home/cril/wallon/new-cdcl/divide/results/data_PB_PB06_SATUNSAT_SMALLINT_submitted_PB06_liu_dbst_normalized_dbst_v50_e1000_d25_mw10_5.opb.PB06.opb.bz2
+[runlim] start:			Wed Feb  5 17:07:16 2020
+[runlim] main pid:		119893
+[runlim] sample:		16.4 time, 10.4 real, 1370.7 MB
+[runlim] end:			Wed Feb  5 17:07:28 2020
+[runlim] status:		ok
+[runlim] result:		0
+[runlim] children:		227
+[runlim] real:			12.17 seconds
+[runlim] time:			19.20 seconds
+[runlim] space:			1407.0 MB
+[runlim] samples:		117
