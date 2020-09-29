@@ -59,7 +59,7 @@ class CsvReader:
         self._line_iterator = None
         self._has_header = has_header
         self._keys = []
-        self._cache=None
+        self._cache = None
 
     def read(self) -> Iterable[List[Tuple[str, str]]]:
         """
@@ -82,7 +82,6 @@ class CsvReader:
         else:
             self._cache = next(self._line_iterator)
             self._keys = [str(i) for i in range(len(self._cache))]
-
         return self._keys
 
     def read_content(self) -> Iterable[List[Tuple[str, str]]]:
@@ -92,9 +91,11 @@ class CsvReader:
         :return: The content of the CSV stream.
         """
         if self._cache is not None:
-            yield zip(self._keys,self._cache)
+            yield zip(self._keys, self._cache)
         for line in self._line_iterator:
             line = list(map(str.strip, line))
+            if len(line) != len(self._keys):
+                raise ValueError(f'Length of line is different from header: {line}')
             if self._row_filter(line):
                 yield zip(self._keys, line)
 

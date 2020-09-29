@@ -38,7 +38,7 @@ reproducibility of experimental results and their analysis.
 
 To execute *Metrics* on your computer, you first need to install
 [Python](https://www.python.org/downloads/) on your computer
-(at least version 3.8).
+(at least version **3.8**).
 
 As the `metrics` library is
 [available on PyPI](https://pypi.org/project/crillab-metrics/), you install it

@@ -1249,7 +1249,6 @@ def read_configuration(yaml_file: str, listener: CampaignParserListener) -> Scal
     :return: The read configuration.
     """
     with open(yaml_file, 'r') as yaml_stream:
-        print(yaml_file)
         yaml = load_yaml(yaml_stream)
         builder = DictionaryScalpelConfigurationBuilder(yaml, listener)
         return builder.build()
