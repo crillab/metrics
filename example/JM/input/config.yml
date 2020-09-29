@@ -1,0 +1,15 @@
+name: JM
+setup:
+  timeout: 3600
+  memout: 8000000
+source:
+  path: input/data.csv
+  format: csv2
+data:
+  mapping:
+    input: input
+    experiment_ware:
+      - method
+      - k
+      - cover
+    cpu_time: time

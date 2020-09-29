@@ -33,7 +33,7 @@ from metrics.core.model import Campaign
 from metrics.scalpel import read_yaml
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
-from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable
+from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable
 
 
 class Analysis:
@@ -109,7 +109,7 @@ class Analysis:
         return StatTable(self._campaign_df, **kwargs).get_figure()
 
     def get_contribution_table(self, **kwargs: dict):
-        return StatTable(self._campaign_df, **kwargs).get_figure()
+        return ContributionTable(self._campaign_df, **kwargs).get_figure()
 
 
 class CampaignDataFrameBuilder:
