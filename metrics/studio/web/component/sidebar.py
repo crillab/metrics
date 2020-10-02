@@ -2,6 +2,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
+from metrics.core.model import Campaign
+
 SIDEBAR_STYLE = {
     "position": "fixed",
     "top": 0,
@@ -13,13 +15,13 @@ SIDEBAR_STYLE = {
 }
 
 
-def data_loading():
+def data_loading(disabled=False):
     return [
         html.H3("Data Loading"),
         dbc.FormGroup(
             [
                 dbc.Label("Separator"),
-                dbc.Input(placeholder="", type="text", id="sep")
+                dbc.Input(placeholder="", type="text", id="sep", disabled=disabled)
             ]
         ),
         dbc.FormGroup(
@@ -27,6 +29,7 @@ def data_loading():
                 dbc.Label("File(s)"),
                 dcc.Upload(
                     id='upload-data',
+                    disabled=disabled,
                     children=html.Div([
                         'Drag and Drop or ',
                         html.A('Select Files')
@@ -46,12 +49,13 @@ def data_loading():
     ]
 
 
-def configuration():
+def configuration(disabled=False):
     return [
         html.H3("Configuration"),
         dbc.FormGroup([
             dbc.Label("Experiment ware"),
             dcc.Dropdown(
+                disabled=disabled,
                 id="xp-ware",
                 options=[
 
@@ -62,6 +66,7 @@ def configuration():
         dbc.FormGroup([
             dbc.Label("Time"),
             dcc.Dropdown(
+                disabled=disabled,
                 id="time",
                 options=[
 
@@ -71,6 +76,7 @@ def configuration():
         dbc.FormGroup([
             dbc.Label("Input"),
             dcc.Dropdown(
+                disabled=disabled,
                 id="input",
                 options=[
                 ],
@@ -82,15 +88,19 @@ def configuration():
     ]
 
 
-def plot_configuration():
+def plot_configuration(campaign=None):
+    if campaign is None:
+        options = []
+    else:
+        options = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
+
     return [
         html.H3("Plot Configuration"),
         dbc.FormGroup([
             dbc.Label("Experiment ware:"),
             dcc.Dropdown(
                 id="global-experiment-ware",
-                options=[
-                ],
+                options=options,
                 multi=True,
                 placeholder="Select experiment ware",
             )], className='mt-2', ),
@@ -107,11 +117,23 @@ def plot_configuration():
     ]
 
 
-sidebar = html.Div(
-    [
-        html.H2("STUDIO", className="display-4"),
-        html.Hr(),
+def get_sidebar(campaign: Campaign = None):
+    if campaign is None:
+        return html.Div(
+            [
+                html.H2("STUDIO", className="display-4"),
+                html.Hr(),
 
-    ] + data_loading() + [html.Hr()] + configuration() + [html.Hr()] + plot_configuration(),
-    style=SIDEBAR_STYLE, className="col-md-3"
-)
+            ] + data_loading() + [html.Hr()] + configuration() + [html.Hr()] + plot_configuration(),
+            style=SIDEBAR_STYLE, className="col-md-3"
+        )
+    else:
+        return html.Div(
+            [
+                html.H2("STUDIO", className="display-4"),
+                html.Hr(),
+
+            ] + plot_configuration(campaign) + [html.Hr()] + data_loading(True) + [html.Hr()] + configuration(True) + [
+                html.Hr()],
+            style=SIDEBAR_STYLE, className="col-md-3"
+        )

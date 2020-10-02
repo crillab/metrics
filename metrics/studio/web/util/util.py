@@ -21,3 +21,7 @@ def decode(contents) -> TextIO:
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
     return io.StringIO(decoded.decode('utf-8'))
+
+
+def have_parameter(pathname):
+    return len(pathname.split('/')) > 2

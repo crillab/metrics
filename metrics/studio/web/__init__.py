@@ -20,5 +20,9 @@
 #  along with this program.                                                                        #
 #  If not, see <https://www.gnu.org/licenses/>.                                                    #
 # ##################################################################################################
+import os
 
-from metrics.studio.web.application import app
+from metrics.studio.web.application import dash
+
+if not os.path.exists('uploads'):
+    os.mkdir('uploads')

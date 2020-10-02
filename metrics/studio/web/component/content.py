@@ -12,19 +12,15 @@ CONTENT_STYLE = {
 def box_plot():
     return [
         html.H4("Box Plot", className="card-title"),
-        # dbc.FormGroup([
-        # dbc.Label("Experiment ware"),
-        # dcc.Dropdown(
-        #     id="box-experiment-ware",
-        #     options=[
-        #     ],
-        #     multi=True,
-        #     placeholder="Select experiment ware",
-        # )], className='mt-2', )
         dcc.Loading(id="loading-icon-box", children=html.Div(id='box'))]
 
 
-def scatter_plot():
+def scatter_plot(campaign=None):
+    if campaign is None:
+        options = []
+    else:
+        options = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
+
     return [
         html.H4("Scatter Plot", className="card-title"),
         dbc.Row(children=[
@@ -33,8 +29,7 @@ def scatter_plot():
                     dbc.Label("Experiment ware 1:"),
                     dcc.Dropdown(
                         id="experiment-ware-1",
-                        options=[
-                        ],
+                        options=options,
                         multi=False,
                         placeholder="Select experiment ware",
                     )], className='mt-2', )]
@@ -43,8 +38,7 @@ def scatter_plot():
                     dbc.Label("Experiment ware 2:"),
                     dcc.Dropdown(
                         id="experiment-ware-2",
-                        options=[
-                        ],
+                        options=options,
                         multi=False,
                         placeholder="Select experiment ware",
                     )], className='mt-2', )]),
@@ -79,18 +73,36 @@ def contribution():
     ]
 
 
-content = html.Div(
-    [
-        dbc.Row(children=[dbc.Col(children=dbc.Card(children=dbc.CardBody(scatter_plot())))]),
-        dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(box_plot())))], className="mt-5"),
-        dbc.Row(
-            children=[
-                dbc.Col(children=dbc.Card(children=dbc.CardBody(cactus_plot()))),
-                dbc.Col(children=dbc.Card(children=dbc.CardBody(cdf())))
-            ], className="mt-5"
-        ),
-        dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(table())))], className="mt-5"),
-        dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(contribution())))], className="mt-5")
-    ],
-    style=CONTENT_STYLE, className="col-md-10"
-)
+def get_content(campaign=None):
+    if campaign is None:
+        return html.Div(
+            [
+                dbc.Row(children=[dbc.Col(children=dbc.Card(children=dbc.CardBody(scatter_plot())))]),
+                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(box_plot())))], className="mt-5"),
+                dbc.Row(
+                    children=[
+                        dbc.Col(children=dbc.Card(children=dbc.CardBody(cactus_plot()))),
+                        dbc.Col(children=dbc.Card(children=dbc.CardBody(cdf())))
+                    ], className="mt-5"
+                ),
+                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(table())))], className="mt-5"),
+                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(contribution())))], className="mt-5")
+            ],
+            style=CONTENT_STYLE, className="col-md-10"
+        )
+    else:
+        return html.Div(
+            [
+                dbc.Row(children=[dbc.Col(children=dbc.Card(children=dbc.CardBody(scatter_plot(campaign))))]),
+                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(box_plot())))], className="mt-5"),
+                dbc.Row(
+                    children=[
+                        dbc.Col(children=dbc.Card(children=dbc.CardBody(cactus_plot()))),
+                        dbc.Col(children=dbc.Card(children=dbc.CardBody(cdf())))
+                    ], className="mt-5"
+                ),
+                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(table())))], className="mt-5"),
+                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(contribution())))], className="mt-5")
+            ],
+            style=CONTENT_STYLE, className="col-md-10"
+        )

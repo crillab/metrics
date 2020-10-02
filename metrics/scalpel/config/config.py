@@ -1222,7 +1222,6 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: The configuration for the specified key, or an empty dictionary
                  if the configuration is not specified.
         """
-        print(self._dict_config)
         config = self._dict_config.get(key)
         return {} if config is None else config
 
