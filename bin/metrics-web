@@ -1,4 +1,4 @@
-from metrics.studio.web import app
+from metrics.studio.web import dash
 
 if __name__ == '__main__':
-    app.run_server(debug=True, host='0.0.0.0')
+    dash.run_server(debug=True, host='0.0.0.0')

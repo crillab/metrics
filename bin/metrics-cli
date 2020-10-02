@@ -4,17 +4,8 @@ from argparse import Namespace
 
 from pyfiglet import Figlet
 
+from metrics.studio.cli import create_report
 from metrics.studio.cli.parser import parse_args
-from metrics.studio.cli.report import ReportBuilder
-
-
-def close(arguments: Namespace) -> None:
-    """
-
-    @param arguments:
-    """
-    if arguments.plot_config:
-        arguments.plot_config.close()
 
 
 def welcome():
@@ -29,10 +20,16 @@ def welcome():
     print("\n\n\n")
 
 
-welcome()
+def close(arguments: Namespace) -> None:
+    """
+    @param arguments:
+    """
+    if arguments.plot_config:
+        arguments.plot_config.close()
 
-args = parse_args(sys.argv[1:])
 
-ReportBuilder(args).load().build().generate_report()
-
-close(args)
+if __name__ == '__main__':
+    welcome()
+    args = parse_args(sys.argv[1:])
+    create_report(args)
+    close(args)
