@@ -39,4 +39,4 @@ class TestReadConfiguration(TestCase):
         file_name_meta = configuration.get_file_name_meta()
         self.assertEqual(2, file_name_meta.get_experiment_ware_group())
         self.assertEqual(1, file_name_meta.get_input_group())
-        self.assertEqual(1, file_name_meta.get_regex_pattern())
+        self.assertEqual('ProblemFile-(.*)_(bs[012]{1})_(.*)', file_name_meta.get_regex_pattern())
