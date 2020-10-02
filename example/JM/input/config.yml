@@ -3,7 +3,7 @@ setup:
   timeout: 3600
   memout: 8000000
 source:
-  path: example/JM/input/data/data2.csv
+  path: example/JM/input/data/data.csv
   format: csv2
 data:
   mapping:

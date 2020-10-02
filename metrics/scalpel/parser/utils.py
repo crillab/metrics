@@ -92,10 +92,10 @@ class CsvReader:
         """
         if self._cache is not None:
             yield zip(self._keys, self._cache)
-        for line in self._line_iterator:
+        for index, line in enumerate(self._line_iterator):
             line = list(map(str.strip, line))
             if len(line) != len(self._keys):
-                raise ValueError(f'Length of line is different from header: {line}')
+                raise ValueError(f'Length of line {index+1} is different from header: {line}')
             if self._row_filter(line):
                 yield zip(self._keys, line)
 
