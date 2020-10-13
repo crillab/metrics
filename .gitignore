@@ -11,6 +11,11 @@ build
 dist
 .scannerwork
 
+# Test files
+.coverage
+coverage.xml
+nosetests.xml
+
 # Python egg metadata
 *.egg
 *.egg-info
