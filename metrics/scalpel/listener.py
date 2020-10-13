@@ -29,10 +29,12 @@ This module provides a listener which listens to the events triggered while
 a campaign is being parsed, so as to build its representation.
 """
 
+
 from collections import defaultdict
-from typing import Any, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from metrics.core.builder import CampaignBuilder
+from metrics.core.builder.builder import ModelBuilder
 from metrics.core.model import Campaign
 
 
@@ -51,10 +53,10 @@ class KeyMapping:
     def __setitem__(self, scalpel_key: str,
                     campaign_key: Union[str, List[str]]) -> None:
         """
-        Maps a key as defined in the campaign to that expected by Scalpel.
+        Maps key(s) as defined in the campaign to that expected by Scalpel.
 
         :param scalpel_key: The key expected by Scalpel.
-        :param campaign_key: The key defined in the campaign.
+        :param campaign_key: The key(s) defined in the campaign.
         """
         if isinstance(campaign_key, list):
             self._dict_representation[scalpel_key] = [str(v) for v in campaign_key]
@@ -76,7 +78,16 @@ class KeyMapping:
                 return key, len(value)
         return campaign_key, 1
 
-    def get_sorted_keys(self, scalpel_key: str):
+    def get_sorted_keys(self, scalpel_key: str) -> List[str]:
+        """
+        Gives the list of the campaign keys that map to the given key expected
+        by Scalpel.
+
+        :param scalpel_key: The key expected by Scalpel.
+
+        :return: The list of the campaign keys that map to the given key, in the
+                 same order as that specified by the user.
+        """
         keys = self._dict_representation.get(scalpel_key)
         if keys is None:
             return [scalpel_key]
@@ -96,16 +107,16 @@ class CampaignParserListener:
         self._campaign_builder = None
         self._input_set_builder = None
         self._current_builder = None
-        self._pending_keys = defaultdict(dict)
         self._current_experiment = False
+        self._pending_keys = defaultdict(dict)
 
     def add_key_mapping(self, scalpel_key: str,
                         campaign_key: Union[str, List[str]]) -> None:
         """
-        Maps a key as defined in the campaign to that expected by Scalpel.
+        Maps key(s) as defined in the campaign to that expected by Scalpel.
 
         :param scalpel_key: The key expected by Scalpel.
-        :param campaign_key: The key defined in the campaign.
+        :param campaign_key: The key(s) defined in the campaign.
         """
         self._key_mapping[scalpel_key] = campaign_key
 
@@ -119,7 +130,12 @@ class CampaignParserListener:
     def end_campaign(self) -> None:
         """
         Notifies this listener that the current campaign has been fully parsed.
+
+        :raises ValueError: If some keys are still pending for the current
+                            campaign.
         """
+        if len(self._pending_keys) > 0:
+            raise ValueError('Cannot end current campaign: some values are still pending!')
         self._current_builder = None
 
     def start_experiment_ware(self) -> None:
@@ -185,39 +201,66 @@ class CampaignParserListener:
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
+        # If the value is a tuple, its elements are recursively logged.
         if isinstance(value, tuple):
             for v in value:
                 self.log_data(key, v)
             return
-        # Adding the read value.
+
+        # Otherwise, we need to retrieve the mapping for the logged element.
         scalpel_key, nb = self._key_mapping[key]
         read_values = self._pending_keys[scalpel_key]
         read_values[key] = str(value)
+
         # If all the values of the mapping have been read, we can commit them.
         if len(read_values) == nb:
-            values = ['' if read_values[v] is None else read_values[v] for v in
-                      self._key_mapping.get_sorted_keys(scalpel_key)]
-
-            name = ' '.join(values)
-            self._current_builder[scalpel_key] = name
-
-            if self._current_experiment:
-                if scalpel_key == 'experiment_ware' and not self._campaign_builder.has_experiment_ware_with_name(name):
-                    xp_ware_builder = self._campaign_builder.add_experiment_ware_builder()
-                    self.create_on_the_fly(xp_ware_builder, read_values, 'name', name)
-                if scalpel_key == 'input' and not self._campaign_builder.has_input_with_path(name):
-                    if self._input_set_builder is None:
-                        self._input_set_builder = self._campaign_builder.add_input_set_builder()
-                        self._input_set_builder['name'] = 'auto_name'
-                    input_builder = self._input_set_builder.add_input_builder()
-                    self.create_on_the_fly(input_builder, read_values, 'path', name)
+            values = ['' if read_values[v] is None else read_values[v]
+                      for v in self._key_mapping.get_sorted_keys(scalpel_key)]
+            identifier = ' '.join(values)
+            self._create_if_missing(scalpel_key, identifier, read_values)
+            self._current_builder[scalpel_key] = identifier
             del self._pending_keys[scalpel_key]
 
+    def _create_if_missing(self, key: str, identifier: str, all_values: Dict[str, str]) -> None:
+        """
+        Creates an element of the campaign if it has not been declared yet.
+
+        :param key: The key identifying the element.
+        :param identifier: The identifier of the element.
+        :param all_values: All the values we have for the element.
+        """
+        # If we are not in an experiment, there is nothing to create.
+        if not self._current_experiment:
+            return
+
+        # Checking whether the element is an undeclared experiment-ware.
+        if key == 'experiment_ware' and not self._campaign_builder.has_experiment_ware_with_name(identifier):
+            xp_ware_builder = self._campaign_builder.add_experiment_ware_builder()
+            self._build_on_the_fly(xp_ware_builder, all_values, 'name', identifier)
+
+        # Checking whether the element is an undeclared input.
+        if key == 'input' and not self._campaign_builder.has_input_with_path(identifier):
+            if self._input_set_builder is None:
+                self._input_set_builder = self._campaign_builder.add_input_set_builder()
+                self._input_set_builder['name'] = 'auto_name'
+            input_builder = self._input_set_builder.add_input_builder()
+            self._build_on_the_fly(input_builder, all_values, 'path', identifier)
+
     @staticmethod
-    def create_on_the_fly(builder, read_values, key, name):
-        for k, v in read_values.items():
-            builder[k] = v
-        builder[key] = name
+    def _build_on_the_fly(builder: ModelBuilder, all_values: Dict[str, str],
+                          element_key: str, element_id: str) -> None:
+        """
+        Creates an element of the campaign when it is first encountered while
+        parsing an experiment (and was not encountered before).
+
+        :param builder: The builder to use to build the element.
+        :param all_values: All the values characterizing the element.
+        :param element_key: The key that identifies the element in the builder.
+        :param element_id: The identifier of the element.
+        """
+        for key, value in all_values.items():
+            builder[key] = value
+        builder[element_key] = element_id
 
     def get_campaign(self) -> Campaign:
         """

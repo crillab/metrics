@@ -33,6 +33,8 @@ to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
 
 from typing import Any, Iterable
 
+from jsonpickle import decode as load_json
+
 from metrics.core.model import Campaign
 
 from metrics.scalpel.config import read_configuration
@@ -52,6 +54,9 @@ def read_campaign(input_file: str) -> Campaign:
     """
     if input_file.endswith('.yml') or input_file.endswith('.yaml'):
         return read_yaml(input_file)
+
+    if input_file.endswith('.json'):
+        return read_json(input_file)
 
     raise ValueError(f'Unrecognized campaign format for file {input_file}')
 
@@ -74,9 +79,21 @@ def read_yaml(yaml_configuration: str) -> Campaign:
     return parser_listener.get_campaign()
 
 
-def convert_object(yaml_configuration: str, iterable: Iterable[Any]) -> Campaign:
+def read_json(json_file: str) -> Campaign:
     """
-    Convert the data stored in the given iterabl object following the
+    Reads a campaign that has been serialized in a JSON file.
+
+    :param json_file: The path of the JSON file to read the campaign from.
+
+    :return: The read campaign.
+    """
+    with open(json_file, 'r') as json_campaign:
+        return load_json(json_campaign.read())
+
+
+def read_object(yaml_configuration: str, iterable: Iterable[Any]) -> Campaign:
+    """
+    Reads the data stored in the given iterable object following the
     configuration described in the given YAML file.
 
     :param yaml_configuration: The path of the YAML file describing Scalpel's
@@ -85,7 +102,7 @@ def convert_object(yaml_configuration: str, iterable: Iterable[Any]) -> Campaign
                      campaign.
                      Each element encountered during the iteration must define
                      an "items()" method returning a set of key-value pairs
-                     (such as dictionaries or rows in a data-frame, for instance.
+                     (such as dictionaries or rows in a data-frame, for instance).
 
     :return: The read campaign.
     """

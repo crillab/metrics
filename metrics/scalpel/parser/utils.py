@@ -29,19 +29,22 @@ This module provides utility classes wrapping standard readers to better fit
 Scalpel's needs.
 """
 
+
 from csv import reader as load_csv
 from typing import Callable, Iterable, List, Optional, TextIO, Tuple
 
 
 class CsvReader:
     """
-    The CsvReader allows to easily parse CSV files having a header line,
-    describing what the columns contain.
+    The CsvReader allows to easily parse CSV files that may have a header
+    line, describing what the columns contain.
     """
 
-    def __init__(self, stream: TextIO, separator: str = ',',
+    def __init__(self, stream: TextIO,
+                 separator: str = ',',
                  quote_char: Optional[str] = None,
-                 row_filter: Callable[[List[str]], bool] = lambda r: True, has_header: bool = True) -> None:
+                 has_header: bool = True,
+                 row_filter: Callable[[List[str]], bool] = lambda r: True) -> None:
         """
         Creates a new CsvReader.
 
@@ -49,15 +52,16 @@ class CsvReader:
         :param separator: The value separator used in the CSV input.
         :param quote_char: The character used to quote the fields in the
                            CSV input, if any.
+        :param has_header: Whether the CSV input has a header line.
         :param row_filter: The filter allowing to select which rows to consider
                            from the CSV stream.
         """
         self._stream = stream
         self._separator = separator
         self._quote_char = quote_char
+        self._has_header = has_header
         self._row_filter = row_filter
         self._line_iterator = None
-        self._has_header = has_header
         self._keys = []
         self._cache = None
 
@@ -66,6 +70,8 @@ class CsvReader:
         Parses the associated CSV stream to extract data from this stream.
 
         :return: The data collected from the stream, given by key-value pairs.
+
+        :raises ValueError: If one of the lines does not match the header.
         """
         self.read_header()
         return self.read_content()
@@ -89,13 +95,16 @@ class CsvReader:
         Parses the associated CSV stream to extract its content.
 
         :return: The content of the CSV stream.
+
+        :raises ValueError: If one of the lines does not match the header.
         """
-        if self._cache is not None:
+        if self._cache is not None and self._row_filter(self._cache):
             yield zip(self._keys, self._cache)
+
         for index, line in enumerate(self._line_iterator):
             line = list(map(str.strip, line))
             if len(line) != len(self._keys):
-                raise ValueError(f'Length of line {index+1} is different from header: {line}')
+                raise ValueError(f'Line #{index + 1} does not match header: {line}')
             if self._row_filter(line):
                 yield zip(self._keys, line)
 
@@ -108,5 +117,4 @@ class CsvReader:
         if self._quote_char is None:
             return load_csv(self._stream, delimiter=self._separator)
 
-        return load_csv(self._stream, delimiter=self._separator,
-                        quotechar=self._quote_char)
+        return load_csv(self._stream, delimiter=self._separator, quotechar=self._quote_char)

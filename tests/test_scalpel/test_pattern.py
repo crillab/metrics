@@ -28,6 +28,7 @@
 Unit tests for the "pattern" module from Scalpel.
 """
 
+
 from unittest import TestCase
 
 from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex
@@ -46,8 +47,8 @@ class TestCompileRegex(TestCase):
         """
         pattern = compile_regex(r'Here is a numbered word: ([A-Za-z]+[0-9]+)')
         self.assertEqual(('test0',), pattern.search('Here is a numbered word: test0'))
-        self.assertEqual((), pattern.search('Here is a numbered word: test'))
-        self.assertEqual((), pattern.search('Here is a numbered word: 0'))
+        self.assertFalse(pattern.search('Here is a numbered word: test'))
+        self.assertFalse(pattern.search('Here is a numbered word: 0'))
 
     def test_one_group_with_non_capturing_group(self) -> None:
         """
@@ -57,8 +58,8 @@ class TestCompileRegex(TestCase):
         """
         pattern = compile_regex(r'(?:.*): ([A-Za-z]+[0-9]+)')
         self.assertEqual(('test0',), pattern.search('Here is a numbered word: test0'))
-        self.assertEqual((), pattern.search('Here is a numbered word: test'))
-        self.assertEqual((), pattern.search('Here is a numbered word: 0'))
+        self.assertFalse(pattern.search('Here is a numbered word: test'))
+        self.assertFalse(pattern.search('Here is a numbered word: 0'))
 
     def test_multiple_groups(self) -> None:
         """
@@ -67,15 +68,14 @@ class TestCompileRegex(TestCase):
         is either the first one, or the one specified when compiling).
         """
         pattern_1 = compile_regex(r'([A-Za-z ]+): ([A-Za-z]+[0-9]+)')
-        self.assertEqual(('Here is a numbered word',),
-                         pattern_1.search('Here is a numbered word: test0'))
-        self.assertEqual((), pattern_1.search('Here is a numbered word: test'))
-        self.assertEqual((), pattern_1.search('Here is a numbered word: 0'))
+        self.assertEqual(('Here is a numbered word',), pattern_1.search('Here is a numbered word: test0'))
+        self.assertFalse(pattern_1.search('Here is a numbered word: test'))
+        self.assertFalse(pattern_1.search('Here is a numbered word: 0'))
 
         pattern_2 = compile_regex(r'([A-Za-z ]+): ([A-Za-z]+[0-9]+)', group_id=2)
         self.assertEqual(('test0',), pattern_2.search('Here is a numbered word: test0'))
-        self.assertEqual((),pattern_2.search('Here is a numbered word: test'))
-        self.assertEqual((),pattern_2.search('Here is a numbered word: 0'))
+        self.assertFalse(pattern_2.search('Here is a numbered word: test'))
+        self.assertFalse(pattern_2.search('Here is a numbered word: 0'))
 
     def test_error_when_not_enough_groups(self) -> None:
         """
@@ -85,8 +85,21 @@ class TestCompileRegex(TestCase):
         """
         self.assertRaises(ValueError, lambda: compile_regex(r'[A-Za-z ]+: [A-Za-z]+[0-9]+'))
         self.assertRaises(ValueError, lambda: compile_regex(r'(?:.*): (?:[A-Za-z]+[0-9]+)'))
-        self.assertRaises(ValueError,
-                          lambda: compile_regex(r'([A-Za-z ]+): [A-Za-z]+[0-9]+', group_id=2))
+        self.assertRaises(ValueError, lambda: compile_regex(r'([A-Za-z ]+): [A-Za-z]+[0-9]+', group_id=2))
+
+
+class TestCompileAllRegexes(TestCase):
+    """
+    Test case for testing the compilation of regular expressions, and their
+    use to extract several pieces of data from a string.
+    """
+
+    def test_error_when_no_group(self) -> None:
+        """
+        Tests that an exception is raised when no group identifiers are given
+        when compiling the regular expression.
+        """
+        self.assertRaises(ValueError, lambda: compile_regex(r'[A-Za-z ]+: [A-Za-z]+[0-9]+'))
 
 
 class TestCompileNamedPattern(TestCase):
@@ -97,7 +110,7 @@ class TestCompileNamedPattern(TestCase):
 
     def test_compile_boolean(self) -> None:
         """
-        Tests that a Boolean values can be extracted from a matching string.
+        Tests that a Boolean value can be extracted from a matching string.
         """
         pattern = compile_named_pattern('Test  case for\t {boolean}.')
         self.assertIsNotNone(pattern)
@@ -108,7 +121,7 @@ class TestCompileNamedPattern(TestCase):
 
         self.assertFalse(pattern.search(''))
         self.assertFalse(pattern.search('Test case for 1664.'))
-        self.assertFalse(pattern.search('This string does not Talse.'))
+        self.assertFalse(pattern.search('This string contains Talse.'))
         self.assertFalse(pattern.search('Test case for frRue'))
 
     def test_compile_integer(self) -> None:
@@ -175,8 +188,7 @@ class TestCompileNamedPattern(TestCase):
 
         self.assertEqual(('',), pattern.search('Test case for  string.'))
         self.assertEqual(('a  short',), pattern.search('Test  case  for  a  short  string.'))
-        self.assertEqual(('a\tquite\tlonger',),
-                         pattern.search('Test\tcase\tfor\ta\tquite\tlonger\tstring.'))
+        self.assertEqual(('a\tquite\tlonger',), pattern.search('Test\tcase\tfor\ta\tquite\tlonger\tstring.'))
 
         self.assertFalse(pattern.search(''))
         self.assertFalse(pattern.search('Test case for string.'))
@@ -207,5 +219,4 @@ class TestCompileNamedPattern(TestCase):
         """
         self.assertRaises(ValueError, lambda: compile_named_pattern('This string has no pattern.'))
         self.assertRaises(ValueError, lambda: compile_named_pattern('There is no pattern here.'))
-        self.assertRaises(ValueError,
-                          lambda: compile_named_pattern('No pattern is present in this string.'))
+        self.assertRaises(ValueError, lambda: compile_named_pattern('No pattern is present in this string.'))

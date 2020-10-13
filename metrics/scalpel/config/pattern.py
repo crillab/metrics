@@ -26,12 +26,13 @@
 
 """
 This module provides classes defining user-defined patterns, which allow to
-identify and extract data from an experiment-ware output file.
+identify and extract data from experiment-ware output files.
 """
+
 
 from enum import Enum
 from re import compile, escape, sub
-from typing import Optional, Pattern, Iterable, Tuple
+from typing import List, Optional, Pattern, Tuple, Callable
 
 
 class NamedPattern(Enum):
@@ -57,68 +58,86 @@ class NamedPattern(Enum):
         self._escaped_identifier = escape(identifier)
         self._regex = regex
 
-    def _compile(self, string: str) -> Tuple[str, bool]:
+    def _replace_in(self, string: str) -> Tuple[str, bool]:
         """
         Replaces this named pattern in the given string by the corresponding
-        regular expression, and compiles it.
+        regular expression.
 
         :param string: The string in which to replace this named pattern.
 
-        :return: The compiled pattern, or None if this named pattern does not
-                 appear in the specified string.
+        :return: The string in which the named pattern has been replaced (if
+                 present), and a Boolean value that indicates whether a
+                 replacement has been achieved.
         """
         if self._escaped_identifier in string:
             return string.replace(self._escaped_identifier, self._regex), True
-
         return string, False
 
     @staticmethod
     def compile(string: str) -> Optional[Pattern]:
+        """
+        Compiles the given string as a regular expression using named patterns.
+
+        :param string: The string to compile.
+
+        :return: The compiled pattern, or None if the input string does not
+                 contain any named pattern.
+        """
+        # Escaping "classical" regular expression characters.
         escaped = escape(string)
         escaped = sub(r'(\\\s)+', r'\\s+', escaped)
+
+        # Replacing each named pattern.
         any_found = False
-        for name_pattern in NamedPattern:
-            escaped, found = name_pattern._compile(escaped)
+        for named_pattern in NamedPattern:
+            escaped, found = named_pattern._replace_in(escaped)
             any_found = any_found or found
+
+        # Compiling the pattern (if any).
         return compile(escaped) if any_found else None
 
 
 class AbstractUserDefinedPattern:
+    """
+    The AbstractUserDefinedPattern is the parent class of the patterns
+    specified by the user to retrieve data from output files of
+    experiment-wares.
+    """
 
     def search(self, string: str) -> Tuple[str]:
         """
-        Searches the given string to retrieve the value specified by the
+        Searches the given string to retrieve the values specified by the
         associated pattern.
 
         :param string: The string to look into.
 
-        :return: The extracted value, if any.
+        :return: The extracted values, or an empty tuple if the pattern did
+                 not match.
         """
         raise NotImplementedError('Method "search()" is abstract!')
 
 
-class UserDefinedPatterns(AbstractUserDefinedPattern):
-
-    def __init__(self):
-        self._children = []
-
-    def add(self, obj: AbstractUserDefinedPattern):
-        self._children.append(obj)
+class NullUserDefinedPattern(AbstractUserDefinedPattern):
+    """
+    The NullUserDefinedPattern is a null object implementation of
+    AbstractUserDefinedPattern, which never matches a given input.
+    """
 
     def search(self, string: str) -> Tuple[str]:
-        results = []
-        for c in self._children:
-            r = c.search(string)
-            if len(r) == 0:
-                return tuple()
-            results.extend(r)
-        return tuple(results)
+        """
+        Searches the given string to retrieve a value.
+
+        :param string: The string to look into.
+
+        :return: Always an empty tuple.
+        """
+        return tuple()
 
 
 class UserDefinedPattern(AbstractUserDefinedPattern):
     """
-    The UserDefinedPattern allows to easily extract from a string a value
-    identified with a regular expression.
+    The UserDefinedPattern is a pattern specified by the user to retrieve
+    exactly one piece of data from log files of experiment-wares.
     """
 
     def __init__(self, pattern: Pattern, group_id: int = 1) -> None:
@@ -138,7 +157,8 @@ class UserDefinedPattern(AbstractUserDefinedPattern):
 
         :param string: The string to look into.
 
-        :return: The extracted value, if any.
+        :return: The extracted value, or an empty tuple if the pattern did
+                 not match.
         """
         match = self._pattern.search(string)
         if match is None:
@@ -146,12 +166,75 @@ class UserDefinedPattern(AbstractUserDefinedPattern):
         return match.group(self._group_id),
 
 
-class NullUserDefinedPattern(AbstractUserDefinedPattern):
+class UserDefinedPatterns(AbstractUserDefinedPattern):
+    """
+    The UserDefinedPatterns is a composite pattern specified by the user to
+    retrieve simultaneously multiple pieces of data from log files of
+    experiment-wares.
+    """
+
+    def __init__(self) -> None:
+        """
+        Creates a new UserDefinedPatterns that does not have any child.
+        """
+        self._children: List[AbstractUserDefinedPattern] = []
+
+    def add(self, pattern: AbstractUserDefinedPattern) -> None:
+        """
+        Appends a pattern to the children of this composite pattern.
+
+        :param pattern: The pattern to add.
+        """
+        self._children.append(pattern)
+
     def search(self, string: str) -> Tuple[str]:
-        return tuple()
+        """
+        Searches the given string to retrieve the values specified by the
+        associated patterns.
+
+        :param string: The string to look into.
+
+        :return: The extracted values, or an empty tuple if the pattern did not
+                 match, i.e., if at least one of the patterns aggregated in
+                 this composite did not match the given string.
+        """
+        values = []
+        for child in self._children:
+            value = child.search(string)
+            if len(value) == 0:
+                return tuple()
+            values.extend(value)
+        return tuple(values)
 
 
-def compile_regex(regex: str, group_id: int = 1) -> UserDefinedPattern:
+def _compile_all(string: str, group_ids: Tuple[int],
+                 compile_fct: Callable[[str, int], AbstractUserDefinedPattern]) -> AbstractUserDefinedPattern:
+    """
+    Compiles a string as a pattern allowing to identify several values.
+    The values are supposed to be matched by one of the given groups.
+
+    :param string: The string to compile as a pattern.
+    :param group_ids: The indices of the groups identifying the values
+                      to retrieve.
+    :param compile_fct: The function to use to compile the pattern.
+
+    :return: The compiled pattern.
+
+    :raises ValueError: If no group index is specified or if one of the group
+                        indices is incorrect given the specified pattern.
+    """
+    # Checking that there is at least one group.
+    if len(group_ids) == 0:
+        raise ValueError(f'Missing group indices for pattern "{string}"')
+
+    # Aggregating the patterns.
+    all_patterns = UserDefinedPatterns()
+    for group_id in group_ids:
+        all_patterns.add(compile_fct(string, group_id))
+    return all_patterns
+
+
+def compile_regex(regex: str, group_id: int = 1) -> AbstractUserDefinedPattern:
     """
     Compiles a string as a regular expression allowing to identify a value.
     The value is supposed to be matched by the group having the given index.
@@ -161,28 +244,71 @@ def compile_regex(regex: str, group_id: int = 1) -> UserDefinedPattern:
 
     :return: The compiled pattern.
 
-    :raises: A ValueError is raised if the index of the group is incorrect
-             given the specified regular expression.
+    :raises ValueError: If the index of the group is incorrect given the
+                        specified regular expression.
     """
     pattern = compile(regex)
-    if group_id <= pattern.groups:
-        return UserDefinedPattern(pattern, group_id)
-    raise ValueError(f'"{regex}" must define at least {group_id} group(s) ({pattern.groups} found)')
+    if group_id > pattern.groups:
+        raise ValueError(f'"{regex}" must define at least {group_id} group(s) ({pattern.groups} found)')
+    return UserDefinedPattern(pattern, group_id)
 
 
-def compile_named_pattern(string: str, group_id: int = 1) -> UserDefinedPattern:
+def compile_all_regexes(regex: str, *group_ids: int) -> AbstractUserDefinedPattern:
     """
-    Compiles a string as a simplified regular expression allowing to identify a
-    value with a named pattern.
+    Compiles a string as a regular expression allowing to identify several
+    values.
+    The values are supposed to be matched by one of the given groups.
 
-    :param string: The string to compile as a simplified regular expression.
-    :param group_id:
+    :param regex: The string to compile as a regular expression.
+    :param group_ids: The indices of the groups identifying the values to
+                      retrieve.
+
     :return: The compiled pattern.
 
-    :raises: A ValueError is raised if the string does not contain a
-             named pattern.x
+    :raises ValueError: If no group index is specified or if one of the group
+                        indices is incorrect given the specified regular
+                        expression.
+    """
+    return _compile_all(regex, group_ids, compile_regex)
+
+
+def compile_named_pattern(string: str, pattern_id: int = 1) -> AbstractUserDefinedPattern:
+    """
+    Compiles a string as a simplified regular expression allowing to
+    identify a value with a named pattern.
+    The value is supposed to be matched by the named pattern having the
+    given index.
+
+    :param string: The string to compile as a simplified regular expression.
+    :param pattern_id: The index of the named pattern identifying the value to
+                       retrieve.
+
+    :return: The compiled pattern.
+
+    :raises ValueError: If the string does not contain enough named patterns.
     """
     pattern = NamedPattern.compile(string)
-    if pattern is not None:
-        return UserDefinedPattern(pattern, group_id)
-    raise ValueError(f'"{string}" does not contain a recognized named pattern')
+    if pattern is None:
+        raise ValueError(f'"{string}" does not contain a recognized named pattern')
+    if pattern_id > pattern.groups:
+        raise ValueError(f'"{string}" must define at least {pattern_id} pattern(s) ({pattern.groups} found)')
+    return UserDefinedPattern(pattern, pattern_id)
+
+
+def compile_all_named_patterns(string: str, *pattern_ids: int) -> AbstractUserDefinedPattern:
+    """
+    Compiles a string as a simplified regular expression allowing to identify
+    several values with named patterns.
+    The values are supposed to be matched by one of the named patterns having
+    the given indices.
+
+    :param string: The string to compile as a simplified regular expression.
+    :param pattern_ids: The indices of the the named patterns identifying the
+                        values to retrieve.
+
+    :return: The compiled pattern.
+
+    :raises ValueError: If no group index is specified or if the string does
+                        not contain enough named patterns.
+    """
+    return _compile_all(string, pattern_ids, compile_named_pattern)
