@@ -177,8 +177,7 @@ class CsvCampaignParser(FileCampaignParser):
 
         :return: The header of the CSV stream
         """
-        self._reader = CsvReader(stream, self._separator, self._quote_char,
-                                 self._row_filter, self._has_header)
+        self._reader = CsvReader(stream, self._separator, self._quote_char, self._has_header, self._row_filter)
         return self._reader.read_header()
 
     def parse_content(self) -> None:

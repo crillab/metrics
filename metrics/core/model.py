@@ -109,7 +109,7 @@ class Input(Model):
     def __init__(self, attributes: dict) -> None:
         """
         Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
-        @param attributes: dictionnary of attribute to add in this model
+        @param attributes: dictionary of attribute to add in this model
         """
         self.path = attributes.pop('path')
         super().__init__(attributes)
