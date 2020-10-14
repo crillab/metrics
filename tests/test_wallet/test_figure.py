@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from tests.test_core.json_reader import JsonReader
 from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder, Analysis
 from metrics.wallet.figure.static_figure import StatTable, CactusMPL, BoxMPL, ScatterMPL, LINE_STYLES, \
-    ContributionTable, DEFAULT_COLORS
+    ContributionTable, DEFAULT_COLORS, ErrorTable
 
 
 class MyTestCase(unittest.TestCase):
@@ -152,6 +152,13 @@ class MyTestCase(unittest.TestCase):
         contrib = ContributionTable(cdfb, [0, 10, 100])
         self.assertEqual('WDegCAxCD', contrib.get_figure().iloc[0].name)
         self.assertEqual(168, contrib.get_figure().iloc[0]['vbew 0s'])
+
+    def test_error_table(self):
+        self.campaign.experiments = self.campaign.experiments[999:]
+        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
+        error = ErrorTable(cdfb)
+        print(error.get_figure())
+
 
     def test_static_cactus_and_cdf(self):
         color_map = {

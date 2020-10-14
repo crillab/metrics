@@ -30,6 +30,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import jsonpickle
+
 
 class Model:
     """
@@ -83,6 +85,9 @@ class Campaign(Model):
         self.input_set = attributes.pop('input_set')
         self.experiments = attributes.pop('experiments')
         super().__init__(attributes)
+
+    def export(self):
+        return jsonpickle.encode(self)
 
 
 class Experiment(Model):

@@ -27,14 +27,25 @@ This module provides a simple class corresponding to the builder of the datafram
 from __future__ import annotations
 from typing import Set, Callable, Any, List
 
+import jsonpickle
 from pandas import DataFrame
 
 from metrics.core.model import Campaign
 from metrics.scalpel import read_yaml
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
-from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable
+from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable, \
+    ErrorTable
 
+
+def import_campaign(json) -> Campaign:
+    return jsonpickle.decode(json)
+
+def import_campaign_data_frame(json) -> CampaignDataFrame:
+    return jsonpickle.decode(json)
+
+def import_analysis(json) -> Analysis:
+    return jsonpickle.decode(json)
 
 class Analysis:
 
@@ -110,6 +121,12 @@ class Analysis:
 
     def get_contribution_table(self, **kwargs: dict):
         return ContributionTable(self._campaign_df, **kwargs).get_figure()
+
+    def get_error_table(self, **kwargs: dict):
+        return ErrorTable(self._campaign_df, **kwargs).get_figure()
+
+    def export(self):
+        return jsonpickle.encode(self)
 
 
 class CampaignDataFrameBuilder:
