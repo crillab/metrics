@@ -146,7 +146,7 @@ class JsonCampaignOutputParser(CampaignOutputParser):
             self._read_object(json, prefix)
 
         else:
-            self._listener.log_data(prefix, str(json))
+            self.log_data(prefix, json)
 
     def _read_object(self, obj: dict, prefix: Optional[str]) -> None:
         """
@@ -222,6 +222,15 @@ class RawCampaignOutputParser(CampaignOutputParser):
         :param line: The line to read.
         """
         for log_data in self._configuration.get_data_in(self._file_name):
-            value = log_data.extract_value_from(line)
-            if value:
-                self.log_data(log_data.get_name(), value)
+            names = log_data.get_names()
+            values = log_data.extract_value_from(line)
+            if len(values) == 0:
+                return
+            if len(names) == len(values):
+                for name, value in zip(names, values):
+                    self.log_data(name, value)
+            else:
+                assert len(names) == 1 and len(values) > 1
+                name = names[0]
+                for index, value in enumerate(values):
+                    self.log_data(f'{name}{index}', value)

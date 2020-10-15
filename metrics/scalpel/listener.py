@@ -364,18 +364,9 @@ class CampaignParserListener:
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
-        # If the value is a tuple, its elements are recursively logged.
-        if isinstance(value, tuple):
-            for v in value:
-                self.log_data(key, v)
-            return
-
-        # Otherwise, we need to retrieve the mapping for the logged element.
         scalpel_key, nb = self._key_mapping[key]
         read_values = self._pending_keys[scalpel_key]
         read_values[key] = str(value)
-
-        # If all the values of the mapping have been read, we can commit them.
         if len(read_values) == nb:
             sub_keys = self._key_mapping.get_sorted_keys(key)
             self._state.log_data(self._current_builder, scalpel_key, sub_keys, read_values)
