@@ -47,7 +47,7 @@ def parse_args(args) -> Namespace:
     parser.add_argument('-w', '--web-report', required=False, action='store_true',
                         help='With this option we generate the campaign object and upload it to metrics-server. We '
                              'generate a unique link for view the report.')
-    parser.add_argument('-s', '--server', required=False, default='http://coscinus.org:8080',
+    parser.add_argument('-s', '--server', required=False, default='http://crillab-metrics.cloud',
                         help='With this option we generate the campaign object and upload it to metrics-server. We '
                              'generate a unique link for view the report.')
 

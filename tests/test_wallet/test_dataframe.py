@@ -5,6 +5,8 @@ import unittest
 
 import jsonpickle as jsonpickle
 import jsonpickle.ext.pandas as jsonpickle_pd
+
+
 jsonpickle_pd.register_handlers()
 
 from tests.test_core.json_reader import JsonReader
@@ -55,8 +57,8 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
         cls.campaign_df.data_frame['success'] = cls.campaign_df.data_frame.apply((lambda x: x['cpu_time'] < cls.campaign.timeout), axis=1)
 
         cdf = cls.campaign_df
-        json_cdf = jsonpickle.encode(cdf)
-        cls.campaign_df = jsonpickle.decode(json_cdf)
+        json_cdf = cdf.export()
+        cls.campaign_df = import_campaign_data_frame(json_cdf)
 
     def test_data_frame(self):
         self.assertEqual(list(self.campaign_df.data_frame.columns),

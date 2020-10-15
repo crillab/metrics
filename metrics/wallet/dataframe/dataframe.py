@@ -31,6 +31,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import List
 
+import jsonpickle
 import pandas as pd
 
 from metrics.wallet.dataframe.builder import *
@@ -209,3 +210,6 @@ class CampaignDataFrame:
         @return: a new instance of CampaignDataFrame with the filtered dataframe.
         """
         return self._campaign_df_builder.build_from_data_frame(df, name=name, vbew_names=self._vbew_names)
+
+    def export(self):
+        return jsonpickle.encode(self)

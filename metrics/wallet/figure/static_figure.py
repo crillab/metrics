@@ -107,6 +107,28 @@ class ContributionTable(Table):
 
         return contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False])
 
+class ErrorTable(Table):
+    """
+    Creation of a table representing the different contributions of each solver.
+    """
+
+    def __init__(self, campaign_df: CampaignDataFrame, **kwargs):
+        super().__init__(campaign_df, **kwargs)
+
+    def get_data_frame(self):
+        xp_wares = [ew.name for ew in self._campaign_df.campaign.experiment_wares]
+
+        error = self._campaign_df.data_frame
+        error = error.pivot(index='input', columns='experiment_ware', values='cpu_time')
+
+        inputs = {i.path for i in self._campaign_df.campaign.input_set.inputs if i.path not in error.index}
+        all_xp_ware = pd.DataFrame(columns=xp_wares, index=inputs)
+        error = pd.concat([error, all_xp_ware])
+
+        error['n_errors'] = error.isnull().sum(axis=1)
+
+        return error[error.n_errors > 0]
+
 
 class CactusMPL(CactusPlot):
     """
@@ -173,7 +195,7 @@ class CactusMPL(CactusPlot):
         if colors is not None:
             for color, text in zip(colors, leg.get_texts()):
                 text.set_color(color)
-
+print
 
 
 
