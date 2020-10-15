@@ -32,20 +32,57 @@ describes how to read the data collected during a campaign.
 
 from __future__ import annotations
 
+from _csv import reader as load_csv
 from abc import ABC
 from collections import defaultdict
 from fnmatch import fnmatch
 from os import path, walk
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, TextIO
 
 from yaml import safe_load as load_yaml
 
 from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex, \
-    AbstractUserDefinedPattern, UserDefinedPatterns, NullUserDefinedPattern, compile_all_named_patterns, \
+from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex, \
+    AbstractUserDefinedPattern, NullUserDefinedPattern, compile_all_named_patterns, \
     compile_all_regexes
+
+
+class CsvConfiguration:
+
+    def __init__(self, separator: str = ',', quote_char: Optional[str] = None, has_header: bool = True):
+        """
+        Creates a new CsvReader.
+
+        :param separator: The value separator used in the CSV input.
+        :param quote_char: The character used to quote the fields in the
+                           CSV input, if any.
+        :param has_header: Whether the CSV input has a header line.
+        """
+        self._separator = separator
+        self._quote_char = quote_char
+        self._has_header = has_header
+
+    def has_header(self):
+        return self._has_header
+
+    def get_separator(self):
+        return self._separator
+
+    def get_quote_char(self):
+        return self._quote_char
+
+    def create_loader(self, stream: TextIO):
+        """
+        Reads the associated CSV stream line-by-line.
+
+        :return: The lines of the CSV stream.
+        """
+        if self._quote_char is None:
+            return load_csv(stream, delimiter=self._separator)
+
+        return load_csv(stream, delimiter=self._separator, quotechar=self._quote_char)
 
 
 class LogData:
@@ -90,7 +127,7 @@ class ScalpelConfiguration:
     relevant values to retrieve from this campaign.
     """
 
-    def __init__(self, fmt: Optional[CampaignFormat], has_header: bool, quote: str, separator: str, main_file: str,
+    def __init__(self, fmt: Optional[CampaignFormat], csv_configuration: CsvConfiguration, main_file: str,
                  data_files: Optional[List[str]],
                  log_datas: Optional[Dict[str, List[LogData]]],
                  hierarchy_depth: Optional[int],
@@ -101,9 +138,6 @@ class ScalpelConfiguration:
 
         :param fmt: The format in which the results of the campaign are stored.
                     If None, the format will be guessed on a best effort basis.
-        :param has_header:
-        :param quote:
-        :param separator:
         :param main_file: The path of the main file containing data about the
                           campaign.
         :param data_files: The names of the files to be considered for each experiment
@@ -115,9 +149,7 @@ class ScalpelConfiguration:
         """
         assert file_name_meta is not None
         self._format = fmt
-        self._has_header = has_header
-        self._quote = quote
-        self._sep = separator
+        self._csv_configuration = csv_configuration
         self._main_file = main_file
         self._data_files = data_files
         self._log_datas = log_datas
@@ -146,14 +178,8 @@ class ScalpelConfiguration:
         """
         return self._format
 
-    def has_header(self) -> bool:
-        return self._has_header
-
-    def get_quote_char(self) -> str:
-        return self._quote
-
-    def get_separator(self) -> str:
-        return self._sep
+    def get_csv_configuration(self):
+        return self._csv_configuration
 
     def is_to_be_parsed(self, file: str) -> bool:
         """
@@ -682,14 +708,12 @@ class ScalpelConfigurationBuilder:
         self._listener = listener
         self._main_file = None
         self._format = None
+        self._csv_configuration = None
         self._hierarchy_depth = None
         self._experiment_ware_depth = None
         self._data_files = None
         self._log_datas = defaultdict(list)
         self._custom_parser = None
-        self._header = True
-        self._sep = ','
-        self._quote = None
         self._file_name_meta = EmptyFileNameMetaConfiguration()
 
     def build(self) -> ScalpelConfiguration:
@@ -706,7 +730,7 @@ class ScalpelConfigurationBuilder:
         self.read_input_set()
         self.read_source()
         self.read_data()
-        return ScalpelConfiguration(self._format, self._header, self._quote, self._sep, self._main_file,
+        return ScalpelConfiguration(self._format, self._csv_configuration, self._main_file,
                                     self._data_files, self._log_datas,
                                     self._hierarchy_depth,
                                     self._experiment_ware_depth,
@@ -830,12 +854,10 @@ class ScalpelConfigurationBuilder:
         self._main_file = self._get_campaign_path()
         self._format = self._guess_format()
         self._format = self._get_format()
-        self._header = self._has_header()
-        self._quote = self._quote_char()
-        self._sep = self._separator()
         self._hierarchy_depth = self._get_hierarchy_depth()
         self._experiment_ware_depth = self._get_experiment_ware_depth()
         self._custom_parser = self._get_custom_parser()
+        self.read_csv_configuration()
 
     def _get_campaign_path(self) -> Iterable[str]:
         """
@@ -892,6 +914,9 @@ class ScalpelConfigurationBuilder:
             return CampaignFormat.value_of(self._main_file[0][index + 1:])
         except ValueError:
             return None
+
+    def read_csv_configuration(self):
+        self._csv_configuration = CsvConfiguration(self._separator(), self._quote_char(), self._has_header())
 
     def _has_header(self) -> bool:
         """
@@ -1255,3 +1280,4 @@ def read_configuration(yaml_file: str, listener: CampaignParserListener) -> Scal
         yaml = load_yaml(yaml_stream)
         builder = DictionaryScalpelConfigurationBuilder(yaml, listener)
         return builder.build()
+

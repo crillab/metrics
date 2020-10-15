@@ -37,6 +37,7 @@ from typing import Any, Optional, TextIO
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration
 from metrics.scalpel.parser.utils import CsvReader
+from metrics.scalpel.config.config import CsvConfiguration
 
 
 class CampaignOutputParser:
@@ -88,23 +89,15 @@ class CsvCampaignOutputParser(CampaignOutputParser):
 
     def __init__(self, listener: CampaignParserListener,
                  file: str,
-                 separator: str = ',',
-                 quote_char: Optional[str] = None,
-                 has_header: bool = True) -> None:
+                 configuration: CsvConfiguration = CsvConfiguration()) -> None:
         """
         Creates a new CsvCampaignOutputParser.
 
         :param listener: The listener to notify while parsing.
         :param file: The path of the file to parse.
-        :param separator: The value separator used in the CSV input.
-        :param quote_char: The character used to quote the fields in the
-                           CSV input, if any.
-        :param has_header: Whether the CSV input has a header line.
         """
         super().__init__(listener, file)
-        self._separator = separator
-        self._quote_char = quote_char
-        self._has_header = has_header
+        self._configuration = configuration
 
     def _internal_parse(self, stream: TextIO) -> None:
         """
@@ -112,7 +105,7 @@ class CsvCampaignOutputParser(CampaignOutputParser):
 
         :param stream: The stream to read.
         """
-        reader = CsvReader(stream, self._separator, self._quote_char, self._has_header)
+        reader = CsvReader(stream, self._configuration)
         for line in reader.read():
             for key, value in line:
                 self.log_data(key, value)

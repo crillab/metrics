@@ -34,7 +34,7 @@ from os.path import basename, splitext
 from typing import List, Optional, TextIO
 
 from metrics.scalpel.config import ScalpelConfiguration
-from metrics.scalpel.config.config import FileNameMetaConfiguration, EmptyFileNameMetaConfiguration
+from metrics.scalpel.config.config import FileNameMetaConfiguration, EmptyFileNameMetaConfiguration, CsvConfiguration
 from metrics.scalpel.config.format import OutputFormat
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.parser.output import CampaignOutputParser, \
@@ -135,21 +135,16 @@ class CsvCampaignParser(FileCampaignParser):
     a CSV file.
     """
 
-    def __init__(self, listener: CampaignParserListener, separator: str = ',',
-                 quote_char: Optional[str] = None, has_header: bool = True,
+    def __init__(self, listener: CampaignParserListener, configuration: CsvConfiguration,
                  file_name_meta: FileNameMetaConfiguration = None) -> None:
         """
         Creates a new CsvCampaignParser.
 
         :param listener: The listener to notify while parsing.
-        :param separator: The value separator, which is ',' by default.
-        :param quote_char: The character used to quote the fields in the
-                           CSV file.
+        :param configuration: The configuration of the CSV reader.
         """
         super().__init__(listener, file_name_meta)
-        self._separator = separator
-        self._quote_char = quote_char
-        self._has_header = has_header
+        self._configuration = configuration
         self._reader = None
         self._file_name_meta = file_name_meta
 
@@ -170,7 +165,7 @@ class CsvCampaignParser(FileCampaignParser):
 
         :return: The header of the CSV stream
         """
-        self._reader = CsvReader(stream, self._separator, self._quote_char, self._has_header, self._row_filter)
+        self._reader = CsvReader(stream, self._configuration, self._row_filter)
         return self._reader.read_header()
 
     def parse_content(self) -> None:
@@ -207,7 +202,7 @@ class EvaluationCampaignParser(CsvCampaignParser):
 
         :param listener: The listener to notify while parsing.
         """
-        super().__init__(listener, '|')
+        super().__init__(listener, CsvConfiguration('|'))
 
     def _row_filter(self, row: List[str]) -> bool:
         """
@@ -327,7 +322,6 @@ class DeepDirectoryCampaignParser(DirectoryCampaignParser):
         :param configuration: The configuration describing how to extract
                data from the output file.
         :param listener: The listener to notify while parsing.
-        :param depth: The depth to explore in the file hierarchy.
         """
         super().__init__(configuration, listener)
         self._depth = configuration.get_hierarchy_depth()
@@ -455,7 +449,7 @@ class MultipleFilesCampaignParser(DirectoryCampaignParser):
         with scandir(root) as root_dir:
             for file in root_dir:
                 if self._configuration.is_to_be_parsed(file.name):
-                    names.add(self._get_extension(file.name))
+                    names.add(self._file_name_without_extension(file.name))
         for n in names:
             self._extract_metadata_from_file_name(n)
             self.start_experiment()
@@ -466,5 +460,5 @@ class MultipleFilesCampaignParser(DirectoryCampaignParser):
             self.end_experiment()
 
     @staticmethod
-    def _get_extension(filename):
+    def _file_name_without_extension(filename):
         return splitext(filename)[0]

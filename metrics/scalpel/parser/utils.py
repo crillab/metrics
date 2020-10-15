@@ -29,9 +29,9 @@ This module provides utility classes wrapping standard readers to better fit
 Scalpel's needs.
 """
 
+from typing import Callable, Iterable, List, TextIO, Tuple
 
-from csv import reader as load_csv
-from typing import Callable, Iterable, List, Optional, TextIO, Tuple
+from metrics.scalpel.config.config import CsvConfiguration
 
 
 class CsvReader:
@@ -41,25 +41,18 @@ class CsvReader:
     """
 
     def __init__(self, stream: TextIO,
-                 separator: str = ',',
-                 quote_char: Optional[str] = None,
-                 has_header: bool = True,
+                 configuration: CsvConfiguration,
                  row_filter: Callable[[List[str]], bool] = lambda r: True) -> None:
         """
         Creates a new CsvReader.
 
         :param stream: The stream to read as a CSV input.
-        :param separator: The value separator used in the CSV input.
-        :param quote_char: The character used to quote the fields in the
-                           CSV input, if any.
-        :param has_header: Whether the CSV input has a header line.
+        :param configuration: The configuration of the reader.
         :param row_filter: The filter allowing to select which rows to consider
                            from the CSV stream.
         """
         self._stream = stream
-        self._separator = separator
-        self._quote_char = quote_char
-        self._has_header = has_header
+        self._configuration = configuration
         self._row_filter = row_filter
         self._line_iterator = None
         self._keys = []
@@ -82,8 +75,8 @@ class CsvReader:
 
         :return: The header of the CSV stream.
         """
-        self._line_iterator = iter(self._internal_read())
-        if self._has_header:
+        self._line_iterator = iter(self._configuration.create_loader(self._stream))
+        if self._configuration.has_header():
             self._keys = next(self._line_iterator)
         else:
             self._cache = next(self._line_iterator)
@@ -117,14 +110,3 @@ class CsvReader:
         for index, line in enumerate(self._line_iterator):
             if self._row_filter(line):
                 yield 2 + index, line
-
-    def _internal_read(self) -> Iterable[List[str]]:
-        """
-        Reads the associated CSV stream line-by-line.
-
-        :return: The lines of the CSV stream.
-        """
-        if self._quote_char is None:
-            return load_csv(self._stream, delimiter=self._separator)
-
-        return load_csv(self._stream, delimiter=self._separator, quotechar=self._quote_char)
