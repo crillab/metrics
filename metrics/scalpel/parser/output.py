@@ -30,6 +30,7 @@ containing the output of experiment-wares produced during a campaign, so as to
 extract the data they contain.
 """
 
+
 from json import load as load_json
 from typing import Any, Optional, TextIO
 
@@ -67,9 +68,9 @@ class CampaignOutputParser:
 
         :param stream: The stream to parse.
         """
-        raise NotImplementedError('Method "parse()" is abstract!')
+        raise NotImplementedError('Method "_internal_parse()" is abstract!')
 
-    def log_data(self, key: str, value: str) -> None:
+    def log_data(self, key: str, value: Any) -> None:
         """
         Notifies the listener about data that has been read about an experiment.
 
@@ -85,8 +86,11 @@ class CsvCampaignOutputParser(CampaignOutputParser):
     produced by an experiment-ware during an experiment.
     """
 
-    def __init__(self, listener: CampaignParserListener, file: str,
-                 separator: str = ',', quote_char: Optional[str] = None) -> None:
+    def __init__(self, listener: CampaignParserListener,
+                 file: str,
+                 separator: str = ',',
+                 quote_char: Optional[str] = None,
+                 has_header: bool = True) -> None:
         """
         Creates a new CsvCampaignOutputParser.
 
@@ -95,10 +99,12 @@ class CsvCampaignOutputParser(CampaignOutputParser):
         :param separator: The value separator used in the CSV input.
         :param quote_char: The character used to quote the fields in the
                            CSV input, if any.
+        :param has_header: Whether the CSV input has a header line.
         """
         super().__init__(listener, file)
         self._separator = separator
         self._quote_char = quote_char
+        self._has_header = has_header
 
     def _internal_parse(self, stream: TextIO) -> None:
         """
@@ -106,7 +112,7 @@ class CsvCampaignOutputParser(CampaignOutputParser):
 
         :param stream: The stream to read.
         """
-        reader = CsvReader(stream, self._separator, self._quote_char)
+        reader = CsvReader(stream, self._separator, self._quote_char, self._has_header)
         for line in reader.read():
             for key, value in line:
                 self.log_data(key, value)
@@ -115,7 +121,7 @@ class CsvCampaignOutputParser(CampaignOutputParser):
 class JsonCampaignOutputParser(CampaignOutputParser):
     """
     The JsonCampaignOutputParser is a parser that reads the output of an
-     experiment from a JSON file produced by an experiment-ware.
+    experiment from a JSON file produced by an experiment-ware.
     """
 
     def _internal_parse(self, stream: TextIO) -> None:
@@ -148,7 +154,7 @@ class JsonCampaignOutputParser(CampaignOutputParser):
         the exploration.
 
         :param obj: The JSON object to explore.
-        :param prefix: The prefix of the fields in the JSON object.
+        :param prefix: The prefix for the fields in the JSON object.
         """
         for key, value in obj.items():
             new_prefix = JsonCampaignOutputParser._create_prefix(prefix, key)
@@ -160,7 +166,7 @@ class JsonCampaignOutputParser(CampaignOutputParser):
         the exploration.
 
         :param array: The JSON array to explore.
-        :param field: The name of the field corresponding to the JSON array.
+        :param field: The name for the objects in the JSON array.
         """
         for elt in array:
             self._read(elt, field)
@@ -199,7 +205,6 @@ class RawCampaignOutputParser(CampaignOutputParser):
         super().__init__(listener, file_path)
         self._configuration = configuration
         self._file_name = file
-        self._cpu = False
 
     def _internal_parse(self, stream: TextIO) -> None:
         """
@@ -209,9 +214,6 @@ class RawCampaignOutputParser(CampaignOutputParser):
         """
         for line in stream:
             self._parse_line(line)
-        if not self._cpu and self._file_name.endswith('.err'):
-            print(self._file_name)
-        self._cpu = False
 
     def _parse_line(self, line: str) -> None:
         """
@@ -220,10 +222,6 @@ class RawCampaignOutputParser(CampaignOutputParser):
         :param line: The line to read.
         """
         for log_data in self._configuration.get_data_in(self._file_name):
-            # print(self._file_name,log_data._name,log_data._pattern)
             value = log_data.extract_value_from(line)
-            # print(value)
             if value:
                 self.log_data(log_data.get_name(), value)
-                if log_data.get_name() == 'cpu_time':
-                    self._cpu = True

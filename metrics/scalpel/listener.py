@@ -30,11 +30,12 @@ a campaign is being parsed, so as to build its representation.
 """
 
 
+from __future__ import annotations
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Union
 
 from metrics.core.builder import CampaignBuilder
-from metrics.core.builder.builder import ModelBuilder
+from metrics.core.builder.builder import ModelBuilder, InputSetBuilder
 from metrics.core.model import Campaign
 
 
@@ -94,6 +95,143 @@ class KeyMapping:
         return keys
 
 
+class AbstractCampaignParserListenerState:
+    """
+    The AbstractCampaignParserListenerState defines the state of a listener
+    that is notified while parsing a campaign.
+    """
+
+    def __init__(self, listener: CampaignParserListener) -> None:
+        """
+        Creates a new AbstractCampaignParserListenerState.
+
+        :param listener: The listener that is in this state.
+        """
+        self._listener = listener
+
+    def log_data(self, builder: ModelBuilder, key: str, sub_keys: List[str], read_values: Dict[str]) -> None:
+        """
+        Sets read data to the given builder, and performs all the operations
+        needed to preserve the consistency of the entire campaign while
+        doing so.
+
+        :param builder: The builder on which to set the read data.
+        :param key: The key identifying the data to set.
+        :param sub_keys: The keys identifying the elements of the data to set,
+                         in the same order as that specified by the user.
+        :param read_values: The values of the data to set.
+        """
+        identifier = ' '.join('' if read_values[v] is None else read_values[v] for v in sub_keys)
+        self._create_if_missing(key, identifier, read_values)
+        builder[key] = identifier
+
+    def _create_if_missing(self, key: str, identifier: str, all_values: Dict[str]) -> None:
+        """
+        Creates (or not) an element of the campaign that is being parsed if no element
+        with the given identifier has already been encountered in this campaign.
+
+        :param key: The key identifying the element to create if needed.
+        :param identifier: The identifier of the element to create if needed.
+        :param all_values: The values that has been read about the element.
+        """
+        raise NotImplementedError('Method "_create_if_missing" is abstract!')
+
+
+class DefaultCampaignParserListenerState(AbstractCampaignParserListenerState):
+    """
+    The DefaultCampaignParserListenerState is the state of a listener that
+    does not ensure anything regarding the consistency of the campaign that
+    is being parsed.
+    """
+
+    def _create_if_missing(self, key: str, identifier: str, all_values: Dict[str]) -> None:
+        """
+        Does NOT create an element of the campaign that is being parsed if no element
+        with the given identifier has already been encountered in this campaign.
+
+        :param key: The key identifying the element to create if needed.
+        :param identifier: The identifier of the element to create if needed.
+        :param all_values: The values that has been read about the element.
+        """
+        return
+
+
+class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerState):
+    """
+    The InExperimentCampaignParserListenerState is the state of a listener that
+    ensures the consistency of the campaign regarding the data read about an
+    experiment.
+    """
+
+    def _create_if_missing(self, key: str, identifier: str, all_values: Dict[str, str]) -> None:
+        """
+        Creates an element of the campaign that is being parsed if no element
+        with the given identifier has already been encountered in this
+        campaign.
+
+        :param key: The key identifying the element to create if needed.
+        :param identifier: The identifier of the element to create if needed.
+        :param all_values: The values that has been read about the element.
+        """
+        campaign_builder = self._listener.get_campaign_builder()
+        if key == 'experiment_ware':
+            self._create_experiment_ware_if_missing(campaign_builder, identifier, all_values)
+        if key == 'input':
+            self._create_input_if_missing(campaign_builder, identifier, all_values)
+
+    def _create_experiment_ware_if_missing(self, campaign_builder: CampaignBuilder,
+                                           name: str, all_values: Dict[str, str]) -> None:
+        """
+        Creates an experiment-ware if no experiment-ware with the given name
+        has already been encountered in the campaign that is being parsed.
+
+        :param campaign_builder: The builder of the campaign that is being parsed.
+        :param name: The name of the experiment-ware to create if needed.
+        :param all_values: The values that has been read about the experiment-ware.
+        """
+        if not campaign_builder.has_experiment_ware_with_name(name):
+            xp_ware_builder = campaign_builder.add_experiment_ware_builder()
+            self._build_on_the_fly(xp_ware_builder, 'name', name, all_values)
+
+    def _create_input_if_missing(self, campaign_builder: CampaignBuilder,
+                                 path: str, all_values: Dict[str, str]) -> None:
+        """
+        Creates an input if no input with the given path has already been
+        encountered in the campaign that is being parsed.
+
+        :param campaign_builder: The builder of the campaign that is being parsed.
+        :param path: The path of the input to create if needed.
+        :param all_values: The values that has been read about the input.
+        """
+        if not campaign_builder.has_input_with_path(path):
+            input_set_builder = self._listener.get_input_set_builder('auto_name')
+            input_builder = input_set_builder.add_input_builder()
+            self._build_on_the_fly(input_builder, 'path', path, all_values)
+
+    @staticmethod
+    def _build_on_the_fly(builder: ModelBuilder, element_key: str, element_id: str,
+                          all_values: Dict[str, str]) -> None:
+        """
+        Creates an element of the campaign when it is first encountered while
+        parsing an experiment (and was not encountered before).
+
+        :param builder: The builder to use to build the element.
+        :param element_key: The key that identifies the element in the builder.
+        :param element_id: The identifier of the element.
+        :param all_values: All the values characterizing the element.
+        """
+        # Setting up all data about the element to build.
+        element_key_already_declared = False
+        for key, value in all_values.items():
+            if key == element_key:
+                element_key_already_declared = True
+            builder[key] = value
+
+        # The (inferred) identifier is only set when it has not been read.
+        if not element_key_already_declared:
+            builder[element_key] = element_id
+
+
 class CampaignParserListener:
     """
     The CampaignParserListener is a listener notified while parsing a campaign.
@@ -107,7 +245,7 @@ class CampaignParserListener:
         self._campaign_builder = None
         self._input_set_builder = None
         self._current_builder = None
-        self._current_experiment = False
+        self._state = DefaultCampaignParserListenerState(self)
         self._pending_keys = defaultdict(dict)
 
     def add_key_mapping(self, scalpel_key: str,
@@ -126,6 +264,15 @@ class CampaignParserListener:
         """
         self._campaign_builder = CampaignBuilder()
         self._current_builder = self._campaign_builder
+
+    def get_campaign_builder(self) -> CampaignBuilder:
+        """
+        Gives the builder used by this listener to create the campaign that is
+        being parsed.
+
+        :return: The builder of the campaign being parsed.
+        """
+        return self._campaign_builder
 
     def end_campaign(self) -> None:
         """
@@ -158,6 +305,22 @@ class CampaignParserListener:
         self._input_set_builder = self._campaign_builder.add_input_set_builder()
         self._current_builder = self._input_set_builder
 
+    def get_input_set_builder(self, name: str) -> InputSetBuilder:
+        """
+        Gives the input set builder used by this listener to create the input
+        set and inputs of the campaign being parsed.
+        If the input set builder does not exist, an input set builder with the
+        given name is created.
+
+        :param name: The name of the input set builder to create, if needed.
+
+        :return: The input set builder to use for the campaign.
+        """
+        if self._input_set_builder is None:
+            self._input_set_builder = self._campaign_builder.add_input_set_builder()
+            self._input_set_builder['name'] = name
+        return self._input_set_builder
+
     def end_input_set(self) -> None:
         """
         Notifies this listener that the current input set has been fully parsed.
@@ -182,7 +345,7 @@ class CampaignParserListener:
         Notifies this listener that a new experiment is going to be parsed.
         """
         self._current_builder = self._campaign_builder.add_experiment_builder()
-        self._current_experiment = True
+        self._state = InExperimentCampaignParserListenerState(self)
 
     def end_experiment(self) -> None:
         """
@@ -190,7 +353,7 @@ class CampaignParserListener:
         fully parsed.
         """
         self._current_builder = self._campaign_builder
-        self._current_experiment = False
+        self._state = DefaultCampaignParserListenerState(self)
 
     def log_data(self, key: str, value: Any) -> None:
         """
@@ -214,53 +377,9 @@ class CampaignParserListener:
 
         # If all the values of the mapping have been read, we can commit them.
         if len(read_values) == nb:
-            values = ['' if read_values[v] is None else read_values[v]
-                      for v in self._key_mapping.get_sorted_keys(scalpel_key)]
-            identifier = ' '.join(values)
-            self._create_if_missing(scalpel_key, identifier, read_values)
-            self._current_builder[scalpel_key] = identifier
+            sub_keys = self._key_mapping.get_sorted_keys(key)
+            self._state.log_data(self._current_builder, scalpel_key, sub_keys, read_values)
             del self._pending_keys[scalpel_key]
-
-    def _create_if_missing(self, key: str, identifier: str, all_values: Dict[str, str]) -> None:
-        """
-        Creates an element of the campaign if it has not been declared yet.
-
-        :param key: The key identifying the element.
-        :param identifier: The identifier of the element.
-        :param all_values: All the values we have for the element.
-        """
-        # If we are not in an experiment, there is nothing to create.
-        if not self._current_experiment:
-            return
-
-        # Checking whether the element is an undeclared experiment-ware.
-        if key == 'experiment_ware' and not self._campaign_builder.has_experiment_ware_with_name(identifier):
-            xp_ware_builder = self._campaign_builder.add_experiment_ware_builder()
-            self._build_on_the_fly(xp_ware_builder, all_values, 'name', identifier)
-
-        # Checking whether the element is an undeclared input.
-        if key == 'input' and not self._campaign_builder.has_input_with_path(identifier):
-            if self._input_set_builder is None:
-                self._input_set_builder = self._campaign_builder.add_input_set_builder()
-                self._input_set_builder['name'] = 'auto_name'
-            input_builder = self._input_set_builder.add_input_builder()
-            self._build_on_the_fly(input_builder, all_values, 'path', identifier)
-
-    @staticmethod
-    def _build_on_the_fly(builder: ModelBuilder, all_values: Dict[str, str],
-                          element_key: str, element_id: str) -> None:
-        """
-        Creates an element of the campaign when it is first encountered while
-        parsing an experiment (and was not encountered before).
-
-        :param builder: The builder to use to build the element.
-        :param all_values: All the values characterizing the element.
-        :param element_key: The key that identifies the element in the builder.
-        :param element_id: The identifier of the element.
-        """
-        for key, value in all_values.items():
-            builder[key] = value
-        builder[element_key] = element_id
 
     def get_campaign(self) -> Campaign:
         """

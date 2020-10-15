@@ -98,15 +98,25 @@ class CsvReader:
 
         :raises ValueError: If one of the lines does not match the header.
         """
-        if self._cache is not None and self._row_filter(self._cache):
-            yield zip(self._keys, self._cache)
-
-        for index, line in enumerate(self._line_iterator):
+        for index, line in self._read_lines():
             line = list(map(str.strip, line))
             if len(line) != len(self._keys):
-                raise ValueError(f'Line #{index + 1} does not match header: {line}')
+                raise ValueError(f'Line #{index} does not match header: {line}')
+            yield zip(self._keys, line)
+
+    def _read_lines(self) -> Iterable[Tuple[int, List[str]]]:
+        """
+        Reads the associated CSV stream and only yields relevant lines.
+
+        :return: The relevant lines from the CSV stream, and their index in
+                 this stream.
+        """
+        if self._cache is not None:
+            yield 1, self._cache
+
+        for index, line in enumerate(self._line_iterator):
             if self._row_filter(line):
-                yield zip(self._keys, line)
+                yield 2 + index, line
 
     def _internal_read(self) -> Iterable[List[str]]:
         """
