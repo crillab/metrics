@@ -96,15 +96,12 @@ class FileCampaignParser(CampaignParser):
         super().__init__(listener)
         assert file_name_meta is not None
         self._file_name_meta = file_name_meta
-        self._current_experiment_ware = None
-        self._current_input = None
+        self._file_name_data = {}
 
     def start_experiment(self) -> None:
         super().start_experiment()
-        if self._current_experiment_ware is not None:
-            self.log_data('experiment_ware', self._current_experiment_ware)
-        if self._current_input is not None:
-            self.log_data('input', self._current_input)
+        for key, value in self._file_name_data.keys():
+            self.log_data(key, value)
 
     def parse_file(self, file_path: str) -> None:
         """
@@ -112,20 +109,16 @@ class FileCampaignParser(CampaignParser):
 
         :param file_path: The path of the file to read.
         """
-        compiled_pattern = self._file_name_meta.get_compiled_pattern()
-        result_tuple = compiled_pattern.search(file_path)
-        if result_tuple:
-            index = 0
-            if self._file_name_meta.get_experiment_ware_group() is not None:
-                self._current_experiment_ware = result_tuple[index]
-                index += 1
-            if self._file_name_meta.get_input_group() is not None:
-                self._current_input = result_tuple[index]
+        log_data = self._file_name_meta.get_log_data()
+        result_tuple = log_data.extract_value_from(file_path)
+        if result_tuple is not None:
+            for name, value in zip(log_data.get_names(), result_tuple):
+                self._file_name_data[name] = value
+
         with open(file_path, 'r') as file:
             self.parse_stream(file)
 
-        self._current_input = None
-        self._current_experiment_ware = None
+        self._file_name_data = {}
 
     def parse_stream(self, stream: TextIO) -> None:
         """
@@ -245,16 +238,13 @@ class DirectoryCampaignParser(CampaignParser):
         """
         super().__init__(listener)
         self._configuration = configuration
-        #        self._file_name_meta = file_name_meta if file_name_meta is not None else EmptyFileNameMetaConfiguration()
-        self._current_experiment_ware = None
-        self._current_input = None
+        self._file_name_data = {}
 
-    def start_experiment(self) -> None:
-        super().start_experiment()
-        if self._current_experiment_ware is not None:
-            self.log_data('experiment_ware', self._current_experiment_ware)
-        if self._current_input is not None:
-            self.log_data('input', self._current_input)
+    def end_experiment(self) -> None:
+        for key, value in self._file_name_data.keys():
+            self.log_data(key, value)
+        self._file_name_data = {}
+        super().end_experiment()
 
     def parse_file(self, file_path: str) -> None:
         """
@@ -264,8 +254,6 @@ class DirectoryCampaignParser(CampaignParser):
         :param file_path: The path of the directory to explore.
         """
         self.explore(file_path)
-        self._current_input = None
-        self._current_experiment_ware = None
 
     def explore(self, root: str) -> None:
         """
@@ -277,15 +265,11 @@ class DirectoryCampaignParser(CampaignParser):
 
     def _extract_metadata_from_file_name(self, file_path: str) -> None:
         meta = self._configuration.get_file_name_meta()
-        compiled_pattern = meta.get_compiled_pattern()
-        result_tuple = compiled_pattern.search(file_path)
-        if result_tuple:
-            index = 0
-            if meta.get_experiment_ware_group() is not None:
-                self._current_experiment_ware = result_tuple[index]
-                index += 1
-            if meta.get_input_group() is not None:
-                self._current_input = result_tuple[index]
+        log_data = meta.get_log_data()
+        result_tuple = log_data.extract_value_from(file_path)
+        if result_tuple is not None:
+            for name, value in zip(log_data.get_names(), result_tuple):
+                self._file_name_data[name] = value
 
     def _get_parser_for(self, file: str, file_path: str) -> CampaignOutputParser:
         """

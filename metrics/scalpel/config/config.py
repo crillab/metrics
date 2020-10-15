@@ -29,13 +29,14 @@ This module provides classes for managing the configuration of Scalpel, which
 describes how to read the data collected during a campaign.
 """
 
+
 from __future__ import annotations
 
 from abc import ABC
 from collections import defaultdict
 from fnmatch import fnmatch
 from os import path, walk
-from typing import Dict, Iterable, List, Optional, Union, Any
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from yaml import safe_load as load_yaml
 
@@ -43,7 +44,8 @@ from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex, \
-    AbstractUserDefinedPattern, UserDefinedPatterns, NullUserDefinedPattern
+    AbstractUserDefinedPattern, UserDefinedPatterns, NullUserDefinedPattern, compile_all_named_patterns, \
+    compile_all_regexes
 
 
 class LogData:
@@ -52,25 +54,25 @@ class LogData:
     an experiment-ware output file.
     """
 
-    def __init__(self, name: str, pattern: UserDefinedPattern) -> None:
+    def __init__(self, names: Union[str, List[str]], pattern: AbstractUserDefinedPattern) -> None:
         """
         Creates a new LogData.
 
-        :param name: The name of the log data.
+        :param names: The name(s) of the log data.
         :param pattern: The pattern identifying the log data.
         """
-        self._name = name
+        self._names = names if isinstance(names, list) else [names]
         self._pattern = pattern
 
-    def get_name(self) -> str:
+    def get_names(self) -> List[str]:
         """
-        Gives the name of this log data.
+        Gives the names of this log data.
 
-        :return: The name of this log data.
+        :return: The names of this log data.
         """
-        return self._name
+        return self._names
 
-    def extract_value_from(self, string: str) -> Optional[str]:
+    def extract_value_from(self, string: str) -> Tuple[str]:
         """
         Extracts the value corresponding to this log data from the given string.
 
@@ -378,7 +380,7 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
     The MappingConfiguration defines the property of the raw data configuration.
     """
 
-    def get_name(self) -> str:
+    def get_name(self) -> Union[str, List[str]]:
         """
         Gives the name of the current raw data.
 
@@ -418,7 +420,7 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
         """
         raise NotImplementedError('Method "get_regex_group()" is abstract!')
 
-    def get_compiled_pattern(self) -> UserDefinedPattern:
+    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
         """
         Gives the compiled pattern identifying the current raw data.
 
@@ -495,7 +497,7 @@ class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfigura
     list of dictionaries.
     """
 
-    def get_name(self) -> str:
+    def get_name(self) -> Union[str, List[str]]:
         """
         Gives the name of the current raw data.
 
@@ -581,7 +583,7 @@ class FileNameMetaConfiguration:
         """
         raise NotImplementedError('Method "get_regex_group()" is abstract!')
 
-    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
+    def get_log_data(self) -> LogData:
         """
         Gives the compiled pattern identifying the current raw data.
 
@@ -591,30 +593,32 @@ class FileNameMetaConfiguration:
                             regular expression was specified for the raw data.
         """
         # First, we look for a named pattern.
-        simplified_pattern = self.get_simplified_pattern()
+        names = []
+        groups = []
         experiment_ware_group = self.get_experiment_ware_group()
         input_group = self.get_input_group()
+        if experiment_ware_group is not None:
+            names.append('experiment_ware')
+            groups.append(experiment_ware_group)
+        if input_group is not None:
+            names.append('input')
+            groups.append(input_group)
 
+        pattern = None
+        simplified_pattern = self.get_simplified_pattern()
         if simplified_pattern is not None:
-            user_defined_patterns = UserDefinedPatterns()
-            if experiment_ware_group is not None:
-                user_defined_patterns.add(compile_named_pattern(simplified_pattern, experiment_ware_group))
-            if input_group is not None:
-                user_defined_patterns.add(compile_named_pattern(simplified_pattern, input_group))
-            return user_defined_patterns
+            pattern = compile_all_named_patterns(simplified_pattern, *groups)
 
-        # There is no look pattern: trying a regular expression.
-        regex = self.get_regex_pattern()
-        if regex is not None:
-            user_defined_patterns = UserDefinedPatterns()
-            if experiment_ware_group is not None:
-                user_defined_patterns.add(compile_regex(regex, experiment_ware_group))
-            if input_group is not None:
-                user_defined_patterns.add(compile_regex(regex, input_group))
-            return user_defined_patterns
+        if pattern is None:
+            regex = self.get_regex_pattern()
+            if regex is not None:
+                pattern = compile_all_regexes(regex, *groups)
 
         # The description of the data is missing!
-        raise ValueError('A pattern or regex is missing!')
+        if pattern is None:
+            raise ValueError('A pattern or regex is missing!')
+
+        return LogData(names, pattern)
 
 
 class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
@@ -644,8 +648,8 @@ class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
     def get_experiment_ware_group(self) -> Optional[int]:
         raise ValueError('Empty raw data configuration!')
 
-    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
-        return NullUserDefinedPattern()
+    def get_log_data(self) -> LogData:
+        return LogData([], NullUserDefinedPattern())
 
 
 class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryConfiguration):
