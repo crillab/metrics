@@ -100,7 +100,7 @@ class FileCampaignParser(CampaignParser):
 
     def start_experiment(self) -> None:
         super().start_experiment()
-        for key, value in self._file_name_data.keys():
+        for key, value in self._file_name_data.items():
             self.log_data(key, value)
 
     def parse_file(self, file_path: str) -> None:
@@ -236,7 +236,7 @@ class DirectoryCampaignParser(CampaignParser):
         self._file_name_data = {}
 
     def end_experiment(self) -> None:
-        for key, value in self._file_name_data.keys():
+        for key, value in self._file_name_data.items():
             self.log_data(key, value)
         self._file_name_data = {}
         super().end_experiment()
@@ -455,7 +455,7 @@ class MultipleFilesCampaignParser(DirectoryCampaignParser):
             self.start_experiment()
             for file in glob.glob(f'{path.join(root, n)}.*'):
                 if self._configuration.is_to_be_parsed(file):
-                    parser = self._get_parser_for(file, path.join(root, file))
+                    parser = self._get_parser_for(file, file)
                     parser.parse()
             self.end_experiment()
 

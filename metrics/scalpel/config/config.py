@@ -32,7 +32,7 @@ describes how to read the data collected during a campaign.
 
 from __future__ import annotations
 
-from _csv import reader as load_csv
+from csv import reader as load_csv
 from abc import ABC
 from collections import defaultdict
 from fnmatch import fnmatch
@@ -438,7 +438,7 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
         """
         raise NotImplementedError('Method "get_regex_pattern()" is abstract!')
 
-    def get_regex_group(self) -> Optional[int]:
+    def get_regex_group(self) -> Optional[Tuple[int]]:
         """
         Gives the group identifying the current raw data in the regular expression.
 
@@ -457,15 +457,20 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
         """
         # First, we look for a named pattern.
         simplified_pattern = self.get_simplified_pattern()
+        groups = self.get_regex_group()
         if simplified_pattern is not None:
-            return compile_named_pattern(simplified_pattern)
+            if groups is None:
+                return compile_named_pattern(simplified_pattern)
+            else:
+                return compile_all_named_patterns(simplified_pattern, *groups)
 
         # There is no look pattern: trying a regular expression.
         regex = self.get_regex_pattern()
-        group = self.get_regex_group()
         if regex is not None:
-            group = 1 if group is None else group
-            return compile_regex(regex, group)
+            if groups is None:
+                return compile_regex(regex)
+            else:
+                return compile_all_regexes(regex, *groups)
 
         # The description of the data is missing!
         raise ValueError('A pattern or regex is missing!')
@@ -555,13 +560,16 @@ class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfigura
         """
         return self.current().get('regex')
 
-    def get_regex_group(self) -> Optional[int]:
+    def get_regex_group(self) -> Optional[Tuple[int]]:
         """
         Gives the group identifying the current raw data in the regular expression.
 
         :return: The group in the regular expression, if any.
         """
-        return self.current().get('group')
+        groups = self.current().get('group')
+        if groups is not None:
+            return tuple(groups)
+        return None
 
 
 class DictionaryConfiguration:

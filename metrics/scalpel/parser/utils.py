@@ -104,7 +104,7 @@ class CsvReader:
         :return: The relevant lines from the CSV stream, and their index in
                  this stream.
         """
-        if self._cache is not None:
+        if self._cache is not None and self._row_filter(self._cache):
             yield 1, self._cache
 
         for index, line in enumerate(self._line_iterator):

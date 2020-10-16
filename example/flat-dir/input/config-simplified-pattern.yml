@@ -17,9 +17,12 @@ data:
     experiment_ware: 2
     input_group: 1
   raw-data:
-    - log-data: cpu_time
-      regex: <global.*cpu="(\d+\.\d+)"
-    - log-data: mem
-      regex: <global.*mem="(\d+M\d+)"
+    - log-data:
+        - cpu_time
+        - mem
+      regex: <global.*cpu="(\d+\.\d+)".*mem="(\d+M\d+)"
+      group:
+        - 1
+        - 2
     - log-data: result
       pattern: Stop="{word}"

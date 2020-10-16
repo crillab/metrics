@@ -33,6 +33,7 @@ from pydoc import locate
 
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration, CampaignFormat
+from metrics.scalpel.config.config import CsvConfiguration
 from metrics.scalpel.parser.campaign import CampaignParser, \
     CsvCampaignParser, EvaluationCampaignParser, \
     FlatDirectoryCampaignParser, DeepDirectoryCampaignParser, MultipleFilesCampaignParser
@@ -61,10 +62,10 @@ def create_parser(config: ScalpelConfiguration,
         return CsvCampaignParser(listener, config.get_csv_configuration(), file_name_meta=config.get_file_name_meta())
 
     if campaign_format == CampaignFormat.CSV2:
-        return CsvCampaignParser(listener, config.get_csv_configuration(), file_name_meta=config.get_file_name_meta())
+        return CsvCampaignParser(listener, CsvConfiguration(';'), file_name_meta=config.get_file_name_meta())
 
     if campaign_format == CampaignFormat.TSV:
-        return CsvCampaignParser(listener, config.get_csv_configuration(), file_name_meta=config.get_file_name_meta())
+        return CsvCampaignParser(listener, CsvConfiguration('\t'), file_name_meta=config.get_file_name_meta())
 
     if campaign_format == CampaignFormat.EVALUATION:
         return EvaluationCampaignParser(listener)
