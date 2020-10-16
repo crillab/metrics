@@ -32,6 +32,14 @@ from typing import Any
 
 import jsonpickle
 
+from metrics.constants import XP_WARE_NAME, CAMPAIGN_NAME, CAMPAIGN_TIMEOUT, CAMPAIGN_MEMOUT, CAMPAIGN_XP_WARES, \
+    CAMPAIGN_INPUT_SET, CAMPAIGN_EXPERIMENTS, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, INPUT_PATH, \
+    INPUT_SET_NAME, INPUT_SET_INPUTS
+
+"""
+Global campaign attribute constants
+"""
+
 
 class Model:
     """
@@ -64,7 +72,7 @@ class ExperimentWare(Model):
         Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
         @param attributes: dictionnary of attribute to add in this model
         """
-        self.name = attributes.pop('name')
+        self.name = attributes.pop(XP_WARE_NAME)
         super().__init__(attributes)
 
 
@@ -78,12 +86,12 @@ class Campaign(Model):
         Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
         @param attributes: dictionnary of attribute to add in this model
         """
-        self.name = attributes.pop('name')
-        self.timeout = attributes.pop('timeout')
-        self.memout = attributes.pop('memout')
-        self.experiment_wares = attributes.pop('experiment_wares')
-        self.input_set = attributes.pop('input_set')
-        self.experiments = attributes.pop('experiments')
+        self.name = attributes.pop(CAMPAIGN_NAME)
+        self.timeout = attributes.pop(CAMPAIGN_TIMEOUT)
+        self.memout = attributes.pop(CAMPAIGN_MEMOUT)
+        self.experiment_wares = attributes.pop(CAMPAIGN_XP_WARES)
+        self.input_set = attributes.pop(CAMPAIGN_INPUT_SET)
+        self.experiments = attributes.pop(CAMPAIGN_EXPERIMENTS)
         super().__init__(attributes)
 
     def export(self):
@@ -100,9 +108,9 @@ class Experiment(Model):
         Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
         @param attributes: dictionnary of attribute to add in this model
         """
-        self.input = attributes.pop('input')
-        self.experiment_ware = attributes.pop('experiment_ware')
-        self.cpu_time = attributes.pop('cpu_time')
+        self.input = attributes.pop(EXPERIMENT_INPUT)
+        self.experiment_ware = attributes.pop(EXPERIMENT_XP_WARE)
+        self.cpu_time = attributes.pop(EXPERIMENT_CPU_TIME)
         super().__init__(attributes)
 
 
@@ -116,7 +124,7 @@ class Input(Model):
         Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
         @param attributes: dictionary of attribute to add in this model
         """
-        self.path = attributes.pop('path')
+        self.path = attributes.pop(INPUT_PATH)
         super().__init__(attributes)
 
 
@@ -130,8 +138,8 @@ class InputSet(Model):
         Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
         @param attributes: dictionnary of attribute to add in this model
         """
-        self.name = attributes.pop('name')
-        self.inputs = attributes.pop('inputs')
+        self.name = attributes.pop(INPUT_SET_NAME)
+        self.inputs = attributes.pop(INPUT_SET_INPUTS)
         super().__init__(attributes)
 
 

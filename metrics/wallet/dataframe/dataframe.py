@@ -29,9 +29,8 @@ This module uses the DataFrame object pandas library.
 from __future__ import annotations
 
 from enum import Enum
-from typing import List
 
-import jsonpickle
+
 import pandas as pd
 
 from metrics.wallet.dataframe.builder import *
@@ -41,8 +40,8 @@ class CampaignDFFilter(Enum):
     """
     This enumeration provides all the needed operations that we can apply to our dataframe.
     """
-    ONLY_TIMEOUT = (lambda c, df:   df[~df['success']])
-    ONLY_SOLVED = (lambda c, df:    df[df['success']])
+    ONLY_TIMEOUT = (lambda c, df:   df[~df[SUCCESS_COL]])
+    ONLY_SOLVED = (lambda c, df:    df[df[SUCCESS_COL]])
     ONLY_COMMON_TIMEOUT = (lambda c, df:    df[~df.input.isin(CampaignDFFilter.ONLY_SOLVED(c, df).input)])
     ONLY_COMMON_SOLVED = (lambda c, df:     df[~df.input.isin(CampaignDFFilter.ONLY_TIMEOUT(c, df).input)])
     DELETE_COMMON_TIMEOUT = (lambda c, df:  df[df.input.isin(CampaignDFFilter.ONLY_SOLVED(c, df).input)])
@@ -166,7 +165,7 @@ class CampaignDataFrame:
         df = self._data_frame[self._data_frame[column].isin(sub_set)]
         return self.build_data_frame(df)
 
-    def add_vbew(self, xp_ware_set, opti_col='cpu_time', minimize=True, vbew_name='vbew') -> CampaignDataFrame:
+    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew') -> CampaignDataFrame:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -179,10 +178,9 @@ class CampaignDataFrame:
         @return: a new instance of CampaignDataFrame with the new vbew.
         """
         df = self._data_frame
-        df = df[df.experiment_ware != 'vbs']
 
-        df_vbs = df[df['experiment_ware'].isin(xp_ware_set)]
-        df_vbs = df_vbs.sort_values(by=opti_col, ascending=minimize).drop_duplicates(['input'])\
+        df_vbs = df[df[EXPERIMENT_XP_WARE].isin(xp_ware_set)]
+        df_vbs = df_vbs.sort_values(by=opti_col, ascending=minimize).drop_duplicates([EXPERIMENT_INPUT])\
             .assign(experiment_ware=lambda x: vbew_name)
         df = pd.concat([df, df_vbs], ignore_index=True)
 

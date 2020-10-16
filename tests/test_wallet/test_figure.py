@@ -154,10 +154,10 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(168, contrib.get_figure().iloc[0]['vbew 0s'])
 
     def test_error_table(self):
-        self.campaign.experiments = self.campaign.experiments[999:]
+        self.campaign.experiments = self.campaign.experiments[1000:]
         cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
         error = ErrorTable(cdfb)
-        print(error.get_figure())
+        self.assertEqual(1000, error.get_figure()['n_errors'].sum())
 
 
     def test_static_cactus_and_cdf(self):
