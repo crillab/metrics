@@ -13,9 +13,9 @@ class TestReadConfiguration(TestCase):
         configuration = read_configuration(os.path.join(self._example_dir, 'sat-competition/input/config.yml'),
                                            parser_listener)
 
-        self.assertEqual(',', configuration.get_separator())
-        self.assertIsNone(configuration.get_quote_char())
-        self.assertTrue(configuration.has_header())
+        self.assertEqual(',', configuration.get_csv_configuration().get_separator())
+        self.assertIsNone(configuration.get_csv_configuration().get_quote_char())
+        self.assertTrue(configuration.get_csv_configuration().has_header())
         self.assertIsNone(configuration.get_experiment_ware_depth())
         self.assertEqual(1, configuration.get_hierarchy_depth())
 
@@ -25,9 +25,9 @@ class TestReadConfiguration(TestCase):
             os.path.join(self._example_dir, 'multi-csv-with-custom-separator-and-no-header/input/config.yml'),
             parser_listener)
 
-        self.assertEqual(' ', configuration.get_separator())
-        self.assertIsNone(configuration.get_quote_char())
-        self.assertFalse(configuration.has_header())
+        self.assertEqual(' ', configuration.get_csv_configuration().get_separator())
+        self.assertIsNone(configuration.get_csv_configuration().get_quote_char())
+        self.assertFalse(configuration.get_csv_configuration().has_header())
         self.assertIsNone(configuration.get_experiment_ware_depth())
         self.assertEqual(1, configuration.get_hierarchy_depth())
 

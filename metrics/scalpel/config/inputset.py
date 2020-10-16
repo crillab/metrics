@@ -70,7 +70,7 @@ class InputSetReader:
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
-        self._listener.log_data(key, str(value))
+        self._listener.log_data(key, value)
 
     def _end_input(self) -> None:
         """

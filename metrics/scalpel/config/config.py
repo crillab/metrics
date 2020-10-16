@@ -29,21 +29,60 @@ This module provides classes for managing the configuration of Scalpel, which
 describes how to read the data collected during a campaign.
 """
 
+
 from __future__ import annotations
 
+from _csv import reader as load_csv
 from abc import ABC
 from collections import defaultdict
 from fnmatch import fnmatch
 from os import path, walk
-from typing import Dict, Iterable, List, Optional, Union, Any
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, TextIO
 
 from yaml import safe_load as load_yaml
 
 from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.config.pattern import UserDefinedPattern, compile_named_pattern, compile_regex, \
-    AbstractUserDefinedPattern, UserDefinedPatterns, NullUserDefinedPattern
+from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex, \
+    AbstractUserDefinedPattern, NullUserDefinedPattern, compile_all_named_patterns, \
+    compile_all_regexes
+
+
+class CsvConfiguration:
+
+    def __init__(self, separator: str = ',', quote_char: Optional[str] = None, has_header: bool = True):
+        """
+        Creates a new CsvReader.
+
+        :param separator: The value separator used in the CSV input.
+        :param quote_char: The character used to quote the fields in the
+                           CSV input, if any.
+        :param has_header: Whether the CSV input has a header line.
+        """
+        self._separator = separator
+        self._quote_char = quote_char
+        self._has_header = has_header
+
+    def has_header(self):
+        return self._has_header
+
+    def get_separator(self):
+        return self._separator
+
+    def get_quote_char(self):
+        return self._quote_char
+
+    def create_loader(self, stream: TextIO):
+        """
+        Reads the associated CSV stream line-by-line.
+
+        :return: The lines of the CSV stream.
+        """
+        if self._quote_char is None:
+            return load_csv(stream, delimiter=self._separator)
+
+        return load_csv(stream, delimiter=self._separator, quotechar=self._quote_char)
 
 
 class LogData:
@@ -52,25 +91,25 @@ class LogData:
     an experiment-ware output file.
     """
 
-    def __init__(self, name: str, pattern: UserDefinedPattern) -> None:
+    def __init__(self, names: Union[str, List[str]], pattern: AbstractUserDefinedPattern) -> None:
         """
         Creates a new LogData.
 
-        :param name: The name of the log data.
+        :param names: The name(s) of the log data.
         :param pattern: The pattern identifying the log data.
         """
-        self._name = name
+        self._names = names if isinstance(names, list) else [names]
         self._pattern = pattern
 
-    def get_name(self) -> str:
+    def get_names(self) -> List[str]:
         """
-        Gives the name of this log data.
+        Gives the names of this log data.
 
-        :return: The name of this log data.
+        :return: The names of this log data.
         """
-        return self._name
+        return self._names
 
-    def extract_value_from(self, string: str) -> Optional[str]:
+    def extract_value_from(self, string: str) -> Tuple[str]:
         """
         Extracts the value corresponding to this log data from the given string.
 
@@ -88,7 +127,7 @@ class ScalpelConfiguration:
     relevant values to retrieve from this campaign.
     """
 
-    def __init__(self, fmt: Optional[CampaignFormat], has_header: bool, quote: str, separator: str, main_file: str,
+    def __init__(self, fmt: Optional[CampaignFormat], csv_configuration: CsvConfiguration, main_file: str,
                  data_files: Optional[List[str]],
                  log_datas: Optional[Dict[str, List[LogData]]],
                  hierarchy_depth: Optional[int],
@@ -99,9 +138,6 @@ class ScalpelConfiguration:
 
         :param fmt: The format in which the results of the campaign are stored.
                     If None, the format will be guessed on a best effort basis.
-        :param has_header:
-        :param quote:
-        :param separator:
         :param main_file: The path of the main file containing data about the
                           campaign.
         :param data_files: The names of the files to be considered for each experiment
@@ -113,9 +149,7 @@ class ScalpelConfiguration:
         """
         assert file_name_meta is not None
         self._format = fmt
-        self._has_header = has_header
-        self._quote = quote
-        self._sep = separator
+        self._csv_configuration = csv_configuration
         self._main_file = main_file
         self._data_files = data_files
         self._log_datas = log_datas
@@ -144,14 +178,8 @@ class ScalpelConfiguration:
         """
         return self._format
 
-    def has_header(self) -> bool:
-        return self._has_header
-
-    def get_quote_char(self) -> str:
-        return self._quote
-
-    def get_separator(self) -> str:
-        return self._sep
+    def get_csv_configuration(self):
+        return self._csv_configuration
 
     def is_to_be_parsed(self, file: str) -> bool:
         """
@@ -378,7 +406,7 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
     The MappingConfiguration defines the property of the raw data configuration.
     """
 
-    def get_name(self) -> str:
+    def get_name(self) -> Union[str, List[str]]:
         """
         Gives the name of the current raw data.
 
@@ -418,7 +446,7 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
         """
         raise NotImplementedError('Method "get_regex_group()" is abstract!')
 
-    def get_compiled_pattern(self) -> UserDefinedPattern:
+    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
         """
         Gives the compiled pattern identifying the current raw data.
 
@@ -495,7 +523,7 @@ class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfigura
     list of dictionaries.
     """
 
-    def get_name(self) -> str:
+    def get_name(self) -> Union[str, List[str]]:
         """
         Gives the name of the current raw data.
 
@@ -581,7 +609,7 @@ class FileNameMetaConfiguration:
         """
         raise NotImplementedError('Method "get_regex_group()" is abstract!')
 
-    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
+    def get_log_data(self) -> LogData:
         """
         Gives the compiled pattern identifying the current raw data.
 
@@ -591,30 +619,32 @@ class FileNameMetaConfiguration:
                             regular expression was specified for the raw data.
         """
         # First, we look for a named pattern.
-        simplified_pattern = self.get_simplified_pattern()
+        names = []
+        groups = []
         experiment_ware_group = self.get_experiment_ware_group()
         input_group = self.get_input_group()
+        if experiment_ware_group is not None:
+            names.append('experiment_ware')
+            groups.append(experiment_ware_group)
+        if input_group is not None:
+            names.append('input')
+            groups.append(input_group)
 
+        pattern = None
+        simplified_pattern = self.get_simplified_pattern()
         if simplified_pattern is not None:
-            user_defined_patterns = UserDefinedPatterns()
-            if experiment_ware_group is not None:
-                user_defined_patterns.add(compile_named_pattern(simplified_pattern, experiment_ware_group))
-            if input_group is not None:
-                user_defined_patterns.add(compile_named_pattern(simplified_pattern, input_group))
-            return user_defined_patterns
+            pattern = compile_all_named_patterns(simplified_pattern, *groups)
 
-        # There is no look pattern: trying a regular expression.
-        regex = self.get_regex_pattern()
-        if regex is not None:
-            user_defined_patterns = UserDefinedPatterns()
-            if experiment_ware_group is not None:
-                user_defined_patterns.add(compile_regex(regex, experiment_ware_group))
-            if input_group is not None:
-                user_defined_patterns.add(compile_regex(regex, input_group))
-            return user_defined_patterns
+        if pattern is None:
+            regex = self.get_regex_pattern()
+            if regex is not None:
+                pattern = compile_all_regexes(regex, *groups)
 
         # The description of the data is missing!
-        raise ValueError('A pattern or regex is missing!')
+        if pattern is None:
+            raise ValueError('A pattern or regex is missing!')
+
+        return LogData(names, pattern)
 
 
 class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
@@ -644,8 +674,8 @@ class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
     def get_experiment_ware_group(self) -> Optional[int]:
         raise ValueError('Empty raw data configuration!')
 
-    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
-        return NullUserDefinedPattern()
+    def get_log_data(self) -> LogData:
+        return LogData([], NullUserDefinedPattern())
 
 
 class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryConfiguration):
@@ -678,14 +708,12 @@ class ScalpelConfigurationBuilder:
         self._listener = listener
         self._main_file = None
         self._format = None
+        self._csv_configuration = None
         self._hierarchy_depth = None
         self._experiment_ware_depth = None
         self._data_files = None
         self._log_datas = defaultdict(list)
         self._custom_parser = None
-        self._header = True
-        self._sep = ','
-        self._quote = None
         self._file_name_meta = EmptyFileNameMetaConfiguration()
 
     def build(self) -> ScalpelConfiguration:
@@ -702,7 +730,7 @@ class ScalpelConfigurationBuilder:
         self.read_input_set()
         self.read_source()
         self.read_data()
-        return ScalpelConfiguration(self._format, self._header, self._quote, self._sep, self._main_file,
+        return ScalpelConfiguration(self._format, self._csv_configuration, self._main_file,
                                     self._data_files, self._log_datas,
                                     self._hierarchy_depth,
                                     self._experiment_ware_depth,
@@ -826,12 +854,10 @@ class ScalpelConfigurationBuilder:
         self._main_file = self._get_campaign_path()
         self._format = self._guess_format()
         self._format = self._get_format()
-        self._header = self._has_header()
-        self._quote = self._quote_char()
-        self._sep = self._separator()
         self._hierarchy_depth = self._get_hierarchy_depth()
         self._experiment_ware_depth = self._get_experiment_ware_depth()
         self._custom_parser = self._get_custom_parser()
+        self.read_csv_configuration()
 
     def _get_campaign_path(self) -> Iterable[str]:
         """
@@ -888,6 +914,9 @@ class ScalpelConfigurationBuilder:
             return CampaignFormat.value_of(self._main_file[0][index + 1:])
         except ValueError:
             return None
+
+    def read_csv_configuration(self):
+        self._csv_configuration = CsvConfiguration(self._separator(), self._quote_char(), self._has_header())
 
     def _has_header(self) -> bool:
         """
@@ -1251,3 +1280,4 @@ def read_configuration(yaml_file: str, listener: CampaignParserListener) -> Scal
         yaml = load_yaml(yaml_stream)
         builder = DictionaryScalpelConfigurationBuilder(yaml, listener)
         return builder.build()
+
