@@ -25,6 +25,9 @@ from typing import List
 import pandas as pd
 from matplotlib import pyplot as plt
 
+from metrics.constants import STAT_TABLE_COUNT, STAT_TABLE_COMMON_COUNT, STAT_TABLE_COMMON_SUM, \
+    STAT_TABLE_UNCOMMON_COUNT, STAT_TABLE_TOTAL, STAT_TABLE_SUM, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, \
+    EXPERIMENT_INPUT
 from metrics.wallet.dataframe.dataframe import CampaignDFFilter, CampaignDataFrame
 from metrics.wallet.figure.abstract_figure import CactusPlot, BoxPlot, ScatterPlot, Table, CDFPlot
 
@@ -61,26 +64,26 @@ class StatTable(Table):
             CampaignDFFilter.ONLY_SOLVED,
         ]).data_frame
 
-        df_stat['count'] = only_solved_df.groupby('experiment_ware')['cpu_time'].count()
-        df_stat['sum'] = no_common_failed.groupby('experiment_ware')['cpu_time'].sum()
-        df_stat['common count'] = common_inputs.groupby('experiment_ware')['cpu_time'].count()
-        df_stat['common sum'] = common_inputs.groupby('experiment_ware')['cpu_time'].sum()
-        df_stat['uncommon count'] = no_common_solved_no_out.groupby('experiment_ware')['cpu_time'].count()
-        df_stat['total'] = len(self._campaign_df.data_frame['input'].unique())
+        df_stat[STAT_TABLE_COUNT] = only_solved_df.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].count()
+        df_stat[STAT_TABLE_SUM] = no_common_failed.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].sum()
+        df_stat[STAT_TABLE_COMMON_COUNT] = common_inputs.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].count()
+        df_stat[STAT_TABLE_COMMON_SUM] = common_inputs.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].sum()
+        df_stat[STAT_TABLE_UNCOMMON_COUNT] = no_common_solved_no_out.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].count()
+        df_stat[STAT_TABLE_TOTAL] = len(self._campaign_df.data_frame[EXPERIMENT_INPUT].unique())
 
         return df_stat.sort_values(['count', 'sum'], ascending=[False, True]).fillna(0).astype(int)
 
 
 def contribution_agg(slice: pd.DataFrame, to: float):
-    slice = slice.sort_values(by='cpu_time')
+    slice = slice.sort_values(by=EXPERIMENT_CPU_TIME)
     first = slice.iloc[0]
     second = slice.iloc[1]
 
-    if first['cpu_time'] < to:
-        return pd.Series([first['experiment_ware'], first['cpu_time'], second['cpu_time'] >= to],
-                         index=['first', 'cpu_time', 'unique'])
+    if first[EXPERIMENT_CPU_TIME] < to:
+        return pd.Series([first[EXPERIMENT_XP_WARE], first[EXPERIMENT_CPU_TIME], second[EXPERIMENT_CPU_TIME] >= to],
+                         index=['first', EXPERIMENT_CPU_TIME, 'unique'])
 
-    return pd.Series([None, None, False], index=['first', 'cpu_time', 'unique'])
+    return pd.Series([None, None, False], index=['first', EXPERIMENT_CPU_TIME, 'unique'])
 
 
 class ContributionTable(Table):
@@ -93,7 +96,7 @@ class ContributionTable(Table):
         self._deltas = deltas
 
     def get_data_frame(self):
-        contrib_raw = self._campaign_df.data_frame.groupby('input').apply(
+        contrib_raw = self._campaign_df.data_frame.groupby(EXPERIMENT_INPUT).apply(
             lambda x: contribution_agg(x, self._campaign_df.campaign.timeout))
         contrib = pd.DataFrame()
 
@@ -107,6 +110,7 @@ class ContributionTable(Table):
 
         return contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False])
 
+
 class ErrorTable(Table):
     """
     Creation of a table representing the different contributions of each solver.
@@ -119,7 +123,7 @@ class ErrorTable(Table):
         xp_wares = [ew.name for ew in self._campaign_df.campaign.experiment_wares]
 
         error = self._campaign_df.data_frame
-        error = error.pivot(index='input', columns='experiment_ware', values='cpu_time')
+        error = error.pivot(index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=EXPERIMENT_CPU_TIME)
 
         inputs = {i.path for i in self._campaign_df.campaign.input_set.inputs if i.path not in error.index}
         all_xp_ware = pd.DataFrame(columns=xp_wares, index=inputs)
@@ -183,20 +187,21 @@ class CactusMPL(CactusPlot):
                 ax.plot(df.index, df[col], styles[i], label=self._get_final_xpware_name(col), **(kwargs[i]))
 
     def _set_legend(self, df, ax):
-        colors = ['lightgray' if self._style_map.get(x) == ' ' else 'black' for x in df.columns] if self._style_map else None
+        colors = ['lightgray' if self._style_map.get(x) == ' ' else 'black' for x in
+                  df.columns] if self._style_map else None
 
         if self._xp_ware_name_map is None:
-            leg = ax.legend(self.get_data_frame().columns, loc=self._legend_location, bbox_to_anchor=self._bbox_to_anchor,
-                      ncol=self._ncol_legend)
+            leg = ax.legend(self.get_data_frame().columns, loc=self._legend_location,
+                            bbox_to_anchor=self._bbox_to_anchor,
+                            ncol=self._ncol_legend)
         else:
-            leg = ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns], loc=self._legend_location,
-                      bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
+            leg = ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns],
+                            loc=self._legend_location,
+                            bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
 
         if colors is not None:
             for color, text in zip(colors, leg.get_texts()):
                 text.set_color(color)
-print
-
 
 
 class CDFMPL(CDFPlot):
@@ -242,9 +247,13 @@ class CDFMPL(CDFPlot):
 
         for i, col in enumerate(df.columns):
             if styles is None:
-                ax.hist(df[col].dropna(), int(self._campaign_df.campaign.timeout), label=self._get_final_xpware_name(col), density=True, histtype='step', cumulative=True, **(kwargs[i]))
+                ax.hist(df[col].dropna(), int(self._campaign_df.campaign.timeout),
+                        label=self._get_final_xpware_name(col), density=True, histtype='step', cumulative=True,
+                        **(kwargs[i]))
             else:
-                ax.hist(df[col].dropna(), int(self._campaign_df.campaign.timeout), label=self._get_final_xpware_name(col), density=True, histtype='step', cumulative=True, **(kwargs[i]))
+                ax.hist(df[col].dropna(), int(self._campaign_df.campaign.timeout),
+                        label=self._get_final_xpware_name(col), density=True, histtype='step', cumulative=True,
+                        **(kwargs[i]))
 
     def _set_legend(self, ax):
         if self._xp_ware_name_map is None:
@@ -314,8 +323,6 @@ class ScatterMPL(ScatterPlot):
         ax.set_xlim(self._get_x_lim(ax))
         ax.set_ylim(self._get_y_lim(ax))
 
-        self._extra_col(df, self._color_col)
-
         if self._color_col is None:
             df.plot.scatter(x=self._xp_ware_i, y=self._xp_ware_j, ax=ax)
         else:
@@ -351,10 +358,3 @@ class ScatterMPL(ScatterPlot):
         @return: the title of the plot.
         """
         return f'Comparison of {self._get_final_xpware_name(self._xp_ware_i)} and {self._get_final_xpware_name(self._xp_ware_j)}'
-
-    def _extra_col(self, df, col):
-        if col is None:
-            return
-
-        ori = self._campaign_df.data_frame
-        df[col] = ori.groupby('input')['sat'].agg(lambda x: str(set(x) - {None}))

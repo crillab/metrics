@@ -26,6 +26,7 @@ This module provides abstraction of each figures.
 """
 import matplotlib
 
+from metrics.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_XP_WARE, EXPERIMENT_INPUT
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame, CampaignDFFilter
 
 """
@@ -188,7 +189,7 @@ class CactusPlot(Plot):
     """
 
     def __init__(self, campaign_df: CampaignDataFrame, cumulated=False, show_marker=True, color_map=None,
-                 style_map=None, cactus_col='cpu_time', legend_location: str = 'best', ncol_legend: int = 1,
+                 style_map=None, cactus_col=EXPERIMENT_CPU_TIME, legend_location: str = 'best', ncol_legend: int = 1,
                  bbox_to_anchor=None, **kwargs):
         """
         Creates a cactus plot.
@@ -216,7 +217,7 @@ class CactusPlot(Plot):
         @return: the pandas dataframe used by this figure.
         """
         df_solved = self._campaign_df._filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
-        df_cactus = df_solved.pivot(columns='experiment_ware', values=self._cactus_col)
+        df_cactus = df_solved.pivot(columns=EXPERIMENT_XP_WARE, values=self._cactus_col)
         for col in df_cactus.columns:
             df_cactus[col] = df_cactus[col].sort_values().values
         df_cactus = df_cactus.dropna(how='all').reset_index(drop=True)
@@ -254,7 +255,7 @@ class CDFPlot(Plot):
     Creation of a Cumulative Distribution Function to compare the performance of several solvers.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, color_map=None, style_map=None, cdf_col='cpu_time',
+    def __init__(self, campaign_df: CampaignDataFrame, color_map=None, style_map=None, cdf_col=EXPERIMENT_CPU_TIME,
                  legend_location: str = 'best', ncol_legend: int = 1, bbox_to_anchor=None, **kwargs):
         """
         Creates a cactus plot.
@@ -277,7 +278,7 @@ class CDFPlot(Plot):
         @return: the pandas dataframe used by this figure.
         """
         df_solved = self._campaign_df.data_frame
-        df_cdf = df_solved.pivot(columns='experiment_ware', values=self._cdf_col)
+        df_cdf = df_solved.pivot(columns=EXPERIMENT_XP_WARE, values=self._cdf_col)
         for col in df_cdf.columns:
             df_cdf[col] = df_cdf[col].sort_values().values
         df_cdf = df_cdf.dropna(how='all').reset_index(drop=True)
@@ -314,7 +315,7 @@ class ScatterPlot(Plot):
     Creation of a scatter plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col='cpu_time',
+    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col=EXPERIMENT_CPU_TIME,
                  marker_alpha: float = 0.3, **kwargs):
         """
         Creates a scatter plot.
@@ -338,7 +339,7 @@ class ScatterPlot(Plot):
         @return: the pandas dataframe used by this figure.
         """
         df_solved = self._campaign_df._filter_by([CampaignDFFilter.ONLY_SOLVED]).data_frame
-        df_scatter = df_solved.pivot_table(index=['input'], columns='experiment_ware', values=self._scatter_col,
+        df_scatter = df_solved.pivot_table(index=[EXPERIMENT_INPUT], columns=EXPERIMENT_XP_WARE, values=self._scatter_col,
                                            fill_value=self._campaign_df.campaign.timeout)
 
         return df_scatter.sample(n=self._sample) if self._sample else df_scatter
@@ -370,7 +371,7 @@ class BoxPlot(Plot):
     Creation of a box plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, box_col='cpu_time', **kwargs):
+    def __init__(self, campaign_df: CampaignDataFrame, box_col=EXPERIMENT_CPU_TIME, **kwargs):
         super().__init__(campaign_df, **kwargs)
         self._box_col = box_col
 
@@ -380,7 +381,7 @@ class BoxPlot(Plot):
         @return: the pandas dataframe used by this figure.
         """
         df_by_ware = self._campaign_df.data_frame
-        df_by_ware = df_by_ware.pivot(columns='experiment_ware', values=self._box_col)
+        df_by_ware = df_by_ware.pivot(columns=EXPERIMENT_XP_WARE, values=self._box_col)
         return df_by_ware
 
     def get_x_axis_name(self):

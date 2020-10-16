@@ -31,6 +31,8 @@ import jsonpickle
 from pandas import DataFrame
 
 from metrics.core.model import Campaign
+from metrics.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_PATH, EXPERIMENT_INPUT, XP_WARE_NAME, \
+    EXPERIMENT_XP_WARE
 from metrics.scalpel import read_yaml
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
@@ -53,7 +55,7 @@ class Analysis:
         if campaign_df is None:
             self._input_file = input_file
             self._campaign = self._make_campaign() if campaign is None else campaign
-            self._is_success = (lambda x: x['cpu_time'] < self._campaign.timeout) if is_success is None else is_success
+            self._is_success = (lambda x: x[EXPERIMENT_CPU_TIME] < self._campaign.timeout) if is_success is None else is_success
             self._campaign_df = self._make_campaign_df()
         else:
             self._campaign_df = campaign_df
@@ -67,8 +69,8 @@ class Analysis:
 
     def _make_campaign_df(self):
         campaign_df = CampaignDataFrameBuilder(self._campaign).build_from_campaign()
-        campaign_df.data_frame['success'] = campaign_df.data_frame.apply(self._is_success, axis=1)
-        campaign_df.data_frame['cpu_time'] = campaign_df.data_frame.apply(lambda x: x['cpu_time'] if x['success'] else campaign_df.campaign.timeout, axis=1)
+        campaign_df.data_frame[SUCCESS_COL] = campaign_df.data_frame.apply(self._is_success, axis=1)
+        campaign_df.data_frame[EXPERIMENT_CPU_TIME] = campaign_df.data_frame.apply(lambda x: x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else campaign_df.campaign.timeout, axis=1)
         return campaign_df
 
     def sub_analysis(self, column, sub_set) -> Analysis:
@@ -80,7 +82,7 @@ class Analysis:
         """
         return Analysis(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
 
-    def add_vbew(self, xp_ware_set, opti_col='cpu_time', minimize=True, vbew_name='vbew') -> Analysis:
+    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew') -> Analysis:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -159,9 +161,9 @@ class CampaignDataFrameBuilder:
         experiments_df = self._make_experiments_df()
 
         campaign_df = experiments_df \
-            .join(inputs_df.set_index('path'), on='input', lsuffix='_experiment', rsuffix='_input', how='inner') \
-            .join(experiment_wares_df.set_index('name'),
-                  on='experiment_ware', lsuffix='_experiment', rsuffix='_xpware', how='inner'
+            .join(inputs_df.set_index(INPUT_PATH), on=EXPERIMENT_INPUT, lsuffix='_experiment', rsuffix='_input', how='inner') \
+            .join(experiment_wares_df.set_index(XP_WARE_NAME),
+                  on=EXPERIMENT_XP_WARE, lsuffix='_experiment', rsuffix='_xpware', how='inner'
                   )
 
         return self.build_from_data_frame(campaign_df, self._campaign.name)
