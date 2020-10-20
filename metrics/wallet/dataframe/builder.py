@@ -29,6 +29,7 @@ from typing import Set, Callable, Any, List
 
 import jsonpickle
 from pandas import DataFrame
+from itertools import product
 
 from metrics.core.model import Campaign
 from metrics.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_PATH, EXPERIMENT_INPUT, XP_WARE_NAME, \
@@ -40,15 +41,6 @@ from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, C
     ErrorTable
 
 
-def import_campaign(json) -> Campaign:
-    return jsonpickle.decode(json)
-
-def import_campaign_data_frame(json) -> CampaignDataFrame:
-    return jsonpickle.decode(json)
-
-def import_analysis(json) -> Analysis:
-    return jsonpickle.decode(json)
-
 class Analysis:
 
     def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None, campaign_df: CampaignDataFrame = None ):
@@ -56,7 +48,7 @@ class Analysis:
             self._input_file = input_file
             self._campaign = self._make_campaign() if campaign is None else campaign
             self._is_success = (lambda x: x[EXPERIMENT_CPU_TIME] < self._campaign.timeout) if is_success is None else is_success
-            self._campaign_df = self._make_campaign_df()
+            self._make_campaign_df()
         else:
             self._campaign_df = campaign_df
 
@@ -68,10 +60,25 @@ class Analysis:
         return read_yaml(self._input_file)
 
     def _make_campaign_df(self):
-        campaign_df = CampaignDataFrameBuilder(self._campaign).build_from_campaign()
-        campaign_df.data_frame[SUCCESS_COL] = campaign_df.data_frame.apply(self._is_success, axis=1)
-        campaign_df.data_frame[EXPERIMENT_CPU_TIME] = campaign_df.data_frame.apply(lambda x: x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else campaign_df.campaign.timeout, axis=1)
-        return campaign_df
+        self._campaign_df = CampaignDataFrameBuilder(self._campaign).build_from_campaign()
+        self._complete_missing_experiments()
+
+        self._campaign_df.data_frame[SUCCESS_COL] = self._campaign_df.data_frame.apply(self._is_success, axis=1)
+        self._campaign_df.data_frame[EXPERIMENT_CPU_TIME] = self._campaign_df.data_frame.apply(lambda x: x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else self._campaign_df.campaign.timeout, axis=1)
+
+    def _complete_missing_experiments(self):
+        inputs = [i.path for i in self._campaign_df.campaign.input_set.inputs]
+        xp_wares = [ew.name for ew in self._campaign_df.campaign.experiment_wares]
+        theorical_xps = DataFrame(product(inputs, xp_wares), columns=['input', 'experiment_ware'])
+        df = self._campaign_df._data_frame
+
+        df['missing'] = False
+        df = self._campaign_df._data_frame = self._campaign_df.data_frame.join(theorical_xps.set_index(['input', 'experiment_ware']), how='right', on=['input', 'experiment_ware'])
+        df['missing'] = df['missing'].fillna(True)
+
+    def map(self, new_col, function):
+        df = self._campaign_df.data_frame
+        df[new_col] = df.apply(function, axis=1)
 
     def sub_analysis(self, column, sub_set) -> Analysis:
         """

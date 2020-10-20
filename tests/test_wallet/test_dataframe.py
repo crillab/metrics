@@ -3,9 +3,9 @@ from __future__ import annotations
 import os
 import unittest
 
-import jsonpickle as jsonpickle
 import jsonpickle.ext.pandas as jsonpickle_pd
 
+from metrics.wallet import import_campaign_data_frame
 
 jsonpickle_pd.register_handlers()
 
