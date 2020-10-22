@@ -36,6 +36,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from metrics.core.builder import CampaignBuilder
 from metrics.core.builder.builder import ModelBuilder, InputSetBuilder
+from metrics.core.constants import EXPERIMENT_XP_WARE, EXPERIMENT_INPUT, XP_WARE_NAME, INPUT_PATH, INPUT_SET_NAME
 from metrics.core.model import Campaign
 
 
@@ -174,9 +175,9 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         :param all_values: The values that has been read about the element.
         """
         campaign_builder = self._listener.get_campaign_builder()
-        if key == 'experiment_ware':
+        if key == EXPERIMENT_XP_WARE:
             self._create_experiment_ware_if_missing(campaign_builder, identifier, all_values)
-        if key == 'input':
+        if key == EXPERIMENT_INPUT:
             self._create_input_if_missing(campaign_builder, identifier, all_values)
 
     def _create_experiment_ware_if_missing(self, campaign_builder: CampaignBuilder,
@@ -191,7 +192,7 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         """
         if not campaign_builder.has_experiment_ware_with_name(name):
             xp_ware_builder = campaign_builder.add_experiment_ware_builder()
-            self._build_on_the_fly(xp_ware_builder, 'name', name, all_values)
+            self._build_on_the_fly(xp_ware_builder, XP_WARE_NAME, name, all_values)
 
     def _create_input_if_missing(self, campaign_builder: CampaignBuilder,
                                  path: str, all_values: Dict[str, str]) -> None:
@@ -206,7 +207,7 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         if not campaign_builder.has_input_with_path(path):
             input_set_builder = self._listener.get_input_set_builder('auto_name')
             input_builder = input_set_builder.add_input_builder()
-            self._build_on_the_fly(input_builder, 'path', path, all_values)
+            self._build_on_the_fly(input_builder, INPUT_PATH, path, all_values)
 
     @staticmethod
     def _build_on_the_fly(builder: ModelBuilder, element_key: str, element_id: str,
@@ -318,7 +319,7 @@ class CampaignParserListener:
         """
         if self._input_set_builder is None:
             self._input_set_builder = self._campaign_builder.add_input_set_builder()
-            self._input_set_builder['name'] = name
+            self._input_set_builder[INPUT_SET_NAME] = name
         return self._input_set_builder
 
     def end_input_set(self) -> None:
@@ -368,7 +369,7 @@ class CampaignParserListener:
         read_values = self._pending_keys[scalpel_key]
         read_values[key] = str(value)
         if len(read_values) == nb:
-            sub_keys = self._key_mapping.get_sorted_keys(key)
+            sub_keys = self._key_mapping.get_sorted_keys(scalpel_key)
             self._state.log_data(self._current_builder, scalpel_key, sub_keys, read_values)
             del self._pending_keys[scalpel_key]
 

@@ -25,7 +25,7 @@ from typing import List
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from metrics.constants import STAT_TABLE_COUNT, STAT_TABLE_COMMON_COUNT, STAT_TABLE_COMMON_SUM, \
+from metrics.core.constants import STAT_TABLE_COUNT, STAT_TABLE_COMMON_COUNT, STAT_TABLE_COMMON_SUM, \
     STAT_TABLE_UNCOMMON_COUNT, STAT_TABLE_TOTAL, STAT_TABLE_SUM, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, \
     EXPERIMENT_INPUT
 from metrics.wallet.dataframe.dataframe import CampaignDFFilter, CampaignDataFrame

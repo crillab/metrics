@@ -88,14 +88,13 @@ class CsvReader:
         Parses the associated CSV stream to extract its content.
 
         :return: The content of the CSV stream.
-
-        :raises ValueError: If one of the lines does not match the header.
         """
         for index, line in self._read_lines():
             line = list(map(str.strip, line))
-            if len(line) != len(self._keys):
-                raise ValueError(f'Line #{index} does not match header: {line}')
-            yield zip(self._keys, line)
+            if len(line) == len(self._keys):
+                yield zip(self._keys, line)
+            else:
+                print(f'WARNING: Line #{index} does not match header: {line}')
 
     def _read_lines(self) -> Iterable[Tuple[int, List[str]]]:
         """

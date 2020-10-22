@@ -95,8 +95,8 @@ class ReportBuilder:
         Load input file with scalpel module and get the campaign object
         @return: The current report object
         """
-
-        self._campaign = read_campaign(self._args.input)
+        campaign, config = read_campaign(self._args.input)
+        self._campaign = campaign
         return self
 
     def _load_plot_config(self) -> 'ReportBuilder':

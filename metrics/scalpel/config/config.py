@@ -33,7 +33,7 @@ describes how to read the data collected during a campaign.
 from __future__ import annotations
 
 from csv import reader as load_csv
-from abc import ABC
+from abc import ABC, ABCMeta, abstractmethod
 from collections import defaultdict
 from fnmatch import fnmatch
 from os import path, walk
@@ -41,6 +41,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, TextIO
 
 from yaml import safe_load as load_yaml
 
+from metrics.core.constants import *
+from metrics.scalpel.config.filters import create_filter
 from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
@@ -132,7 +134,8 @@ class ScalpelConfiguration:
                  log_datas: Optional[Dict[str, List[LogData]]],
                  hierarchy_depth: Optional[int],
                  experiment_ware_depth: Optional[int],
-                 custom_parser: Optional[str], file_name_meta: FileNameMetaConfiguration) -> None:
+                 custom_parser: Optional[str], file_name_meta: FileNameMetaConfiguration,
+                 is_success) -> None:
         """
         Creates a new ScalpelConfiguration.
 
@@ -157,6 +160,7 @@ class ScalpelConfiguration:
         self._hierarchy_depth = hierarchy_depth
         self._experiment_ware_depth = experiment_ware_depth
         self._file_name_meta = file_name_meta
+        self._is_success = is_success
 
     def get_main_file(self) -> str:
         """
@@ -247,6 +251,9 @@ class ScalpelConfiguration:
 
     def get_file_name_meta(self) -> FileNameMetaConfiguration:
         return self._file_name_meta
+
+    def get_is_success(self):
+        return self._is_success
 
 
 class ConfigurationIterator:
@@ -632,10 +639,10 @@ class FileNameMetaConfiguration:
         experiment_ware_group = self.get_experiment_ware_group()
         input_group = self.get_input_group()
         if experiment_ware_group is not None:
-            names.append('experiment_ware')
+            names.append(EXPERIMENT_XP_WARE)
             groups.append(experiment_ware_group)
         if input_group is not None:
-            names.append('input')
+            names.append(EXPERIMENT_INPUT)
             groups.append(input_group)
 
         pattern = None
@@ -701,7 +708,298 @@ class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryC
         return self.get('experiment_ware')
 
 
-class ScalpelConfigurationBuilder:
+class IScalpelConfigurationBuilder(metaclass=ABCMeta):
+    @abstractmethod
+    def _get_mapping(self):
+        """
+        Gives the mapping configuration object allowing to retrieve the data
+        expected by Scalpel from the experiment files.
+
+        :return: The configuration for the mapping.
+        """
+        pass
+
+    @abstractmethod
+    def read_mapping(self):
+        """
+        Reads the mapping allowing to retrieve the data wanted by Scalpel from
+        the experiment files.
+        """
+        pass
+
+    @abstractmethod
+    def read_metadata(self):
+        """
+        Reads the description of the campaign to parse.
+        """
+        pass
+
+    @abstractmethod
+    def read_setup(self):
+        """
+        Reads the description of the experimental setup.
+        """
+        pass
+
+    @abstractmethod
+    def build(self):
+        """
+        Builds the configuration of Scalpel, as specified by the user.
+
+        :return: The built configuration.
+        """
+        pass
+
+    @abstractmethod
+    def _get_campaign_name(self):
+        """
+        Gives the name of the campaign being considered.
+
+        :return: The name of the campaign.
+        """
+        pass
+
+    @abstractmethod
+    def _get_campaign_date(self):
+        """
+        Gives the date of the campaign being considered.
+
+        :return: The date of the campaign.
+        """
+        pass
+
+    @abstractmethod
+    def _get_os_description(self):
+        """
+        Gives the description of the operating system on which the campaign has
+        been executed.
+
+        :return: The description of the OS.
+        """
+        pass
+
+    @abstractmethod
+    def _get_cpu_description(self):
+        """
+        Gives the description of the CPU of the machine(s) on which the campaign
+        has been executed.
+
+        :return: The description of the CPU.
+        """
+        pass
+
+    @abstractmethod
+    def _get_total_memory(self):
+        """
+        Gives the total amount of memory available on the machine(s) on which the
+        campaign has been executed.
+
+        :return: The total amount of memory.
+        """
+        pass
+
+    @abstractmethod
+    def _get_time_out(self):
+        """
+        Gives the time limit set to the experiments in this campaign.
+
+        :return: The configured time limit.
+        """
+        pass
+
+    @abstractmethod
+    def _get_memory_out(self):
+        """
+        Gives the memory limit set to the experiments in this campaign.
+
+        :return: The set configured limit.
+        """
+        pass
+
+    @abstractmethod
+    def read_experiment_wares(self):
+        """
+        Reads the experiment-wares that are considered in the campaign being
+        parsed by Scalpel.
+        """
+        pass
+
+    @abstractmethod
+    def read_input_set(self):
+        """
+        Reads the input set considered in the campaign being parsed by Scalpel.
+        """
+        pass
+
+    @abstractmethod
+    def read_source(self):
+        """
+        Reads the description of the source from which the campaign is to
+        be parsed.
+        """
+        pass
+
+    @abstractmethod
+    def _get_campaign_path(self):
+        """
+        Gives the path of the file containing all the data about the campaign.
+        This file may be either a regular file or a directory.
+
+        :return: The path to the main file of the campaign.
+        """
+        pass
+
+    @abstractmethod
+    def _get_format(self):
+        """
+        Gives the format of the campaign to parse.
+        If not specified, the format is guessed on a best effort basis.
+
+        :return: The format of the campaign to parse, if any.
+        """
+        pass
+
+    @abstractmethod
+    def _guess_directory_format(self):
+        """
+        Guesses the format of the campaign to parse when stored in a directory.
+
+        :return: The format of the campaign, guessed from the deepness of the
+                 file hierarchy rooted at the main file of this campaign.
+        """
+        pass
+
+    @abstractmethod
+    def _guess_regular_format(self):
+        """
+        Guesses the format of the campaign to parse when stored in a regular file.
+
+        :return: The format of the campaign, guessed from the extension of its
+                 main file, or None if it could not be guessed.
+        """
+        pass
+
+    @abstractmethod
+    def _guess_format(self):
+        """
+        Guesses the format of the campaign to parse.
+
+        :return: The guessed format of the campaign, or None if it could
+                 not be guessed.
+        """
+        pass
+
+    @abstractmethod
+    def read_csv_configuration(self):
+        pass
+
+    @abstractmethod
+    def _has_header(self):
+        """
+        Checks whether the input file to parse has a header.
+
+        :return: If the input file to parse has a header.
+        """
+        pass
+
+    @abstractmethod
+    def _quote_char(self):
+        """
+        :return: Return the quote char
+        """
+        pass
+
+    @abstractmethod
+    def _separator(self):
+        """
+        :return: Return the separator
+        """
+        pass
+
+    @abstractmethod
+    def _get_hierarchy_depth(self):
+        """
+        Gives the depth of the hierarchy to explore, when the campaign is
+        in the deep log hierarchy format.
+
+        :return: The depth of the hierarchy, if specified.
+        """
+        pass
+
+    @abstractmethod
+    def _get_experiment_ware_depth(self):
+        """
+        Gives the depth of the directory corresponding to the experiment-ware
+        being executed, when the campaign is in the deep log hierarchy format.
+
+        :return: The depth of the experiment-ware directory, if any.
+        """
+        pass
+
+    @abstractmethod
+    def _get_custom_parser(self):
+        """
+        Gives the (completely specified) class of the custom parser to use to parse
+        the campaign, if any.
+
+        :return: The class of the parser to use
+        """
+        pass
+
+    @abstractmethod
+    def _get_data_files(self):
+        """
+        Gives the output files to consider for each experiment, which must be in
+        a format that Scalpel natively recognizes (JSON, CSV, etc.).
+        Such files are only meaningful when the campaign is stored in a "deep"
+        file hierarchy.
+
+        :return: The raw data configuration.
+        """
+        pass
+
+    @abstractmethod
+    def read_data(self):
+        """
+        Reads the files from which Scalpel will extract relevant data for the
+        analysis.
+        Such files are only meaningful when the campaign is stored in a
+        directory.
+        """
+        pass
+
+    @abstractmethod
+    def _get_file_name_meta(self):
+        pass
+
+    @abstractmethod
+    def _get_raw_data(self):
+        """
+        Gives the raw data configuration, which describes how to extract data
+        from the log files of the experiment-wares.
+        Such data is only meaningful when the campaign is stored in a
+        directory.
+
+        :return: The raw data configuration.
+        """
+        pass
+
+    @abstractmethod
+    def _get_is_success(self):
+        pass
+
+    @abstractmethod
+    def _log_data(self, key, value):
+        """
+        Notifies the listener about data that has been read.
+
+        :param key: The key identifying the read data.
+        :param value: The value that has been read.
+        """
+        pass
+
+
+class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
     """
     The ScalpelConfigurationBuilder allows to build Scalpel's configuration.
     """
@@ -722,6 +1020,7 @@ class ScalpelConfigurationBuilder:
         self._data_files = None
         self._log_datas = defaultdict(list)
         self._custom_parser = None
+        self._is_success = None
         self._file_name_meta = EmptyFileNameMetaConfiguration()
 
     def build(self) -> ScalpelConfiguration:
@@ -742,7 +1041,8 @@ class ScalpelConfigurationBuilder:
                                     self._data_files, self._log_datas,
                                     self._hierarchy_depth,
                                     self._experiment_ware_depth,
-                                    self._custom_parser, self._file_name_meta)
+                                    self._custom_parser, self._file_name_meta,
+                                    self._is_success)
 
     def read_mapping(self) -> None:
         """
@@ -769,8 +1069,8 @@ class ScalpelConfigurationBuilder:
         """
         Reads the description of the campaign to parse.
         """
-        self._log_data('name', self._get_campaign_name())
-        self._log_data('date', self._get_campaign_date())
+        self._log_data(CAMPAIGN_NAME, self._get_campaign_name())
+        self._log_data(CAMPAIGN_DATE, self._get_campaign_date())
 
     def _get_campaign_name(self) -> Optional[str]:
         """
@@ -792,11 +1092,11 @@ class ScalpelConfigurationBuilder:
         """
         Reads the description of the experimental setup.
         """
-        self._log_data('os', self._get_os_description())
-        self._log_data('cpu', self._get_cpu_description())
-        self._log_data('memory', self._get_total_memory())
-        self._log_data('timeout', self._get_time_out())
-        self._log_data('memout', self._get_memory_out())
+        self._log_data(CAMPAIGN_OS, self._get_os_description())
+        self._log_data(CAMPAIGN_CPU, self._get_cpu_description())
+        self._log_data(CAMPAIGN_MEMORY, self._get_total_memory())
+        self._log_data(CAMPAIGN_TIMEOUT, self._get_time_out())
+        self._log_data(CAMPAIGN_MEMOUT, self._get_memory_out())
 
     def _get_os_description(self) -> Optional[str]:
         """
@@ -865,7 +1165,11 @@ class ScalpelConfigurationBuilder:
         self._hierarchy_depth = self._get_hierarchy_depth()
         self._experiment_ware_depth = self._get_experiment_ware_depth()
         self._custom_parser = self._get_custom_parser()
+        self._is_success = self._get_is_success()
         self.read_csv_configuration()
+
+    def _get_is_success(self):
+        raise NotImplementedError('Method "_get_is_success()" is abstract!')
 
     def _get_campaign_path(self) -> Iterable[str]:
         """
@@ -1115,7 +1419,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         if experiment_wares is not None:
             for xp_ware in experiment_wares:
                 self._listener.start_experiment_ware()
-                self._listener.log_data('name', xp_ware)
+                self._listener.log_data(XP_WARE_NAME, xp_ware)
                 self._listener.end_experiment_ware()
 
     def read_input_set(self) -> None:
@@ -1129,7 +1433,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         self._listener.start_input_set()
         fmt = InputSetFormat.value_of(input_set['type'])
         name = input_set['name']
-        self._listener.log_data('name', name)
+        self._listener.log_data(INPUT_SET_NAME, name)
         paths = DictionaryScalpelConfigurationBuilder._as_list(input_set['path-list'])
         kwargs = {}
 
@@ -1212,6 +1516,12 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         """
         return self._get('source').get('experiment-ware')
 
+    def _get_is_success(self):
+        expr = self._get('source').get('is-success')
+        if expr is None:
+            return None
+        return create_filter(expr)
+
     def _get_custom_parser(self) -> Optional[str]:
         """
         Gives the (completely specified) class of the custom parser to use to parse
@@ -1288,4 +1598,3 @@ def read_configuration(yaml_file: str, listener: CampaignParserListener) -> Scal
         yaml = load_yaml(yaml_stream)
         builder = DictionaryScalpelConfigurationBuilder(yaml, listener)
         return builder.build()
-

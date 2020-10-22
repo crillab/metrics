@@ -31,18 +31,18 @@ to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
 """
 
 
-from typing import Any, Iterable
+from typing import Any, Iterable, Tuple, Optional
 
 from jsonpickle import decode as load_json
 
 from metrics.core.model import Campaign
 
-from metrics.scalpel.config import read_configuration
+from metrics.scalpel.config import read_configuration, ScalpelConfiguration
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.parser import create_parser
 
 
-def read_campaign(input_file: str) -> Campaign:
+def read_campaign(input_file: str) -> Tuple[Campaign, Optional[ScalpelConfiguration]]:
     """
     Reads the data about a campaign from the given input file.
 
@@ -56,12 +56,12 @@ def read_campaign(input_file: str) -> Campaign:
         return read_yaml(input_file)
 
     if input_file.endswith('.json'):
-        return read_json(input_file)
+        return read_json(input_file), None
 
     raise ValueError(f'Unrecognized campaign format for file {input_file}')
 
 
-def read_yaml(yaml_configuration: str) -> Campaign:
+def read_yaml(yaml_configuration: str) -> Tuple[Campaign, ScalpelConfiguration]:
     """
     Reads the data about a campaign following the configuration described in
     the given YAML file.
@@ -76,7 +76,7 @@ def read_yaml(yaml_configuration: str) -> Campaign:
     campaign_parser = create_parser(configuration, parser_listener)
     for file in configuration.get_main_file():
         campaign_parser.parse_file(file)
-    return parser_listener.get_campaign()
+    return parser_listener.get_campaign(), configuration
 
 
 def read_json(json_file: str) -> Campaign:

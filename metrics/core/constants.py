@@ -29,6 +29,10 @@ This module provides all the constants composing metrics.
 
 ## Campaign constants
 CAMPAIGN_NAME = 'name'
+CAMPAIGN_DATE = 'date'
+CAMPAIGN_OS = 'os'
+CAMPAIGN_MEMORY = 'memory'
+CAMPAIGN_CPU = 'cpu'
 CAMPAIGN_TIMEOUT = 'timeout'
 CAMPAIGN_MEMOUT = 'memout'
 CAMPAIGN_XP_WARES = 'experiment_wares'

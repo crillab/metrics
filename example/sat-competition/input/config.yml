@@ -69,10 +69,14 @@ input-set:
     - example/sat-competition/input/data/sat2019.input
 source:
   path: example/sat-competition/input/data/sat2019.csv
+  is-success:
+    - ${status} == 'complete'
+    - ${result} in ['SAT-VERIFIED', 'UNSAT']
+    - ${verifier result} in ['--', 'UNSAT-VERIFIED']
 data:
   mapping:
     input: benchmark
     experiment_ware:
-    - solver
-    - configuration
+      - solver
+      - configuration
     cpu_time: solver time

@@ -26,7 +26,7 @@ This module provides abstraction of each figures.
 """
 import matplotlib
 
-from metrics.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_XP_WARE, EXPERIMENT_INPUT
+from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_XP_WARE, EXPERIMENT_INPUT
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame, CampaignDFFilter
 
 """

@@ -33,6 +33,7 @@ from os import path, scandir
 from os.path import basename, splitext
 from typing import List, Optional, TextIO
 
+from metrics.core.constants import *
 from metrics.scalpel.config import ScalpelConfiguration
 from metrics.scalpel.config.config import FileNameMetaConfiguration, EmptyFileNameMetaConfiguration, CsvConfiguration
 from metrics.scalpel.config.format import OutputFormat
@@ -281,10 +282,10 @@ class DirectoryCampaignParser(CampaignParser):
             return CsvCampaignOutputParser(self._listener, file_path)
 
         if fmt == OutputFormat.CSV2:
-            return CsvCampaignOutputParser(self._listener, file_path, ';')
+            return CsvCampaignOutputParser(self._listener, file_path, CsvConfiguration(';'))
 
         if fmt == OutputFormat.TSV:
-            return CsvCampaignOutputParser(self._listener, file_path, '\t')
+            return CsvCampaignOutputParser(self._listener, file_path, CsvConfiguration('\t'))
 
         if fmt == OutputFormat.JSON:
             return JsonCampaignOutputParser(self._listener, file_path)
@@ -367,7 +368,7 @@ class DeepDirectoryCampaignParser(DirectoryCampaignParser):
         with scandir(directory) as experiment:
             self.start_experiment()
             if self._experiment_ware is not None:
-                self.log_data('experiment_ware', self._experiment_ware)
+                self.log_data(EXPERIMENT_XP_WARE, self._experiment_ware)
             for file in experiment:
                 if self._configuration.is_to_be_parsed(file.name):
                     self._parse_file(directory, file.name)

@@ -25,15 +25,15 @@
 This module provides a simple class corresponding to the builder of the dataframe linked to a campaign.
 """
 from __future__ import annotations
-from typing import Set, Callable, Any, List
+from typing import Set, Callable, Any, List, Tuple
 
 import jsonpickle
 from pandas import DataFrame
 
 from metrics.core.model import Campaign
-from metrics.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_PATH, EXPERIMENT_INPUT, XP_WARE_NAME, \
+from metrics.core.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_PATH, EXPERIMENT_INPUT, XP_WARE_NAME, \
     EXPERIMENT_XP_WARE
-from metrics.scalpel import read_yaml
+from metrics.scalpel import read_campaign, ScalpelConfiguration
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
 from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable, \
@@ -54,8 +54,14 @@ class Analysis:
     def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None, campaign_df: CampaignDataFrame = None ):
         if campaign_df is None:
             self._input_file = input_file
-            self._campaign = self._make_campaign() if campaign is None else campaign
+            self._campaign = campaign
             self._is_success = (lambda x: x[EXPERIMENT_CPU_TIME] < self._campaign.timeout) if is_success is None else is_success
+            if campaign is None:
+                camp, config = self._make_campaign()
+                self._campaign = camp
+                suc = config.get_is_success()
+                if suc is not None:
+                    self._is_success = suc
             self._campaign_df = self._make_campaign_df()
         else:
             self._campaign_df = campaign_df
@@ -64,8 +70,8 @@ class Analysis:
     def campaign_df(self):
         return self._campaign_df
 
-    def _make_campaign(self) -> Campaign:
-        return read_yaml(self._input_file)
+    def _make_campaign(self) -> Tuple[Campaign, ScalpelConfiguration]:
+        return read_campaign(self._input_file)
 
     def _make_campaign_df(self):
         campaign_df = CampaignDataFrameBuilder(self._campaign).build_from_campaign()
