@@ -23,6 +23,7 @@
 from typing import List
 
 import pandas as pd
+pd.set_option('display.max_rows', None)
 from matplotlib import pyplot as plt
 
 from metrics.core.constants import STAT_TABLE_COUNT, STAT_TABLE_COMMON_COUNT, STAT_TABLE_COMMON_SUM, \
@@ -120,18 +121,13 @@ class ErrorTable(Table):
         super().__init__(campaign_df, **kwargs)
 
     def get_data_frame(self):
-        xp_wares = [ew.name for ew in self._campaign_df.campaign.experiment_wares]
+        df = self._campaign_df.data_frame.copy()
+        df[EXPERIMENT_CPU_TIME] = df.apply(lambda x: x[EXPERIMENT_CPU_TIME] if not x['missing'] else None, axis=1)
+        df = df.pivot(index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=EXPERIMENT_CPU_TIME)
 
-        error = self._campaign_df.data_frame
-        error = error.pivot(index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=EXPERIMENT_CPU_TIME)
+        df['n_errors'] = df.isnull().sum(axis=1)
 
-        inputs = {i.path for i in self._campaign_df.campaign.input_set.inputs if i.path not in error.index}
-        all_xp_ware = pd.DataFrame(columns=xp_wares, index=inputs)
-        error = pd.concat([error, all_xp_ware])
-
-        error['n_errors'] = error.isnull().sum(axis=1)
-
-        return error[error.n_errors > 0]
+        return df[df.n_errors > 0]
 
 
 class CactusMPL(CactusPlot):

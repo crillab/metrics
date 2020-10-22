@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 
 from tests.test_core.json_reader import JsonReader
 from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder, Analysis
-from metrics.wallet.figure.static_figure import StatTable, CactusMPL, BoxMPL, ScatterMPL, LINE_STYLES, \
-    ContributionTable, DEFAULT_COLORS, ErrorTable
+from metrics.wallet.figure.static_figure import LINE_STYLES, ContributionTable, DEFAULT_COLORS, ErrorTable, StatTable
 
 
 class MyTestCase(unittest.TestCase):
@@ -154,10 +153,14 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(168, contrib.get_figure().iloc[0]['vbew 0s'])
 
     def test_error_table(self):
-        self.campaign.experiments = self.campaign.experiments[1000:]
-        cdfb = CampaignDataFrameBuilder(self.campaign).build_from_campaign()
-        error = ErrorTable(cdfb)
-        self.assertEqual(1000, error.get_figure()['n_errors'].sum())
+        self.campaign.experiments = self.campaign.experiments[600:]
+        analysis = Analysis(campaign=self.campaign)
+        self.assertEqual(600, analysis.get_error_table().n_errors.sum())
+
+    def test_stat_table_common(self):
+        self.campaign.experiments = self.campaign.experiments[200:]
+        analysis = Analysis(campaign=self.campaign)
+        self.assertTrue(len(set(analysis.get_stat_table()['common count'])) <= 1)
 
 
     def test_static_cactus_and_cdf(self):

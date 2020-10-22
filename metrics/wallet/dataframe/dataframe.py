@@ -113,7 +113,15 @@ class CampaignDataFrame:
 
         @return: the experimentware names of the dataframe.
         """
-        return self._data_frame.experiment_ware.unique()
+        return self.data_frame[EXPERIMENT_XP_WARE].unique()
+
+    @property
+    def inputs(self) -> List[str]:
+        """
+
+        @return: the input names of the dataframe.
+        """
+        return self.data_frame[INPUT_PATH].unique()
 
     @property
     def vbew_names(self) -> Set[str]:

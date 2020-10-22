@@ -20,3 +20,32 @@
 #  along with this program.                                                    #
 #  If not, see <https://www.gnu.org/licenses/>.                                #
 # ##############################################################################
+import jsonpickle
+
+from metrics.core.model import Campaign
+from metrics.wallet.dataframe.builder import Analysis
+from metrics.wallet.dataframe.dataframe import CampaignDataFrame
+
+
+def import_campaigns(jsons) -> Campaign:
+    campaign = import_campaign(jsons[0])
+
+    for i in range(1, len(jsons)):
+        tmp = import_campaign(jsons[i])
+
+        #campaign.experiment_wares.extend(tmp.experiment_wares)
+        campaign.experiments.extend(tmp.experiments)
+        campaign.input_set.inputs.extend(tmp.input_set.inputs)
+
+    return campaign
+
+def import_campaign(json) -> Campaign:
+    return jsonpickle.decode(json)
+
+
+def import_campaign_data_frame(json) -> CampaignDataFrame:
+    return jsonpickle.decode(json)
+
+
+def import_analysis(json) -> Analysis:
+    return jsonpickle.decode(json)
