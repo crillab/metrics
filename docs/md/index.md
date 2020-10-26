@@ -7,6 +7,7 @@
 
    tutorial
    code
+   scalpel-config
 ```
 
 ## Indices and tables
