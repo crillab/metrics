@@ -121,7 +121,7 @@ class CampaignDataFrame:
 
         @return: the input names of the dataframe.
         """
-        return self.data_frame[INPUT_PATH].unique()
+        return self.data_frame[EXPERIMENT_INPUT].unique()
 
     @property
     def vbew_names(self) -> Set[str]:
@@ -207,6 +207,16 @@ class CampaignDataFrame:
         return [
             self.build_data_frame(group, name=name) for name, group in gb
         ]
+
+    def delete_input_when(self, f):
+        df = self._data_frame.copy()
+        df['f_res'] = df.apply(f, axis=1)
+        input_to_del = df.groupby('input')['f_res'].aggregate(all)
+
+        df = self._data_frame
+        df = df[~df['input'].isin(input_to_del[input_to_del].index)]
+
+        return self.build_data_frame(df, self._name)
 
     def build_data_frame(self, df, name: str = None):
         """

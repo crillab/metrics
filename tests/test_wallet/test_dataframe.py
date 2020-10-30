@@ -103,6 +103,10 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
         df = self.campaign_df.sub_data_frame('experiment_ware', {'CHS', 'WDegCAxCD'}).data_frame
         self.assertEqual(1000, len(df))
 
+    def test_sub_experiment_ware(self):
+        df = self.campaign_df.delete_input_when(lambda x: x['cpu_time'] < 100)
+        self.assertEqual(182, len(df.inputs))
+
     def test_sub_input(self):
         df = self.campaign_df.sub_data_frame('input',
             {'/home/cril/wattez/XCSP17/RenaultMod/RenaultMod-m1-s1/RenaultMod-18.xml.lzma'}).data_frame

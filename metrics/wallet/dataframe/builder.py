@@ -119,6 +119,9 @@ class Analysis:
             Analysis(campaign_df=cdf) for cdf in self._campaign_df.groupby(column)
         ]
 
+    def delete_input_when(self, f):
+        return Analysis(campaign_df=self._campaign_df.delete_input_when(f))
+
     def get_cactus_plot(self, dynamic: bool = False, **kwargs: dict):
         return (CactusPlotly(self._campaign_df, **kwargs) if dynamic else CactusMPL(self._campaign_df, **kwargs)).get_figure()
 
