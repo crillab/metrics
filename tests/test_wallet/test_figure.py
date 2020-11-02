@@ -162,6 +162,10 @@ class MyTestCase(unittest.TestCase):
         analysis = Analysis(campaign=self.campaign)
         self.assertTrue(len(set(analysis.get_stat_table()['common count'])) <= 1)
 
+    def test_stat_table_common(self):
+        analysis = Analysis(campaign=self.campaign)
+        self.assertEqual(500, len(analysis.get_pivot_table(pivot_val='cpu_time')))
+
 
     def test_static_cactus_and_cdf(self):
         color_map = {
