@@ -95,7 +95,7 @@ class Analysis:
         """
         return Analysis(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
 
-    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew') -> Analysis:
+    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> Analysis:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -107,7 +107,7 @@ class Analysis:
         @param vbew_name: name of the vbew.
         @return: a new instance of Analysis with the new vbew.
         """
-        return Analysis(campaign_df=self._campaign_df.add_vbew(xp_ware_set, opti_col, minimize, vbew_name))
+        return Analysis(campaign_df=self._campaign_df.add_vbew(xp_ware_set, opti_col, minimize, vbew_name, diff))
 
     def groupby(self, column) -> List[Analysis]:
         """
