@@ -16,10 +16,7 @@ data:
     regex: ProblemFile-(.*)_(bs[012]{1})_(.*)
     experiment_ware: 2
     input_group: 1
-  raw-data:
-    - log-data: cpu_time
-      regex: <global.*cpu="(\d+\.\d+)"
-    - log-data: mem
-      regex: <global.*mem="(\d+M\d+)"
-    - log-data: result
-      pattern: Stop="{word}"
+  mapping:
+    cpu_time: resolutions.resolution.solver.global.cpu
+    mem: resolutions.resolution.solver.global.mem
+    result: resolutions.resolution.solver.global.Stop

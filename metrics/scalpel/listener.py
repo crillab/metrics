@@ -31,6 +31,7 @@ a campaign is being parsed, so as to build its representation.
 
 
 from __future__ import annotations
+
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Union
 
@@ -135,7 +136,7 @@ class AbstractCampaignParserListenerState:
         :param identifier: The identifier of the element to create if needed.
         :param all_values: The values that has been read about the element.
         """
-        raise NotImplementedError('Method "_create_if_missing" is abstract!')
+        raise NotImplementedError('Method "_create_if_missing()" is abstract!')
 
 
 class DefaultCampaignParserListenerState(AbstractCampaignParserListenerState):
@@ -177,7 +178,7 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         campaign_builder = self._listener.get_campaign_builder()
         if key == EXPERIMENT_XP_WARE:
             self._create_experiment_ware_if_missing(campaign_builder, identifier, all_values)
-        if key == EXPERIMENT_INPUT:
+        elif key == EXPERIMENT_INPUT:
             self._create_input_if_missing(campaign_builder, identifier, all_values)
 
     def _create_experiment_ware_if_missing(self, campaign_builder: CampaignBuilder,
@@ -190,9 +191,17 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         :param name: The name of the experiment-ware to create if needed.
         :param all_values: The values that has been read about the experiment-ware.
         """
-        if not campaign_builder.has_experiment_ware_with_name(name):
-            xp_ware_builder = campaign_builder.add_experiment_ware_builder()
-            self._build_on_the_fly(xp_ware_builder, XP_WARE_NAME, name, all_values)
+        # If the name has been read and corresponds to an existing experiment-ware, there is nothing to do.
+        if XP_WARE_NAME in all_values and campaign_builder.has_experiment_ware_with_name(all_values[XP_WARE_NAME]):
+            return
+
+        # If the inferred name corresponds to an existing experiment-ware, there is nothing to do.
+        if campaign_builder.has_experiment_ware_with_name(name):
+            return
+
+        # This is the first time we read this experiment-ware: we need to create it on the fly.
+        xp_ware_builder = campaign_builder.add_experiment_ware_builder()
+        self._build_on_the_fly(xp_ware_builder, XP_WARE_NAME, name, all_values)
 
     def _create_input_if_missing(self, campaign_builder: CampaignBuilder,
                                  path: str, all_values: Dict[str, str]) -> None:
@@ -204,10 +213,18 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         :param path: The path of the input to create if needed.
         :param all_values: The values that has been read about the input.
         """
-        if not campaign_builder.has_input_with_path(path):
-            input_set_builder = self._listener.get_input_set_builder('auto_name')
-            input_builder = input_set_builder.add_input_builder()
-            self._build_on_the_fly(input_builder, INPUT_PATH, path, all_values)
+        # If the path has been read and corresponds to an existing input, there is nothing to do.
+        if INPUT_PATH in all_values and campaign_builder.has_input_with_path(all_values[INPUT_PATH]):
+            return
+
+        # If the inferred path corresponds to an existing input, there is nothing to do.
+        if campaign_builder.has_input_with_path(path):
+            return
+
+        # This is the first time we read this input: we need to create it on the fly.
+        input_set_builder = self._listener.get_input_set_builder('auto_name')
+        input_builder = input_set_builder.add_input_builder()
+        self._build_on_the_fly(input_builder, INPUT_PATH, path, all_values)
 
     @staticmethod
     def _build_on_the_fly(builder: ModelBuilder, element_key: str, element_id: str,

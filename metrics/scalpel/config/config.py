@@ -1414,12 +1414,19 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         Reads the experiment-wares that are considered in the campaign being
         parsed by Scalpel.
         """
-
         experiment_wares = self._dict_config.get('experiment-wares')
-        if experiment_wares is not None:
+        if not experiment_wares:
+            return
+        elif isinstance(experiment_wares[0], str):
             for xp_ware in experiment_wares:
                 self._listener.start_experiment_ware()
                 self._listener.log_data(XP_WARE_NAME, xp_ware)
+                self._listener.end_experiment_ware()
+        elif isinstance(experiment_wares[0], dict):
+            for xp_ware in experiment_wares:
+                self._listener.start_experiment_ware()
+                for key, value in xp_ware.items():
+                    self._listener.log_data(key, value)
                 self._listener.end_experiment_ware()
 
     def read_input_set(self) -> None:
@@ -1496,7 +1503,13 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: Return the separator
         """
         sep = self._get('source').get('separator')
-        return sep if sep is not None else ','
+        if sep is not None:
+            return sep
+        if self._format == CampaignFormat.CSV2:
+            return ';'
+        if self._format == CampaignFormat.TSV:
+            return '\t'
+        return ','
 
     def _get_hierarchy_depth(self) -> Optional[int]:
         """

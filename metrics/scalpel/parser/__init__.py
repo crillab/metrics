@@ -29,53 +29,45 @@ This package provides the modules allowing to parse files so as to retrieve
 the experimental data collected during a campaign.
 """
 
+
 from pydoc import locate
 
 from metrics.scalpel import CampaignParserListener
-from metrics.scalpel.config import ScalpelConfiguration, CampaignFormat
-from metrics.scalpel.config.config import CsvConfiguration
-from metrics.scalpel.parser.campaign import CampaignParser, \
-    CsvCampaignParser, EvaluationCampaignParser, \
-    FlatDirectoryCampaignParser, DeepDirectoryCampaignParser, MultipleFilesCampaignParser
+from metrics.scalpel.config import CampaignFormat, ScalpelConfiguration
+from metrics.scalpel.parser.campaign import *
 
 
-def create_parser(config: ScalpelConfiguration,
-                  listener: CampaignParserListener) -> CampaignParser:
+def create_parser(configuration: ScalpelConfiguration, listener: CampaignParserListener) -> CampaignParser:
     """
     Creates the most appropriate parser to use to parse the campaign described
     in the given configuration.
 
-    :param config: The configuration describing the campaign to parse.
+    :param configuration: The configuration describing the campaign to parse.
     :param listener: The listener to notify while parsing.
 
     :return: The parser to use to parse the campaign.
     """
     # If the user has written their own parser, this parser is used.
-    custom_parser = config.get_custom_parser()
+    custom_parser = configuration.get_custom_parser()
     if custom_parser is not None:
-        return locate(custom_parser)(config, listener)
+        return locate(custom_parser)(configuration, listener)
 
     # Otherwise, a default parser is chosen w.r.t. the campaign's format.
-    campaign_format = config.get_format()
+    campaign_format = configuration.get_format()
 
-    if campaign_format == CampaignFormat.CSV:
-        return CsvCampaignParser(listener, config.get_csv_configuration(), file_name_meta=config.get_file_name_meta())
-
-    if campaign_format == CampaignFormat.CSV2:
-        return CsvCampaignParser(listener, CsvConfiguration(';'), file_name_meta=config.get_file_name_meta())
-
-    if campaign_format == CampaignFormat.TSV:
-        return CsvCampaignParser(listener, CsvConfiguration('\t'), file_name_meta=config.get_file_name_meta())
+    if campaign_format in (CampaignFormat.CSV, CampaignFormat.CSV2, CampaignFormat.TSV):
+        return CsvCampaignParser(listener, configuration.get_csv_configuration(), configuration.get_file_name_meta())
 
     if campaign_format == CampaignFormat.EVALUATION:
-        return EvaluationCampaignParser(listener)
+        return EvaluationCampaignParser(listener, configuration.get_file_name_meta())
 
     if campaign_format == CampaignFormat.FLAT_LOG_DIRECTORY:
-        return FlatDirectoryCampaignParser(config, listener)
+        return DynamicHierarchyCampaignParser(configuration, listener, SingleFileExplorationStrategy(listener, configuration))
+
+    if campaign_format == CampaignFormat.FLAT_LOG_DIRECTORY_MULTIPLE_FILES:
+        return DynamicHierarchyCampaignParser(configuration, listener, NameBasedFileExplorationStrategy(listener, configuration))
 
     if campaign_format == CampaignFormat.DEEP_LOG_DIRECTORY:
-        return DeepDirectoryCampaignParser(config, listener)
-    if campaign_format == CampaignFormat.FLAT_LOG_DIRECTORY_MULTIPLE_FILES:
-        return MultipleFilesCampaignParser(config, listener)
+        return DynamicHierarchyCampaignParser(configuration, listener, AllFilesExplorationStrategy(listener, configuration))
 
     raise ValueError(f'Unrecognized input format: {campaign_format}')

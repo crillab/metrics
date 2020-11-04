@@ -120,4 +120,5 @@ class OutputFormat(FormatEnum):
     CSV2 = 'csv2', 'csv-2'
     TSV = 'tsv', 'table'
     JSON = 'json'
+    XML = 'xml'
     RAW_LOG = 'out', 'log'

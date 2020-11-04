@@ -33,6 +33,7 @@ extract the data they contain.
 
 from json import load as load_json
 from typing import Any, Optional, TextIO
+from xml.etree.ElementTree import Element, parse as load_xml
 
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration
@@ -87,14 +88,14 @@ class CsvCampaignOutputParser(CampaignOutputParser):
     produced by an experiment-ware during an experiment.
     """
 
-    def __init__(self, listener: CampaignParserListener,
-                 file: str,
+    def __init__(self, listener: CampaignParserListener, file: str,
                  configuration: CsvConfiguration = CsvConfiguration()) -> None:
         """
         Creates a new CsvCampaignOutputParser.
 
         :param listener: The listener to notify while parsing.
         :param file: The path of the file to parse.
+        :param configuration: The configuration of the CSV file to parse.
         """
         super().__init__(listener, file)
         self._configuration = configuration
@@ -111,10 +112,10 @@ class CsvCampaignOutputParser(CampaignOutputParser):
                 self.log_data(key, value)
 
 
-class JsonCampaignOutputParser(CampaignOutputParser):
+class MarkupCampaignOutputParser(CampaignOutputParser):
     """
-    The JsonCampaignOutputParser is a parser that reads the output of an
-    experiment from a JSON file produced by an experiment-ware.
+    The MarkupCampaignOutputParser is the parent class of the parsers
+    that parse campaign outputs written using a markup language.
     """
 
     def _internal_parse(self, stream: TextIO) -> None:
@@ -123,46 +124,27 @@ class JsonCampaignOutputParser(CampaignOutputParser):
 
         :param stream: The stream to read.
         """
-        self._read(load_json(stream))
+        self._decode(self._load_markup(stream))
 
-    def _read(self, json: Any, prefix: Optional[str] = None) -> None:
+    def _load_markup(self, stream: TextIO) -> Any:
         """
-        Reads data from a (JSON) object by recursively exploring it.
+        Loads data from a stream written in a markup language.
 
-        :param json: The JSON object to explore.
-        :param prefix: The prefix for the fields in the JSON object.
+        :param stream: The stream to load data from.
+
+        :return: An object wrapping the content of the stream.
         """
-        if isinstance(json, list):
-            self._read_array(json, prefix)
+        raise NotImplementedError('Method "_load_markup()" is abstract!')
 
-        elif isinstance(json, dict):
-            self._read_object(json, prefix)
-
-        else:
-            self.log_data(prefix, json)
-
-    def _read_object(self, obj: dict, prefix: Optional[str]) -> None:
+    def _decode(self, obj: Any, prefix: Optional[str] = None) -> None:
         """
-        Explores the given JSON object, and notifies the listener during
-        the exploration.
+        Decodes an object wrapping the content of a stream encoded in a
+        markup language to extract campaign data.
 
-        :param obj: The JSON object to explore.
-        :param prefix: The prefix for the fields in the JSON object.
+        :param obj: The object to decode.
+        :param prefix: The prefix for the fields in the object.
         """
-        for key, value in obj.items():
-            new_prefix = JsonCampaignOutputParser._create_prefix(prefix, key)
-            self._read(value, new_prefix)
-
-    def _read_array(self, array: list, field: Optional[str]) -> None:
-        """
-        Explores the given JSON array, and notifies the listener during
-        the exploration.
-
-        :param array: The JSON array to explore.
-        :param field: The name for the objects in the JSON array.
-        """
-        for elt in array:
-            self._read(elt, field)
+        raise NotImplementedError('Method "_decode()" is abstract!')
 
     @staticmethod
     def _create_prefix(prefix: Optional[str], field: Any) -> str:
@@ -177,6 +159,99 @@ class JsonCampaignOutputParser(CampaignOutputParser):
         return str(field) if prefix is None else f'{prefix}.{field}'
 
 
+class JsonCampaignOutputParser(MarkupCampaignOutputParser):
+    """
+    The JsonCampaignOutputParser is a parser that reads the output of an
+    experiment from a JSON file produced by an experiment-ware.
+    """
+
+    def _load_markup(self, stream: TextIO) -> Any:
+        """
+        Loads data from a stream written in JSON.
+
+        :param stream: The stream to load data from.
+
+        :return: An object wrapping the content of the stream.
+        """
+        return load_json(stream)
+
+    def _decode(self, json: Any, prefix: Optional[str] = None) -> None:
+        """
+        Decodes an object wrapping the content of a JSON stream to extract
+        campaign data.
+
+        :param json: The object to decode.
+        :param prefix: The prefix for the fields in the object.
+        """
+        if isinstance(json, list):
+            self._decode_array(json, prefix)
+
+        elif isinstance(json, dict):
+            self._decode_object(json, prefix)
+
+        else:
+            self.log_data(prefix, json)
+
+    def _decode_array(self, array: list, field: Optional[str]) -> None:
+        """
+        Explores the given JSON array, and notifies the listener during
+        the exploration.
+
+        :param array: The JSON array to explore.
+        :param field: The name for the objects in the JSON array.
+        """
+        for elt in array:
+            self._decode(elt, field)
+
+    def _decode_object(self, obj: dict, prefix: Optional[str]) -> None:
+        """
+        Explores the given JSON object, and notifies the listener during
+        the exploration.
+
+        :param obj: The JSON object to explore.
+        :param prefix: The prefix for the fields in the JSON object.
+        """
+        for key, value in obj.items():
+            new_prefix = self._create_prefix(prefix, key)
+            self._decode(value, new_prefix)
+
+
+class XmlCampaignOutputParser(MarkupCampaignOutputParser):
+    """
+    The XmlCampaignOutputParser is a parser that reads the output of an
+    experiment from an XML file produced by an experiment-ware.
+    """
+
+    def _load_markup(self, stream: TextIO) -> Element:
+        """
+        Loads data from a stream written in XML.
+
+        :param stream: The stream to load data from.
+
+        :return: An object wrapping the content of the stream.
+        """
+        return load_xml(stream).getroot()
+
+    def _decode(self, xml: Element, prefix: Optional[str] = None) -> None:
+        """
+        Decodes an object wrapping the content of an XML stream to extract
+        campaign data.
+
+        :param xml: The object to decode.
+        :param prefix: The prefix for the fields in the object.
+        """
+        name = self._create_prefix(prefix, xml.tag)
+
+        if xml.text:
+            self.log_data(name, xml.text)
+
+        for key, value in xml.attrib.items():
+            self.log_data(self._create_prefix(name, key), value)
+
+        for child in xml:
+            self._decode(child, name)
+
+
 class RawCampaignOutputParser(CampaignOutputParser):
     """
     The RawCampaignOutputParser is a parser that reads the raw output of an
@@ -185,19 +260,19 @@ class RawCampaignOutputParser(CampaignOutputParser):
 
     def __init__(self, configuration: ScalpelConfiguration,
                  listener: CampaignParserListener,
-                 file: str, file_path: str) -> None:
+                 file_path: str, file_name: str) -> None:
         """
         Creates a new RawCampaignOutputParser.
 
         :param configuration: The configuration describing how to extract
                data from the output file.
         :param listener: The listener to notify while parsing.
-        :param file: The name of the file to parse.
         :param file_path: The path of the file to parse.
+        :param file_name: The name of the file to parse.
         """
         super().__init__(listener, file_path)
         self._configuration = configuration
-        self._file_name = file
+        self._file_name = file_name
 
     def _internal_parse(self, stream: TextIO) -> None:
         """
@@ -215,10 +290,15 @@ class RawCampaignOutputParser(CampaignOutputParser):
         :param line: The line to read.
         """
         for log_data in self._configuration.get_data_in(self._file_name):
+            # Extracting relevant data from the line.
             names = log_data.get_names()
             values = log_data.extract_value_from(line)
+
+            # If there were no data in the line, there is nothing to do.
             if len(values) == 0:
                 return
+
+            # Unpacking and logging the read data.
             if len(names) == len(values):
                 for name, value in zip(names, values):
                     self.log_data(name, value)
