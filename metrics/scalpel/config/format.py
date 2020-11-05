@@ -94,8 +94,8 @@ class InputSetFormat(FormatEnum):
 
 class FileFormatEnum(FormatEnum):
     """
-    The FileFormatEnum is the parent class of the enumerations that represent
-    file formats that are supported by Scalpel.
+    The FileFormatEnum defines an enumeration type for representing file
+    formats that are supported by Scalpel.
     """
 
     @classmethod
@@ -103,7 +103,7 @@ class FileFormatEnum(FormatEnum):
         """
         Guesses the format of the given file, based on its extension.
 
-        :param file: The file to guess the format of.
+        :param file: The name of the file to guess the format of.
 
         :return: The format of the file, or None if it could not be guessed.
         """
@@ -122,7 +122,6 @@ class CampaignFormat(FileFormatEnum):
     TSV = 'tsv', 'table'
     EVALUATION = 'evaluation', 'or'
     JSON = 'json'
-    RAW_LOG = 'raw', 'raw-log'
     FLAT_LOG_DIRECTORY = 'flat-dir'
     FLAT_LOG_DIRECTORY_MULTIPLE_FILES = 'flat-dir-mult', 'flat-dir-multi', 'flat-dir-multiple-files'
     DEEP_LOG_DIRECTORY = 'deep-dir'
