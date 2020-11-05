@@ -64,6 +64,17 @@ class CampaignDFFilter(Enum):
         return self._df_filter(campaign, data_frame)
 
 
+def vbew_agg(df, opti_col, minimize, diff):
+    df = df.sort_values(opti_col, ascending=minimize)
+
+    df['contributor'] = df['experiment_ware'].values[0]
+
+    i1 = df[opti_col].values[0]
+    i2 = df[opti_col].values[1]
+
+    return df.iloc[0] if (i2 - i1) / i1 >= diff else None
+
+
 class CampaignDataFrame:
     """
     This object encapsulate a dataframe (pandas DataFrame) that corresponds to a campaign.
@@ -173,7 +184,7 @@ class CampaignDataFrame:
         df = self._data_frame[self._data_frame[column].isin(sub_set)]
         return self.build_data_frame(df)
 
-    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew') -> CampaignDataFrame:
+    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> CampaignDataFrame:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -188,8 +199,11 @@ class CampaignDataFrame:
         df = self._data_frame
 
         df_vbs = df[df[EXPERIMENT_XP_WARE].isin(xp_ware_set)]
-        df_vbs = df_vbs.sort_values(by=opti_col, ascending=minimize).drop_duplicates([EXPERIMENT_INPUT])\
+
+        df_vbs = df_vbs.groupby(EXPERIMENT_INPUT).apply(lambda x: vbew_agg(x, opti_col, minimize, diff)).dropna(how='all')\
             .assign(experiment_ware=lambda x: vbew_name)
+
+        df = df[df[EXPERIMENT_INPUT].isin(df_vbs[EXPERIMENT_INPUT])]
         df = pd.concat([df, df_vbs], ignore_index=True)
 
         self._vbew_names.add(vbew_name)
