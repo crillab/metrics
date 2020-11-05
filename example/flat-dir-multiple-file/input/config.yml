@@ -13,7 +13,7 @@ source:
   format: flat-dir-mult
 data:
   file-name-meta:
-    regex: ([-a-z]+)_(.*)
+    regex: ([-a-z]+)_(.*).err
     experiment_ware: 1
     input_group: 2
   raw-data:

@@ -92,7 +92,26 @@ class InputSetFormat(FormatEnum):
     HIERARCHY = 'hierarchy'
 
 
-class CampaignFormat(FormatEnum):
+class FileFormatEnum(FormatEnum):
+    """
+    The FileFormatEnum is the parent class of the enumerations that represent
+    file formats that are supported by Scalpel.
+    """
+
+    @classmethod
+    def guess_format(cls, file: str) -> Optional[FileFormatEnum]:
+        """
+        Guesses the format of the given file, based on its extension.
+
+        :param file: The file to guess the format of.
+
+        :return: The format of the file, or None if it could not be guessed.
+        """
+        index = file.rindex('.')
+        return cls.value_of(file[index + 1:])
+
+
+class CampaignFormat(FileFormatEnum):
     """
     The CampaignFormat defines the different formats that can be parsed by
     Scalpel to retrieve the data about a campaign.
@@ -109,7 +128,7 @@ class CampaignFormat(FormatEnum):
     DEEP_LOG_DIRECTORY = 'deep-dir'
 
 
-class OutputFormat(FormatEnum):
+class OutputFormat(FileFormatEnum):
     """
     The OutputFormat defines the different formats that can be parsed by
     Scalpel to retrieve the data about an experiment from the experiment-ware's

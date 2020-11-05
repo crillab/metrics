@@ -43,7 +43,7 @@ from yaml import safe_load as load_yaml
 
 from metrics.core.constants import *
 from metrics.scalpel.config.filters import create_filter
-from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
+from metrics.scalpel.config.format import CampaignFormat, InputSetFormat, OutputFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex, \
@@ -254,6 +254,16 @@ class ScalpelConfiguration:
 
     def get_is_success(self):
         return self._is_success
+
+    def get_output_format(self, file: str) -> Tuple[OutputFormat, Any]:
+        fmt = OutputFormat.guess_format(file)
+        if fmt == OutputFormat.CSV:
+            return fmt, CsvConfiguration()
+        if fmt == OutputFormat.CSV2:
+            return fmt, CsvConfiguration(';')
+        if fmt == OutputFormat.TSV:
+            return fmt, CsvConfiguration('\t')
+        return fmt, None
 
 
 class ConfigurationIterator:
@@ -660,6 +670,15 @@ class FileNameMetaConfiguration:
             raise ValueError('A pattern or regex is missing!')
 
         return LogData(names, pattern)
+
+    def extract_from(self, file: str) -> Dict[str, str]:
+        log_data = self.get_log_data()
+        extracted_data = log_data.extract_value_from(file)
+        file_name_data = {}
+        if extracted_data is not None:
+            for name, value in zip(log_data.get_names(), extracted_data):
+                file_name_data[name] = value
+        return file_name_data
 
 
 class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):

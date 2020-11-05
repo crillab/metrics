@@ -56,18 +56,18 @@ def create_parser(configuration: ScalpelConfiguration, listener: CampaignParserL
     campaign_format = configuration.get_format()
 
     if campaign_format in (CampaignFormat.CSV, CampaignFormat.CSV2, CampaignFormat.TSV):
-        return CsvCampaignParser(listener, configuration.get_csv_configuration(), configuration.get_file_name_meta())
+        return CsvCampaignParser(listener, configuration.get_file_name_meta(), configuration.get_csv_configuration())
 
     if campaign_format == CampaignFormat.EVALUATION:
         return EvaluationCampaignParser(listener, configuration.get_file_name_meta())
 
     if campaign_format == CampaignFormat.FLAT_LOG_DIRECTORY:
-        return DynamicHierarchyCampaignParser(configuration, listener, SingleFileExplorationStrategy(listener, configuration))
+        return DirectoryCampaignParser(SingleFileExplorationStrategy(listener, configuration))
 
     if campaign_format == CampaignFormat.FLAT_LOG_DIRECTORY_MULTIPLE_FILES:
-        return DynamicHierarchyCampaignParser(configuration, listener, NameBasedFileExplorationStrategy(listener, configuration))
+        return DirectoryCampaignParser(NameBasedFileExplorationStrategy(listener, configuration))
 
     if campaign_format == CampaignFormat.DEEP_LOG_DIRECTORY:
-        return DynamicHierarchyCampaignParser(configuration, listener, AllFilesExplorationStrategy(listener, configuration))
+        return DirectoryCampaignParser(AllFilesExplorationStrategy(listener, configuration))
 
     raise ValueError(f'Unrecognized input format: {campaign_format}')
