@@ -31,6 +31,7 @@ types of files.
 
 
 from typing import Callable, Iterable, List, TextIO, Tuple
+from warnings import warn
 
 from metrics.scalpel.config.config import CsvConfiguration
 
@@ -92,7 +93,7 @@ class CsvReader:
             if len(line) == len(self._keys):
                 yield zip(self._keys, line)
             else:
-                print(f'WARNING: Line #{index} does not match header: {line}')
+                warn(f'Line #{index} does not match header: {line}')
 
     def _read_lines(self) -> Iterable[Tuple[int, List[str]]]:
         """
