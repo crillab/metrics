@@ -34,6 +34,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Union
+from warnings import warn
 
 from metrics.core.builder import CampaignBuilder
 from metrics.core.builder.builder import ModelBuilder, InputSetBuilder
@@ -123,7 +124,7 @@ class AbstractCampaignParserListenerState:
                          in the same order as that specified by the user.
         :param read_values: The values of the data to set.
         """
-        identifier = ' '.join('' if read_values[v] is None else read_values[v] for v in sub_keys)
+        identifier = ' '.join('' if read_values.get(v) is None else read_values.get(v) for v in sub_keys)
         self._create_if_missing(key, identifier, read_values)
         builder[key] = identifier
 
@@ -175,13 +176,14 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         :param identifier: The identifier of the element to create if needed.
         :param all_values: The values that has been read about the element.
         """
-        campaign_builder = self._listener.get_campaign_builder()
+        builder = self._listener.get_campaign_builder()
         if key == EXPERIMENT_XP_WARE:
-            self._create_experiment_ware_if_missing(campaign_builder, identifier, all_values)
+            InExperimentCampaignParserListenerState._create_experiment_ware_if_missing(builder, identifier, all_values)
         elif key == EXPERIMENT_INPUT:
-            self._create_input_if_missing(campaign_builder, identifier, all_values)
+            self._create_input_if_missing(builder, identifier, all_values)
 
-    def _create_experiment_ware_if_missing(self, campaign_builder: CampaignBuilder,
+    @staticmethod
+    def _create_experiment_ware_if_missing(campaign_builder: CampaignBuilder,
                                            name: str, all_values: Dict[str, str]) -> None:
         """
         Creates an experiment-ware if no experiment-ware with the given name
@@ -201,7 +203,7 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
 
         # This is the first time we read this experiment-ware: we need to create it on the fly.
         xp_ware_builder = campaign_builder.add_experiment_ware_builder()
-        self._build_on_the_fly(xp_ware_builder, XP_WARE_NAME, name, all_values)
+        InExperimentCampaignParserListenerState._build_on_the_fly(xp_ware_builder, XP_WARE_NAME, name, all_values)
 
     def _create_input_if_missing(self, campaign_builder: CampaignBuilder,
                                  path: str, all_values: Dict[str, str]) -> None:
@@ -224,7 +226,7 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         # This is the first time we read this input: we need to create it on the fly.
         input_set_builder = self._listener.get_input_set_builder('auto_name')
         input_builder = input_set_builder.add_input_builder()
-        self._build_on_the_fly(input_builder, INPUT_PATH, path, all_values)
+        InExperimentCampaignParserListenerState._build_on_the_fly(input_builder, INPUT_PATH, path, all_values)
 
     @staticmethod
     def _build_on_the_fly(builder: ModelBuilder, element_key: str, element_id: str,
@@ -299,8 +301,7 @@ class CampaignParserListener:
         :raises ValueError: If some keys are still pending for the current
                             campaign.
         """
-        if len(self._pending_keys) > 0:
-            raise ValueError('Cannot end current campaign: some values are still pending!')
+        self._commit_pending_keys()
         self._current_builder = None
 
     def start_experiment_ware(self) -> None:
@@ -314,6 +315,7 @@ class CampaignParserListener:
         Notifies this listener that the current experiment-ware has been
         fully parsed.
         """
+        self._commit_pending_keys()
         self._current_builder = self._campaign_builder
 
     def start_input_set(self) -> None:
@@ -343,8 +345,9 @@ class CampaignParserListener:
         """
         Notifies this listener that the current input set has been fully parsed.
         """
-        self._current_builder = self._campaign_builder
+        self._commit_pending_keys()
         self._input_set_builder = None
+        self._current_builder = self._campaign_builder
 
     def start_input(self) -> None:
         """
@@ -356,6 +359,7 @@ class CampaignParserListener:
         """
         Notifies this listener that the current input has been fully parsed.
         """
+        self._commit_pending_keys()
         self._current_builder = self._input_set_builder
 
     def start_experiment(self) -> None:
@@ -370,6 +374,7 @@ class CampaignParserListener:
         Notifies this listener that the current experiment has been
         fully parsed.
         """
+        self._commit_pending_keys()
         self._current_builder = self._campaign_builder
         self._state = DefaultCampaignParserListenerState(self)
 
@@ -386,9 +391,35 @@ class CampaignParserListener:
         read_values = self._pending_keys[scalpel_key]
         read_values[key] = str(value)
         if len(read_values) == nb:
-            sub_keys = self._key_mapping.get_sorted_keys(scalpel_key)
-            self._state.log_data(self._current_builder, scalpel_key, sub_keys, read_values)
+            self._commit_key(scalpel_key, read_values)
             del self._pending_keys[scalpel_key]
+
+    def _commit_key(self, scalpel_key: str, read_values: Dict[str]) -> None:
+        """
+        Commits the values read for the given key.
+
+        :param scalpel_key: The key to commit.
+        :param read_values: The values that have been read for the key.
+        """
+        sub_keys = self._key_mapping.get_sorted_keys(scalpel_key)
+        self._state.log_data(self._current_builder, scalpel_key, sub_keys, read_values)
+
+    def _commit_pending_keys(self) -> None:
+        """
+        Commits the values for the keys that have not been committed yet.
+        If such keys exist, a warning is raised, as it means that values
+        are missing for this key.
+        """
+        # If there is no pending key, everything is fine.
+        if len(self._pending_keys) == 0:
+            return
+
+        # Otherwise, we commit the remaining keys, and warn the user.
+        for key, value in self._pending_keys.items():
+            warn(f'Logging incomplete value for "{key}": {value}')
+            self._commit_key(key, value)
+        self.log_data('incomplete', True)
+        self._pending_keys = defaultdict(dict)
 
     def get_campaign(self) -> Campaign:
         """
