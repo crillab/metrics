@@ -212,7 +212,7 @@ class JsonCampaignOutputParser(MarkupCampaignOutputParser):
         :param prefix: The prefix for the fields in the JSON object.
         """
         for key, value in obj.items():
-            new_prefix = self._create_prefix(prefix, key)
+            new_prefix = MarkupCampaignOutputParser._create_prefix(prefix, key)
             self._decode(value, new_prefix)
 
 
@@ -240,13 +240,13 @@ class XmlCampaignOutputParser(MarkupCampaignOutputParser):
         :param xml: The object to decode.
         :param prefix: The prefix for the fields in the object.
         """
-        name = self._create_prefix(prefix, xml.tag)
+        name = MarkupCampaignOutputParser._create_prefix(prefix, xml.tag)
 
         if xml.text:
             self.log_data(name, xml.text)
 
         for key, value in xml.attrib.items():
-            self.log_data(self._create_prefix(name, key), value)
+            self.log_data(MarkupCampaignOutputParser._create_prefix(name, key), value)
 
         for child in xml:
             self._decode(child, name)

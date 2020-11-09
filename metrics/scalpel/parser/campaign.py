@@ -432,7 +432,7 @@ class NameBasedFileExplorationStrategy(FileExplorationStrategy):
         :param file_name: The name of the file to parse.
         """
         if self._configuration.is_to_be_parsed(file_name):
-            self._file_names.add(self._file_name_without_extension(file_name))
+            self._file_names.add(NameBasedFileExplorationStrategy._file_name_without_extension(file_name))
 
     def exit_directory(self, directory: str) -> None:
         """
