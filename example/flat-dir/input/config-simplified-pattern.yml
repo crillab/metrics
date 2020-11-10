@@ -14,8 +14,9 @@ source:
 data:
   file-name-meta:
     pattern: ProblemFile-{any}_{word}_{any}
-    experiment_ware: 2
-    input_group: 1
+    groups:
+      experiment_ware: 2
+      input: 1
   mapping:
     cpu_time: resolutions.resolution.solver.global.cpu
     mem: resolutions.resolution.solver.global.mem

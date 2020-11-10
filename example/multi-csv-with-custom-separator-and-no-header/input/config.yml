@@ -18,7 +18,8 @@ source:
 data:
   file-name-meta:
     regex: (\w+)\.txt
-    experiment_ware: 1
+    groups:
+      experiment_ware: 1
   mapping:
     input: 0
     result: 1
