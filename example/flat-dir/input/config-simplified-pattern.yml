@@ -10,7 +10,7 @@ setup:
 
 source:
   path: example/flat-dir/input/data2/
-  format: flat-dir
+  format: single-file
 data:
   file-name-meta:
     pattern: ProblemFile-{any}_{word}_{any}

@@ -10,7 +10,7 @@ setup:
 
 source:
   path: example/flat-dir-multiple-files/input/data/
-  format: flat-dir-mult
+  format: multi-files
 data:
   file-name-meta:
     regex: ([-a-z]+)_(.*).err

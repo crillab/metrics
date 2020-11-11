@@ -122,9 +122,9 @@ class CampaignFormat(FileFormatEnum):
     TSV = 'tsv', 'table'
     EVALUATION = 'evaluation', 'or'
     JSON = 'json'
-    FLAT_LOG_DIRECTORY = 'flat-dir'
-    FLAT_LOG_DIRECTORY_MULTIPLE_FILES = 'flat-dir-mult', 'flat-dir-multi', 'flat-dir-multiple-files'
-    DEEP_LOG_DIRECTORY = 'deep-dir'
+    SINGLE_EXPERIMENT_LOG_FILE = 'file', 'log-file', 'one-file', 'one-log-file', 'single-file', 'single-log-file'
+    MULTIPLE_EXPERIMENT_LOG_FILES = 'files', 'log-files', 'multi-files', 'multi-log-files'
+    EXPERIMENT_DIRECTORY = 'dir', 'experiment-dir', 'experiment-directory', 'xp-dir', 'xp-directory'
 
 
 class OutputFormat(FileFormatEnum):

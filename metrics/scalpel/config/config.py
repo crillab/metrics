@@ -1170,8 +1170,8 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         """
         for _, dirs, _ in walk(self._main_file[0]):
             if dirs:
-                return CampaignFormat.DEEP_LOG_DIRECTORY
-        return CampaignFormat.FLAT_LOG_DIRECTORY
+                return CampaignFormat.EXPERIMENT_DIRECTORY
+        return CampaignFormat.SINGLE_EXPERIMENT_LOG_FILE
 
     def _guess_regular_format(self) -> Optional[CampaignFormat]:
         """

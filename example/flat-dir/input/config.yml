@@ -10,7 +10,7 @@ setup:
 
 source:
   path: example/flat-dir/input/data2/
-  format: flat-dir
+  format: one-file
 data:
   file-name-meta:
     regex: ProblemFile-(.*)_(bs[012]{1})_(.*)
