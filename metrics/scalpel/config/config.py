@@ -43,7 +43,7 @@ from yaml import safe_load as load_yaml
 
 from metrics.core.constants import *
 from metrics.scalpel.config.filters import create_filter
-from metrics.scalpel.config.format import CampaignFormat, InputSetFormat
+from metrics.scalpel.config.format import CampaignFormat, InputSetFormat, OutputFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.listener import CampaignParserListener
 from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex, \
@@ -132,8 +132,6 @@ class ScalpelConfiguration:
     def __init__(self, fmt: Optional[CampaignFormat], csv_configuration: CsvConfiguration, main_file: str,
                  data_files: Optional[List[str]],
                  log_datas: Optional[Dict[str, List[LogData]]],
-                 hierarchy_depth: Optional[int],
-                 experiment_ware_depth: Optional[int],
                  custom_parser: Optional[str], file_name_meta: FileNameMetaConfiguration,
                  is_success) -> None:
         """
@@ -157,8 +155,6 @@ class ScalpelConfiguration:
         self._data_files = data_files
         self._log_datas = log_datas
         self._custom_parser = custom_parser
-        self._hierarchy_depth = hierarchy_depth
-        self._experiment_ware_depth = experiment_ware_depth
         self._file_name_meta = file_name_meta
         self._is_success = is_success
 
@@ -229,18 +225,6 @@ class ScalpelConfiguration:
                 return v
         return []
 
-    def get_hierarchy_depth(self):
-        depth = self._hierarchy_depth
-        if depth is None:
-            return 1
-        return int(depth)
-
-    def get_experiment_ware_depth(self):
-        depth = self._experiment_ware_depth
-        if depth is None:
-            return None
-        return int(depth)
-
     def get_custom_parser(self) -> Optional[str]:
         """
         Gives the (completely specified) class of a custom parser to use.
@@ -254,6 +238,16 @@ class ScalpelConfiguration:
 
     def get_is_success(self):
         return self._is_success
+
+    def get_output_format(self, file: str) -> Tuple[OutputFormat, Any]:
+        fmt = OutputFormat.guess_format(file)
+        if fmt == OutputFormat.CSV:
+            return fmt, CsvConfiguration()
+        if fmt == OutputFormat.CSV2:
+            return fmt, CsvConfiguration(';')
+        if fmt == OutputFormat.TSV:
+            return fmt, CsvConfiguration('\t')
+        return fmt, None
 
 
 class ConfigurationIterator:
@@ -573,7 +567,7 @@ class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfigura
 
         :return: The group in the regular expression, if any.
         """
-        groups = self.current().get('group')
+        groups = self.current().get('groups')
         if groups is not None:
             return tuple(groups)
         return None
@@ -608,21 +602,8 @@ class FileNameMetaConfiguration:
         """
         raise NotImplementedError('Method "get_regex_pattern()" is abstract!')
 
-    def get_input_group(self) -> Optional[int]:
-        """
-        Gives the group identifying the input name in the regular expression.
-
-        :return: The group in the regular expression, if any.
-        """
-        raise NotImplementedError('Method "get_regex_group()" is abstract!')
-
-    def get_experiment_ware_group(self) -> Optional[int]:
-        """
-        Gives the group identifying the experiment ware in the regular expression.
-
-        :return: The group in the regular expression, if any.
-        """
-        raise NotImplementedError('Method "get_regex_group()" is abstract!')
+    def get_groups(self) -> Iterable[Tuple[str, int]]:
+        raise NotImplementedError('Method "get_groups()" is abstract!')
 
     def get_log_data(self) -> LogData:
         """
@@ -636,14 +617,9 @@ class FileNameMetaConfiguration:
         # First, we look for a named pattern.
         names = []
         groups = []
-        experiment_ware_group = self.get_experiment_ware_group()
-        input_group = self.get_input_group()
-        if experiment_ware_group is not None:
-            names.append(EXPERIMENT_XP_WARE)
-            groups.append(experiment_ware_group)
-        if input_group is not None:
-            names.append(EXPERIMENT_INPUT)
-            groups.append(input_group)
+        for key, value in self.get_groups():
+            names.append(key)
+            groups.append(value)
 
         pattern = None
         simplified_pattern = self.get_simplified_pattern()
@@ -660,6 +636,15 @@ class FileNameMetaConfiguration:
             raise ValueError('A pattern or regex is missing!')
 
         return LogData(names, pattern)
+
+    def extract_from(self, file: str) -> Dict[str, str]:
+        log_data = self.get_log_data()
+        extracted_data = log_data.extract_value_from(file)
+        file_name_data = {}
+        if extracted_data is not None:
+            for name, value in zip(log_data.get_names(), extracted_data):
+                file_name_data[name] = value
+        return file_name_data
 
 
 class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
@@ -683,7 +668,7 @@ class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
         """
         raise ValueError('Empty raw data configuration!')
 
-    def get_input_group(self) -> Optional[int]:
+    def get_groups(self) -> Iterable[Tuple[str, int]]:
         raise ValueError('Empty raw data configuration!')
 
     def get_experiment_ware_group(self) -> Optional[int]:
@@ -701,11 +686,11 @@ class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryC
     def get_regex_pattern(self) -> Optional[str]:
         return self.get('regex')
 
-    def get_input_group(self) -> Optional[int]:
-        return self.get('input_group')
-
-    def get_experiment_ware_group(self) -> Optional[int]:
-        return self.get('experiment_ware')
+    def get_groups(self) -> Iterable[Tuple[str, int]]:
+        groups = self.get('groups')
+        if groups is None:
+            return []
+        return groups.items()
 
 
 class IScalpelConfigurationBuilder(metaclass=ABCMeta):
@@ -917,26 +902,6 @@ class IScalpelConfigurationBuilder(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _get_hierarchy_depth(self):
-        """
-        Gives the depth of the hierarchy to explore, when the campaign is
-        in the deep log hierarchy format.
-
-        :return: The depth of the hierarchy, if specified.
-        """
-        pass
-
-    @abstractmethod
-    def _get_experiment_ware_depth(self):
-        """
-        Gives the depth of the directory corresponding to the experiment-ware
-        being executed, when the campaign is in the deep log hierarchy format.
-
-        :return: The depth of the experiment-ware directory, if any.
-        """
-        pass
-
-    @abstractmethod
     def _get_custom_parser(self):
         """
         Gives the (completely specified) class of the custom parser to use to parse
@@ -1015,8 +980,6 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         self._main_file = None
         self._format = None
         self._csv_configuration = None
-        self._hierarchy_depth = None
-        self._experiment_ware_depth = None
         self._data_files = None
         self._log_datas = defaultdict(list)
         self._custom_parser = None
@@ -1039,8 +1002,6 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         self.read_data()
         return ScalpelConfiguration(self._format, self._csv_configuration, self._main_file,
                                     self._data_files, self._log_datas,
-                                    self._hierarchy_depth,
-                                    self._experiment_ware_depth,
                                     self._custom_parser, self._file_name_meta,
                                     self._is_success)
 
@@ -1162,8 +1123,6 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         self._main_file = self._get_campaign_path()
         self._format = self._guess_format()
         self._format = self._get_format()
-        self._hierarchy_depth = self._get_hierarchy_depth()
-        self._experiment_ware_depth = self._get_experiment_ware_depth()
         self._custom_parser = self._get_custom_parser()
         self._is_success = self._get_is_success()
         self.read_csv_configuration()
@@ -1211,8 +1170,8 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         """
         for _, dirs, _ in walk(self._main_file[0]):
             if dirs:
-                return CampaignFormat.DEEP_LOG_DIRECTORY
-        return CampaignFormat.FLAT_LOG_DIRECTORY
+                return CampaignFormat.EXPERIMENT_DIRECTORY
+        return CampaignFormat.SINGLE_EXPERIMENT_LOG_FILE
 
     def _guess_regular_format(self) -> Optional[CampaignFormat]:
         """
@@ -1249,24 +1208,6 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         :return: Return the separator
         """
         raise NotImplementedError('Method "_separator()" is abstract!')
-
-    def _get_hierarchy_depth(self) -> Optional[int]:
-        """
-        Gives the depth of the hierarchy to explore, when the campaign is
-        in the deep log hierarchy format.
-
-        :return: The depth of the hierarchy, if specified.
-        """
-        raise NotImplementedError('Method "_get_hierarchy_depth()" is abstract!')
-
-    def _get_experiment_ware_depth(self) -> Optional[int]:
-        """
-        Gives the depth of the directory corresponding to the experiment-ware
-        being executed, when the campaign is in the deep log hierarchy format.
-
-        :return: The depth of the experiment-ware directory, if any.
-        """
-        raise NotImplementedError('Method "_get_experiment_ware_depth()" is abstract!')
 
     def _get_custom_parser(self) -> Optional[str]:
         """
@@ -1414,12 +1355,19 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         Reads the experiment-wares that are considered in the campaign being
         parsed by Scalpel.
         """
-
         experiment_wares = self._dict_config.get('experiment-wares')
-        if experiment_wares is not None:
+        if not experiment_wares:
+            return
+        elif isinstance(experiment_wares[0], str):
             for xp_ware in experiment_wares:
                 self._listener.start_experiment_ware()
                 self._listener.log_data(XP_WARE_NAME, xp_ware)
+                self._listener.end_experiment_ware()
+        elif isinstance(experiment_wares[0], dict):
+            for xp_ware in experiment_wares:
+                self._listener.start_experiment_ware()
+                for key, value in xp_ware.items():
+                    self._listener.log_data(key, value)
                 self._listener.end_experiment_ware()
 
     def read_input_set(self) -> None:
@@ -1496,25 +1444,13 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: Return the separator
         """
         sep = self._get('source').get('separator')
-        return sep if sep is not None else ','
-
-    def _get_hierarchy_depth(self) -> Optional[int]:
-        """
-        Gives the depth of the hierarchy to explore, when the campaign is
-        in the deep log hierarchy format.
-
-        :return: The depth of the hierarchy, if specified.
-        """
-        return self._get('source').get('hierarchy-depth')
-
-    def _get_experiment_ware_depth(self) -> Optional[int]:
-        """
-        Gives the depth of the directory corresponding to the experiment-ware
-        being executed, when the campaign is in the deep log hierarchy format.
-
-        :return: The depth of the experiment-ware directory, if any.
-        """
-        return self._get('source').get('experiment-ware')
+        if sep is not None:
+            return sep
+        if self._format == CampaignFormat.CSV2:
+            return ';'
+        if self._format == CampaignFormat.TSV:
+            return '\t'
+        return ','
 
     def _get_is_success(self):
         expr = self._get('source').get('is-success')

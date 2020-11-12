@@ -130,6 +130,20 @@ class ErrorTable(Table):
         return df[df.n_errors > 0]
 
 
+class PivotTable(Table):
+    """
+    Creation of a table representing the different contributions of each solver.
+    """
+
+    def __init__(self, campaign_df: CampaignDataFrame, pivot_val, **kwargs):
+        super().__init__(campaign_df, **kwargs)
+        self._pivot_val = pivot_val
+
+    def get_data_frame(self):
+        df_solved = self._campaign_df.data_frame
+        return df_solved.pivot(index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=self._pivot_val)
+
+
 class CactusMPL(CactusPlot):
     """
     Creation of a static cactus plot.

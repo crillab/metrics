@@ -92,7 +92,26 @@ class InputSetFormat(FormatEnum):
     HIERARCHY = 'hierarchy'
 
 
-class CampaignFormat(FormatEnum):
+class FileFormatEnum(FormatEnum):
+    """
+    The FileFormatEnum defines an enumeration type for representing file
+    formats that are supported by Scalpel.
+    """
+
+    @classmethod
+    def guess_format(cls, file: str) -> Optional[FileFormatEnum]:
+        """
+        Guesses the format of the given file, based on its extension.
+
+        :param file: The name of the file to guess the format of.
+
+        :return: The format of the file, or None if it could not be guessed.
+        """
+        index = file.rindex('.')
+        return cls.value_of(file[index + 1:])
+
+
+class CampaignFormat(FileFormatEnum):
     """
     The CampaignFormat defines the different formats that can be parsed by
     Scalpel to retrieve the data about a campaign.
@@ -103,13 +122,12 @@ class CampaignFormat(FormatEnum):
     TSV = 'tsv', 'table'
     EVALUATION = 'evaluation', 'or'
     JSON = 'json'
-    RAW_LOG = 'raw', 'raw-log'
-    FLAT_LOG_DIRECTORY = 'flat-dir'
-    FLAT_LOG_DIRECTORY_MULTIPLE_FILES = 'flat-dir-mult', 'flat-dir-multi', 'flat-dir-multiple-files'
-    DEEP_LOG_DIRECTORY = 'deep-dir'
+    SINGLE_EXPERIMENT_LOG_FILE = 'file', 'log-file', 'one-file', 'one-log-file', 'single-file', 'single-log-file'
+    MULTIPLE_EXPERIMENT_LOG_FILES = 'files', 'log-files', 'multi-files', 'multi-log-files'
+    EXPERIMENT_DIRECTORY = 'dir', 'experiment-dir', 'experiment-directory', 'xp-dir', 'xp-directory'
 
 
-class OutputFormat(FormatEnum):
+class OutputFormat(FileFormatEnum):
     """
     The OutputFormat defines the different formats that can be parsed by
     Scalpel to retrieve the data about an experiment from the experiment-ware's
@@ -120,4 +138,5 @@ class OutputFormat(FormatEnum):
     CSV2 = 'csv2', 'csv-2'
     TSV = 'tsv', 'table'
     JSON = 'json'
+    XML = 'xml'
     RAW_LOG = 'out', 'log'

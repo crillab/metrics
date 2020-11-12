@@ -116,7 +116,7 @@ class Plot(Figure):
 
     def __init__(self, campaign_df: CampaignDataFrame, figsize=(7, 5), font_name='DejaVu Sans', font_size=12,
                  font_color='#000000', logx: bool = False, logy: bool = False, latex_writing: bool = False,
-                 x_min: int = 0, y_min: int = 0, x_max: int = -1, y_max: int = -1, **kwargs):
+                 x_min: int = 0, y_min: int = 0, x_max: int = -1, y_max: int = -1, x_axis_name=None, y_axis_name=None, title=None, **kwargs):
         super().__init__(campaign_df, **kwargs)
 
         self._font_name = font_name
@@ -130,6 +130,9 @@ class Plot(Figure):
         self._x_max = x_max
         self._y_max = y_max
         self._figsize = figsize
+        self._x_axis_name = x_axis_name
+        self._y_axis_name = y_axis_name
+        self._title = title
 
     def get_x_axis_name(self):
         """
@@ -221,6 +224,7 @@ class CactusPlot(Plot):
         for col in df_cactus.columns:
             df_cactus[col] = df_cactus[col].sort_values().values
         df_cactus = df_cactus.dropna(how='all').reset_index(drop=True)
+        df_cactus.index += 1
         df_cactus = df_cactus[df_cactus.index > self._x_min]
 
         order = list(df_cactus.count().sort_values(ascending=False).index)
@@ -233,21 +237,21 @@ class CactusPlot(Plot):
 
         @return: the x axis name.
         """
-        return 'Number of solved inputs'
+        return self._x_axis_name or 'Number of solved inputs'
 
     def get_y_axis_name(self):
         """
 
         @return: the y axis name.
         """
-        return 'Cumulated time' if self._cumulated else 'Time to solve an input'
+        return self._y_axis_name or ('Cumulated time' if self._cumulated else 'Time to solve an input')
 
     def get_title(self):
         """
 
         @return: the title of the plot.
         """
-        return 'Comparison of experimentwares'
+        return self._title or 'Comparison of experimentwares'
 
 
 class CDFPlot(Plot):
@@ -282,6 +286,7 @@ class CDFPlot(Plot):
         for col in df_cdf.columns:
             df_cdf[col] = df_cdf[col].sort_values().values
         df_cdf = df_cdf.dropna(how='all').reset_index(drop=True)
+        df_cdf.index += 1
 
         order = list(df_cdf.applymap(lambda x: x < self._campaign_df.campaign.timeout).sum().sort_values(ascending=False).index)
         df_cdf = df_cdf[order]
@@ -293,21 +298,21 @@ class CDFPlot(Plot):
 
         @return: the x axis name.
         """
-        return 'Time to solve an input'
+        return self._x_axis_name or 'Time to solve an input'
 
     def get_y_axis_name(self):
         """
 
         @return: the y axis name.
         """
-        return 'Solved inputs'
+        return self._y_axis_name or 'Solved inputs'
 
     def get_title(self):
         """
 
         @return: the title of the plot.
         """
-        return 'Comparison of experimentwares'
+        return self._title or 'Comparison of experimentwares'
 
 
 class ScatterPlot(Plot):
@@ -349,21 +354,21 @@ class ScatterPlot(Plot):
 
         @return: the x axis name.
         """
-        return self._xp_ware_i
+        return self._x_axis_name or self._xp_ware_i
 
     def get_y_axis_name(self):
         """
 
         @return: the y axis name.
         """
-        return self._xp_ware_j
+        return self._y_axis_name or self._xp_ware_j
 
     def get_title(self):
         """
 
         @return: the title of the plot.
         """
-        return f'Comparison of {self._xp_ware_i} and {self._xp_ware_j}'
+        return self._title or f'Comparison of {self._xp_ware_i} and {self._xp_ware_j}'
 
 
 class BoxPlot(Plot):
@@ -389,7 +394,7 @@ class BoxPlot(Plot):
 
         @return: the x axis name.
         """
-        return 'Time to solve an input'
+        return self._x_axis_name or 'Time to solve an input'
 
     def get_y_axis_name(self):
         """
@@ -403,4 +408,4 @@ class BoxPlot(Plot):
 
         @return: the title of the plot.
         """
-        return 'Comparison of experimentwares'
+        return self._title or 'Comparison of experimentwares'

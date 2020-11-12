@@ -5,7 +5,7 @@ import unittest
 
 import jsonpickle.ext.pandas as jsonpickle_pd
 
-from metrics.wallet import import_campaign_data_frame
+from metrics.wallet import import_campaign_data_frame, import_from_api_and_store
 
 jsonpickle_pd.register_handlers()
 
@@ -103,6 +103,10 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
         df = self.campaign_df.sub_data_frame('experiment_ware', {'CHS', 'WDegCAxCD'}).data_frame
         self.assertEqual(1000, len(df))
 
+    def test_sub_experiment_ware(self):
+        df = self.campaign_df.delete_input_when(lambda x: x['cpu_time'] < 100)
+        self.assertEqual(182, len(df.inputs))
+
     def test_sub_input(self):
         df = self.campaign_df.sub_data_frame('input',
             {'/home/cril/wattez/XCSP17/RenaultMod/RenaultMod-m1-s1/RenaultMod-18.xml.lzma'}).data_frame
@@ -110,7 +114,13 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
 
     def test_add_vbs(self):
         df = self.campaign_df.add_vbew({'CHS', 'WDegCAxCD'}, 'cpu_time').data_frame
+        self.assertEqual(2.138, df[(df['input'] == '/home/cril/wattez/XCSP17/SuperSolutions/SuperSolutions-Taillard-os04/SuperTaillard-os-04-26.xml.lzma') & (df['experiment_ware'] == 'vbew')]['cpu_time'].values[0])
         self.assertEqual(2000, len(df))
+
+    def test_add_vbs_diff_10(self):
+        df = self.campaign_df.add_vbew({'CHS', 'WDegCAxCD'}, 'cpu_time', diff=.1).data_frame
+        print(df)
+        self.assertEqual(532, len(df))
 
     def test_groupby(self):
         gb = self.campaign_df.groupby('family')
@@ -170,6 +180,30 @@ class TestCampaignDataFrameBuilderVBS(unittest.TestCase):
         self.assertEqual(INPUT, set(df_no_common_solved_no_out['input']))
 
         self.assertEqual(SET_COMMON_FAILED_INPUTS, set(sub._filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame.input.unique()))
+
+
+class TestCampaignDataFrameVbew(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, '../../data/xcsp18.json')
+
+        campaign = import_from_api_and_store('', filename)
+        cls.analysis = Analysis(campaign=campaign)
+
+    def test_vbew(self):
+        VBS_SOLVERS = {
+            'WDegCAxCD',
+            'CHS',
+            'Activity',
+            'DDegOnDom',
+            'Impact',
+        }
+
+        df = self.analysis.add_vbew(VBS_SOLVERS).campaign_df.data_frame
+
+        self.assertEqual(2493, len(df))
 
 
 class TestCampaignDataFrameBuilderSubWare(unittest.TestCase):

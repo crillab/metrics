@@ -25,11 +25,13 @@
 
 
 """
-This module provides utility classes wrapping standard readers to better fit
-Scalpel's needs.
+This module provides utility classes making easier the parsing of different
+types of files.
 """
 
+
 from typing import Callable, Iterable, List, TextIO, Tuple
+from warnings import warn
 
 from metrics.scalpel.config.config import CsvConfiguration
 
@@ -40,8 +42,7 @@ class CsvReader:
     line, describing what the columns contain.
     """
 
-    def __init__(self, stream: TextIO,
-                 configuration: CsvConfiguration,
+    def __init__(self, stream: TextIO, configuration: CsvConfiguration,
                  row_filter: Callable[[List[str]], bool] = lambda r: True) -> None:
         """
         Creates a new CsvReader.
@@ -63,8 +64,6 @@ class CsvReader:
         Parses the associated CSV stream to extract data from this stream.
 
         :return: The data collected from the stream, given by key-value pairs.
-
-        :raises ValueError: If one of the lines does not match the header.
         """
         self.read_header()
         return self.read_content()
@@ -94,7 +93,7 @@ class CsvReader:
             if len(line) == len(self._keys):
                 yield zip(self._keys, line)
             else:
-                print(f'WARNING: Line #{index} does not match header: {line}')
+                warn(f'Line #{index} does not match header: {line}')
 
     def _read_lines(self) -> Iterable[Tuple[int, List[str]]]:
         """

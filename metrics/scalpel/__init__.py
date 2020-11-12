@@ -31,7 +31,7 @@ to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
 """
 
 
-from typing import Any, Iterable, Tuple, Optional
+from typing import Any, Iterable, Optional, Tuple
 
 from jsonpickle import decode as load_json
 
@@ -48,7 +48,7 @@ def read_campaign(input_file: str) -> Tuple[Campaign, Optional[ScalpelConfigurat
 
     :param input_file: The input file describing the campaign.
 
-    :return: The read campaign.
+    :return: The read campaign and the configuration of this campaign, if any.
 
     :raises ValueError: If the input file does not have a recognized format.
     """
@@ -58,7 +58,7 @@ def read_campaign(input_file: str) -> Tuple[Campaign, Optional[ScalpelConfigurat
     if input_file.endswith('.json'):
         return read_json(input_file), None
 
-    raise ValueError(f'Unrecognized campaign format for file {input_file}')
+    raise ValueError(f'Unrecognized campaign format for file "{input_file}"')
 
 
 def read_yaml(yaml_configuration: str) -> Tuple[Campaign, ScalpelConfiguration]:
@@ -69,7 +69,7 @@ def read_yaml(yaml_configuration: str) -> Tuple[Campaign, ScalpelConfiguration]:
     :param yaml_configuration: The path of the YAML file describing Scalpel's
                                configuration.
 
-    :return: The read campaign.
+    :return: The read campaign and the configuration of this campaign.
     """
     parser_listener = CampaignParserListener()
     configuration = read_configuration(yaml_configuration, parser_listener)
@@ -91,26 +91,27 @@ def read_json(json_file: str) -> Campaign:
         return load_json(json_campaign.read())
 
 
-def read_object(yaml_configuration: str, iterable: Iterable[Any]) -> Campaign:
+def read_object(yaml_configuration: str, campaign: Iterable[Any]) -> Tuple[Campaign, ScalpelConfiguration]:
     """
     Reads the data stored in the given iterable object following the
     configuration described in the given YAML file.
 
     :param yaml_configuration: The path of the YAML file describing Scalpel's
                                configuration.
-    :param iterable: The object to iterate over so as to get the data about the
+    :param campaign: The object to iterate over so as to get the data about the
                      campaign.
-                     Each element encountered during the iteration must define
-                     an "items()" method returning a set of key-value pairs
-                     (such as dictionaries or rows in a data-frame, for instance).
+                     Each element encountered during the iteration is supposed to
+                     represent an experiment, and must define an "items()" method
+                     returning a set of key-value pairs (such as dictionaries or
+                     rows in a data-frame, for instance).
 
-    :return: The read campaign.
+    :return: The read campaign and the configuration of this campaign.
     """
-    campaign_parser_listener = CampaignParserListener()
-    read_configuration(yaml_configuration, campaign_parser_listener)
-    for element in iterable:
-        campaign_parser_listener.start_experiment()
-        for key, value in element.items():
-            campaign_parser_listener.log_data(key, value)
-        campaign_parser_listener.end_experiment()
-    return campaign_parser_listener.get_campaign()
+    parser_listener = CampaignParserListener()
+    configuration = read_configuration(yaml_configuration, parser_listener)
+    for experiment in campaign:
+        parser_listener.start_experiment()
+        for key, value in experiment.items():
+            parser_listener.log_data(key, value)
+        parser_listener.end_experiment()
+    return parser_listener.get_campaign(), configuration

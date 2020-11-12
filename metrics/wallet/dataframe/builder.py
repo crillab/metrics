@@ -38,7 +38,7 @@ from metrics.scalpel import read_campaign, ScalpelConfiguration
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
 from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable, \
-    ErrorTable
+    ErrorTable, PivotTable
 
 
 class Analysis:
@@ -95,7 +95,7 @@ class Analysis:
         """
         return Analysis(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
 
-    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew') -> Analysis:
+    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> Analysis:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -107,7 +107,7 @@ class Analysis:
         @param vbew_name: name of the vbew.
         @return: a new instance of Analysis with the new vbew.
         """
-        return Analysis(campaign_df=self._campaign_df.add_vbew(xp_ware_set, opti_col, minimize, vbew_name))
+        return Analysis(campaign_df=self._campaign_df.add_vbew(xp_ware_set, opti_col, minimize, vbew_name, diff))
 
     def groupby(self, column) -> List[Analysis]:
         """
@@ -118,6 +118,27 @@ class Analysis:
         return [
             Analysis(campaign_df=cdf) for cdf in self._campaign_df.groupby(column)
         ]
+
+    def get_only_failed(self):
+        return Analysis(campaign_df=self._campaign_df.get_only_failed())
+
+    def get_only_success(self):
+        return Analysis(campaign_df=self._campaign_df.get_only_success())
+
+    def get_only_common_failed(self):
+        return Analysis(campaign_df=self._campaign_df.get_only_common_failed())
+
+    def get_only_common_success(self):
+        return Analysis(campaign_df=self._campaign_df.get_only_common_success())
+
+    def delete_common_failed(self):
+        return Analysis(campaign_df=self._campaign_df.delete_common_failed())
+
+    def delete_common_success(self):
+        return Analysis(campaign_df=self._campaign_df.delete_common_success())
+
+    def delete_input_when(self, f):
+        return Analysis(campaign_df=self._campaign_df.delete_input_when(f))
 
     def get_cactus_plot(self, dynamic: bool = False, **kwargs: dict):
         return (CactusPlotly(self._campaign_df, **kwargs) if dynamic else CactusMPL(self._campaign_df, **kwargs)).get_figure()
@@ -139,6 +160,9 @@ class Analysis:
 
     def get_error_table(self, **kwargs: dict):
         return ErrorTable(self._campaign_df, **kwargs).get_figure()
+
+    def get_pivot_table(self, **kwargs: dict):
+        return PivotTable(self._campaign_df, **kwargs).get_figure()
 
     def export(self):
         return jsonpickle.encode(self)

@@ -20,6 +20,9 @@
 #  along with this program.                                                    #
 #  If not, see <https://www.gnu.org/licenses/>.                                #
 # ##############################################################################
+import urllib
+from pathlib import Path
+
 import jsonpickle
 
 from metrics.core.model import Campaign
@@ -33,19 +36,32 @@ def import_campaigns(jsons) -> Campaign:
     for i in range(1, len(jsons)):
         tmp = import_campaign(jsons[i])
 
-        #campaign.experiment_wares.extend(tmp.experiment_wares)
         campaign.experiments.extend(tmp.experiments)
         campaign.input_set.inputs.extend(tmp.input_set.inputs)
 
     return campaign
 
-def import_campaign(json) -> Campaign:
-    return jsonpickle.decode(json)
+
+def import_from_api_and_store(url, path):
+    file = Path(path)
+
+    if file.exists():
+        content = file.read_text()
+    else:
+        with urllib.request.urlopen(url) as url:
+            content = url.read().decode()
+            file.write_text(content)
+
+    return import_campaign(content)
 
 
-def import_campaign_data_frame(json) -> CampaignDataFrame:
-    return jsonpickle.decode(json)
+def import_campaign(content) -> Campaign:
+    return jsonpickle.decode(content)
 
 
-def import_analysis(json) -> Analysis:
-    return jsonpickle.decode(json)
+def import_campaign_data_frame(content) -> CampaignDataFrame:
+    return jsonpickle.decode(content)
+
+
+def import_analysis(content) -> Analysis:
+    return jsonpickle.decode(content)

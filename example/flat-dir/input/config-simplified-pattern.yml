@@ -10,19 +10,16 @@ setup:
 
 source:
   path: example/flat-dir/input/data2/
-  format: flat-dir
+  format: single-file
 data:
   file-name-meta:
     pattern: ProblemFile-{any}_{word}_{any}
-    experiment_ware: 2
-    input_group: 1
-  raw-data:
-    - log-data:
-        - cpu_time
-        - mem
-      regex: <global.*cpu="(\d+\.\d+)".*mem="(\d+M\d+)"
-      group:
-        - 1
-        - 2
-    - log-data: result
-      pattern: Stop="{word}"
+    groups:
+      experiment_ware: 2
+      input: 1
+  mapping:
+    cpu_time: resolutions.resolution.solver.global.cpu
+    mem: resolutions.resolution.solver.global.mem
+    result: resolutions.resolution.solver.global.Stop
+  data-files:
+    - "*.xml"

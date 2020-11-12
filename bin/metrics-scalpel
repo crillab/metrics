@@ -251,7 +251,7 @@ class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         return answers['campaign_path']
 
     def _get_raw_data(self) -> RawDataConfiguration:
-        if self._format in (CampaignFormat.DEEP_LOG_DIRECTORY, CampaignFormat.FLAT_LOG_DIRECTORY):
+        if self._format in (CampaignFormat.EXPERIMENT_DIRECTORY, CampaignFormat.SINGLE_EXPERIMENT_LOG_FILE):
             return CLIRawDataConfiguration()
         return EmptyRawDataConfiguration()
 
@@ -270,12 +270,12 @@ class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
             yield answers['file_name']
 
     def _get_data_files(self) -> Iterable[str]:
-        if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
+        if self._format == CampaignFormat.EXPERIMENT_DIRECTORY:
             return self._data_file_generator()
         return []
 
     def _get_hierarchy_depth(self) -> Optional[int]:
-        if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
+        if self._format == CampaignFormat.EXPERIMENT_DIRECTORY:
             questions = [
                 {
                     'type': 'input',
@@ -288,7 +288,7 @@ class CLIScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         return None
 
     def _get_experiment_ware_depth(self) -> Optional[int]:
-        if self._format == CampaignFormat.DEEP_LOG_DIRECTORY:
+        if self._format == CampaignFormat.EXPERIMENT_DIRECTORY:
             questions = [
                 {
                     'type': 'input',

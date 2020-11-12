@@ -338,7 +338,7 @@ def _create_simple_filter(expression: str) -> AbstractExpression:
 
     :return: The created filter.
     """
-    return SimpleExpression(ExpressionParser().parseString(expression).asDict())
+    return SimpleExpression(ExpressionParser().parseString(expression, parseAll=True).asDict())
 
 
 def create_filter(expression: Union[str, List[str]]) -> AbstractExpression:
