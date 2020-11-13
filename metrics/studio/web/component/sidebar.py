@@ -17,7 +17,7 @@ SIDEBAR_STYLE = {
 
 def data_loading(disabled=False):
     return [
-        html.H3("Data Loading"),
+        html.H3([html.I(className='fas fa-fw fa-spinner'), "Data Loading"]),
         dbc.FormGroup(
             [
                 dbc.Label("Separator"),
@@ -51,7 +51,7 @@ def data_loading(disabled=False):
 
 def configuration(disabled=False):
     return [
-        html.H3("Configuration"),
+        html.H3(children=[html.I(className='fas fa-fw fa-cogs'), "Configuration"]),
         dbc.FormGroup([
             dbc.Label("Experiment ware"),
             dcc.Dropdown(
@@ -95,7 +95,7 @@ def plot_configuration(campaign=None):
         options = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
 
     return [
-        html.H3("Plot Configuration"),
+        html.H3(children=[html.I(className='fas fa-fw fa-chart-bar'), "Plot Configuration"]),
         dbc.FormGroup([
             dbc.Label("Experiment ware:"),
             dcc.Dropdown(
@@ -121,7 +121,7 @@ def get_sidebar(campaign: Campaign = None):
     if campaign is None:
         return html.Div(
             [
-                html.H2("STUDIO", className="display-4"),
+                html.H2("METRICS STUDIO", className="display-4", style={'text-align': 'center'}),
                 html.Hr(),
 
             ] + data_loading() + [html.Hr()] + configuration() + [html.Hr()] + plot_configuration(),
@@ -130,7 +130,7 @@ def get_sidebar(campaign: Campaign = None):
     else:
         return html.Div(
             [
-                html.H2("STUDIO", className="display-4"),
+                html.H2("METRICS STUDIO", className="display-4"),
                 html.Hr(),
 
             ] + plot_configuration(campaign) + [html.Hr()] + data_loading(True) + [html.Hr()] + configuration(True) + [

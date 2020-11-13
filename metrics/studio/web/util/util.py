@@ -24,4 +24,4 @@ def decode(contents) -> TextIO:
 
 
 def have_parameter(pathname):
-    return len(pathname.split('/')) > 2
+    return len(pathname.split('/')) > 3

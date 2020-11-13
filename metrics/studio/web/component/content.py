@@ -74,26 +74,14 @@ def contribution():
 
 
 def get_content(campaign=None):
+    result = []
     if campaign is None:
-        return html.Div(
-            [
-                dbc.Row(children=[dbc.Col(children=dbc.Card(children=dbc.CardBody(scatter_plot())))]),
-                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(box_plot())))], className="mt-5"),
-                dbc.Row(
-                    children=[
-                        dbc.Col(children=dbc.Card(children=dbc.CardBody(cactus_plot()))),
-                        dbc.Col(children=dbc.Card(children=dbc.CardBody(cdf())))
-                    ], className="mt-5"
-                ),
-                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(table())))], className="mt-5"),
-                dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(contribution())))], className="mt-5")
-            ],
-            style=CONTENT_STYLE, className="col-md-10"
-        )
+        result.append(dbc.Row(children=[dbc.Col(children=dbc.Card(children=dbc.CardBody(scatter_plot())))]))
     else:
-        return html.Div(
-            [
-                dbc.Row(children=[dbc.Col(children=dbc.Card(children=dbc.CardBody(scatter_plot(campaign))))]),
+        result.append(dbc.Row(children=[dbc.Col(children=dbc.Card(children=dbc.CardBody(scatter_plot(campaign))))]))
+
+    return html.Div(
+            result + [
                 dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(box_plot())))], className="mt-5"),
                 dbc.Row(
                     children=[
@@ -106,3 +94,4 @@ def get_content(campaign=None):
             ],
             style=CONTENT_STYLE, className="col-md-10"
         )
+

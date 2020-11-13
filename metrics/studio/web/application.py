@@ -1,9 +1,11 @@
 import base64
+import glob
 import hashlib
 import io
 import json
 import os
 import uuid
+from pathlib import Path
 
 import dash
 import dash_bootstrap_components as dbc
@@ -24,6 +26,7 @@ import pandas as pd
 from metrics.scalpel.parser import CsvCampaignParser
 from metrics.studio.web.component.content import get_content as content
 from metrics.studio.web.component.sidebar import get_sidebar as sidebar
+from metrics.studio.web.component.footer import get_footer as footer
 from metrics.studio.web.config import external_stylesheets, OPERATOR_LIST
 from metrics.studio.web.util import util
 from metrics.studio.web.util.util import create_listener, decode
@@ -34,13 +37,43 @@ from datetime import datetime
 
 jsonpickle_pd.register_handlers()
 server = flask.Flask(__name__)
-dash = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server, routes_pathname_prefix='/dash/')
+dash = dash.Dash(__name__, external_stylesheets=external_stylesheets,
+                 server=server, routes_pathname_prefix='/dash/')
 dash.server.secret_key = os.urandom(24)
 cache = Cache(dash.server, config={
     'CACHE_TYPE': 'filesystem',
     'CACHE_DIR': 'cache-directory',
     'CACHE_THRESHOLD': 200
 })
+
+dash.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        <script src="https://kit.fontawesome.com/0fca195f72.js" crossorigin="anonymous"></script>
+        {%favicon%}
+        {%css%}
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
+
+
+
+BASE_DIR = Path(__file__).resolve().parent
+image_directory = 'static/img/'
+list_of_images = [os.path.basename(x) for x in glob.glob(f'{BASE_DIR}/{image_directory}*.png')] + \
+                 [os.path.basename(x) for x in glob.glob(f'{BASE_DIR}/{image_directory}*.jpg')]
+static_image_route = '/static/'
 
 
 @server.route('/send-campaign', methods=['POST'])
@@ -55,6 +88,18 @@ def receipt_campaign():
     return {'url': f'/dash/{timestamp}-{h}'}
 
 
+@server.route(f'{static_image_route}<image_path>')
+def serve_image(image_path):
+    image_name = f'{image_path}.png'
+    image_name2 = f'{image_path}.jpg'
+    if image_name in list_of_images:
+        return flask.send_from_directory(f'{BASE_DIR}/{image_directory}', image_name)
+    elif image_name2 in list_of_images:
+        return flask.send_from_directory(f'{BASE_DIR}/{image_directory}', image_name2)
+    else:
+        raise Exception('"{}" is excluded from the allowed static files'.format(image_path))
+
+
 @server.route('/')
 def index():
     return flask.redirect(flask.url_for('/dash/'))
@@ -65,7 +110,8 @@ def serve_normal_layout():
     return html.Div(id="page-content", children=[
         html.Div(session_id, id='session-id', style={'display': 'none'}),
         sidebar(),
-        content()
+        content(),
+        footer()
     ])
 
 
@@ -74,7 +120,8 @@ def serve_layout_with_content(campaign):
     return html.Div(id="page-content", children=[
         html.Div(session_id, id='session-id', style={'display': 'none'}),
         sidebar(campaign),
-        content(campaign)
+        content(campaign),
+        footer()
     ])
 
 
