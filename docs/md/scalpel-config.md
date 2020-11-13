@@ -241,23 +241,145 @@ As this platform do not use in general the same naming convention as that of
 *Scalpel*, do not forget to specify the mapping of the columns in the text file
 to fit *Scalpel*'s needs (see [below](#variable-mapping) for more details).
 
-### Parsing Raw Data from a Directory Containing All Outputs
+### Parsing Raw Data from a File Hierarchy
+
+If you have gathered the output of your experiment-wares in a directory,
+*Scalpel* can explore the file hierarchy rooted at this solver and extract
+all relevant data for you.
+We support three different kinds of file hierarchy, which are described below.
+
+#### One File per Experiment
+
+In this case, the file hierarchy being explored is supposed to contain
+exactly one (regular) file per experiment.
+You can configure *Scalpel* to consider such a file hierarchy using the
+following description.
 
 ```yaml
 source:
-  path:
-  format:
+  path: /path/to/my-experiment-directory
+  format: one-file
 ```
 
-### Parsing Raw Data from a Complete File Hierarchy
+Let us consider an example to illustrate how *Scalpel* extracts data based on
+this configuration.
+Suppose that the file hierarchy to explore has the following form.
+
+```
+my-experiment-directory
+    + experiment-a.log
+    + experiment-b.log
+    ` more-experiments
+        + experiment-c.log
+        ` experiment-d.log
+```
+
+Here, *Scalpel* will recursively explore the whole file hierarchy, and will
+parse all regular files, provided that these regular files are specified
+in the `data` section of the YAML file (see the dedicated documentation
+[here](#description-of-the-data-to-extract) for more details).
+Each file `experiment-a.log`, `experiment-b.log`, `experiment-c.log`,
+`experiment-d.log` will be considered as the output of a singel experiment
+each.
+
+Note that these files may have common formats (such as JSON, XML or CSV) or
+may also be the raw output of the solver.
+More details on how to retrieve relevant informations from these files
+are given [here](#description-of-the-data-to-extract).
+
+#### Multiple File per Experiment
+
+In this case, the file hierarchy being explored is supposed to contain
+a set of (regular) file per experiment.
+The name of the files (without their extensions) will be used to identify
+each experiment.
+You can configure *Scalpel* to consider such a file hierarchy using the
+following description.
 
 ```yaml
 source:
-  path:
-  format:
-  hierarchy-depth:
-  experiment-ware:
+  path: /path/to/my-experiment-directory
+  format: multi-files
 ```
+
+Let us consider an example to illustrate how *Scalpel* extracts data based on
+this configuration.
+Suppose that the file hierarchy to explore has the following form.
+
+```
+my-experiment-directory
+    + experiment-a.out
+    + experiment-a.err
+    + experiment-b.out
+    + experiment-b.err
+    ` more-experiments
+        + experiment-c.out
+        + experiment-c.err
+        + experiment-d.out
+        ` experiment-d.err
+```
+
+Here, *Scalpel* will recursively explore the whole file hierarchy, and will
+parse all regular files, provided that these regular files are specified
+in the `data` section of the YAML file (see the dedicated documentation
+[here](#description-of-the-data-to-extract) for more details).
+In this case, the files `experiment-a.out` and `experiment-a.err`, for instance,
+will be considered as outputs of the same experiment (they are both named
+`experiment-a`).
+
+Note that these files may have common formats (such as JSON, XML or CSV) or
+may also be the raw output of the solver.
+More details on how to retrieve relevant informations from these files
+are given [here](#description-of-the-data-to-extract).
+
+#### One Directory per Experiment
+
+In this case, the file hierarchy being explored is supposed to have one 
+directory that contain the output files of each experiment.
+The name of the files inside this directory may be arbitrary (and even the same
+from one experiment to the other).
+You can configure *Scalpel* to consider such a file hierarchy using the
+following description.
+
+```yaml
+source:
+  path: /path/to/my-experiment-directory
+  format: dir
+```
+
+Let us consider an example to illustrate how *Scalpel* extracts data based on
+this configuration.
+Suppose that the file hierarchy to explore has the following form.
+
+```
+my-experiment-directory
+    + experiment-a
+    |   + stdout
+    |   + stderr
+    + experiment-b
+    |   + stdout
+    |   + stderr
+    ` more-experiments
+        + experiment-c
+        |   + stdout
+        |   + stderr
+        ` experiment-d.err
+            + stdout
+            + stderr
+```
+
+Here, *Scalpel* will recursively explore the whole file hierarchy, and will
+consider each directory containing regular files as an experiment.
+All the regular files contained in this directory will thus be considered
+as outputs of the corresponding experiments.
+For instance, the `stdout` and `stderr` files in the directory `experiment-a`
+will be considered as output files of the experiment `experiment-a`, and will
+thus be used together to extract relevant informations for this experiment.
+
+Note that these files may have common formats (such as JSON, XML or CSV) or
+may also be the raw output of the solver.
+More details on how to retrieve relevant informations from these files
+are given [here](#description-of-the-data-to-extract).
 
 ### Parsing Unsupported Formats
 
@@ -296,23 +418,68 @@ to parse the campaign.
 
 ## Description of the Data to Extract
 
+In order to extract data from the files of your campaign, you need to provide
+a description of their content.
+In the following, we describe how to write such a description.
+
+### Mapping Data to *Scalpel*'s Expectations
+
+When parsing an experiment, *Scalpel* expects to find several required
+informations.
+The identifier of such data is thus crucial to allow *Scalpel* to build
+consistent experiments.
+In particular, the name of the experiment-ware must be identified with
+`experiment_ware`, ....
+
 ```yaml
 data:
   mapping:
     experiment_ware:
     cpu_time:
     input:
+```
+
+Possible to use multiple values to build one thing
+May also use it for custom value, if must be collected together or if
+the name does not fit
+
+### Extracting Data from File Names
+
+```yaml
+data:
   file-name-meta:
     pattern:
     regex:
     experiment_ware:
     input:
+```
+
+### Extracting Data from File Content
+
+```yaml
+data:
   raw-data:
     - log-data:
       name:
       pattern:
       regex:
       group:
-  data-files:
-    -
 ```
+
+#### Extracting Data from Common Formats
+
+If your output files use a common format (as JSON, CSV or XML), you do
+not need to use `raw-data` to extract their value.
+*Scalpel* will be able to automatically retrieves data from such file,
+giving them proper names.
+You thus just need to specify the name of such files as follows (wildcards
+are supported).
+
+```yaml
+data:
+  data-files:
+    - "*.json"
+    - "output.xml"
+```
+
+TODO Explain how it works for JSON and XML
