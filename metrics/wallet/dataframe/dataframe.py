@@ -64,7 +64,7 @@ class CampaignDFFilter(Enum):
         return self._df_filter(campaign, data_frame)
 
 
-def vbew_agg(df, opti_col, minimize, diff):
+def _vbew_agg(df, opti_col, minimize, diff):
     df = df.sort_values(opti_col, ascending=minimize)
 
     df['contributor'] = df['experiment_ware'].values[0]
@@ -200,7 +200,7 @@ class CampaignDataFrame:
 
         df_vbs = df[df[EXPERIMENT_XP_WARE].isin(xp_ware_set)]
 
-        df_vbs = df_vbs.groupby(EXPERIMENT_INPUT).apply(lambda x: vbew_agg(x, opti_col, minimize, diff)).dropna(how='all')\
+        df_vbs = df_vbs.groupby(EXPERIMENT_INPUT).apply(lambda x: _vbew_agg(x, opti_col, minimize, diff)).dropna(how='all')\
             .assign(experiment_ware=lambda x: vbew_name)
 
         df = df[df[EXPERIMENT_INPUT].isin(df_vbs[EXPERIMENT_INPUT])]
