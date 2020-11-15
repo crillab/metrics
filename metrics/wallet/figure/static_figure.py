@@ -143,7 +143,7 @@ class ErrorTable(Table):
 
 class PivotTable(Table):
     """
-    Creation of a table representing the different contributions of each solver.
+    ...
     """
 
     def __init__(self, campaign_df: CampaignDataFrame, pivot_val, **kwargs):
