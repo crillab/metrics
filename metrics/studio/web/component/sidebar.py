@@ -9,9 +9,10 @@ SIDEBAR_STYLE = {
     "top": 0,
     "left": 0,
     "bottom": 0,
-    "width": "16rem",
+    #"width": "16rem",
     "padding": "2rem 1rem",
     "background-color": "#f8f9fa",
+    "overflow-y": "scroll"
 }
 
 
@@ -83,7 +84,7 @@ def configuration(disabled=False):
                 multi=True,
                 placeholder="Select columns for experiment ware",
             )], className='mt-2', ),
-        html.Div(id="is_success", style={'display': 'none'},
+        html.Div(id="is_success",
                  children=[dbc.Button('Add predicate', id='add', color="primary", )])
     ]
 
@@ -121,19 +122,19 @@ def get_sidebar(campaign: Campaign = None):
     if campaign is None:
         return html.Div(
             [
-                html.H2("METRICS STUDIO", className="display-4", style={'text-align': 'center'}),
+                html.H3("METRICS STUDIO",  style={'text-align': 'center'}),
                 html.Hr(),
 
             ] + data_loading() + [html.Hr()] + configuration() + [html.Hr()] + plot_configuration(),
-            style=SIDEBAR_STYLE, className="col-md-3"
+            style=SIDEBAR_STYLE, className="col-lg-3"
         )
     else:
         return html.Div(
             [
-                html.H2("METRICS STUDIO", className="display-4"),
+                html.H3("METRICS STUDIO", style={'text-align': 'center'}),
                 html.Hr(),
 
             ] + plot_configuration(campaign) + [html.Hr()] + data_loading(True) + [html.Hr()] + configuration(True) + [
                 html.Hr()],
-            style=SIDEBAR_STYLE, className="col-md-3"
+            style=SIDEBAR_STYLE, className="col-lg-3"
         )
