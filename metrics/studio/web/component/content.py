@@ -3,7 +3,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 
 CONTENT_STYLE = {
-    "margin-left": "18rem",
+    "margin-left": "25%",
     "margin-right": "2rem",
     "padding": "2rem 1rem",
 }
@@ -92,6 +92,6 @@ def get_content(campaign=None):
                 dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(table())))], className="mt-5"),
                 dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(contribution())))], className="mt-5")
             ],
-            style=CONTENT_STYLE, className="col-md-10"
+            style=CONTENT_STYLE, className="col-lg-9"
         )
 
