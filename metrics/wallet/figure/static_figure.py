@@ -23,6 +23,7 @@
 from typing import List
 
 import pandas as pd
+
 pd.set_option('display.max_rows', None)
 from matplotlib import pyplot as plt
 
@@ -30,7 +31,7 @@ from metrics.core.constants import STAT_TABLE_COUNT, STAT_TABLE_COMMON_COUNT, ST
     STAT_TABLE_UNCOMMON_COUNT, STAT_TABLE_TOTAL, STAT_TABLE_SUM, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, \
     EXPERIMENT_INPUT
 from metrics.wallet.dataframe.dataframe import CampaignDFFilter, CampaignDataFrame
-from metrics.wallet.figure.abstract_figure import CactusPlot, BoxPlot, ScatterPlot, Table, CDFPlot
+from metrics.wallet.figure.abstract_figure import CactusPlot, BoxPlot, ScatterPlot, Table
 
 LINE_STYLES = ['-', ':', '-.', '--']
 """
@@ -45,6 +46,10 @@ class StatTable(Table):
     Creation of a stat table representing main statistics for a campaign.
     """
 
+    def __init__(self, campaign_df: CampaignDataFrame, par: List[int] = None, **kwargs):
+        super().__init__(campaign_df, **kwargs)
+        self._par = par or list()
+
     def get_data_frame(self):
         df_stat = pd.DataFrame(index=self._campaign_df.xp_ware_names)
 
@@ -54,7 +59,10 @@ class StatTable(Table):
 
         no_common_failed = self._campaign_df._filter_by([
             CampaignDFFilter.DELETE_COMMON_TIMEOUT,
-        ]).data_frame
+        ]).data_frame.copy()
+
+        for i in self._par:
+            no_common_failed[f'PAR{i}'] = no_common_failed.apply(lambda x: x['cpu_time'] if x['success'] else self._campaign_df.campaign.timeout * i, axis=1)
 
         common_inputs = self._campaign_df._filter_by([
             CampaignDFFilter.ONLY_COMMON_SOLVED,
@@ -67,9 +75,12 @@ class StatTable(Table):
 
         df_stat[STAT_TABLE_COUNT] = only_solved_df.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].count()
         df_stat[STAT_TABLE_SUM] = no_common_failed.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].sum()
+        for i in self._par:
+            df_stat[STAT_TABLE_SUM + f'PAR{i}'] = no_common_failed.groupby(EXPERIMENT_XP_WARE)[f'PAR{i}'].sum()
         df_stat[STAT_TABLE_COMMON_COUNT] = common_inputs.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].count()
         df_stat[STAT_TABLE_COMMON_SUM] = common_inputs.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].sum()
-        df_stat[STAT_TABLE_UNCOMMON_COUNT] = no_common_solved_no_out.groupby(EXPERIMENT_XP_WARE)[EXPERIMENT_CPU_TIME].count()
+        df_stat[STAT_TABLE_UNCOMMON_COUNT] = no_common_solved_no_out.groupby(EXPERIMENT_XP_WARE)[
+            EXPERIMENT_CPU_TIME].count()
         df_stat[STAT_TABLE_TOTAL] = len(self._campaign_df.data_frame[EXPERIMENT_INPUT].unique())
 
         return df_stat.sort_values(['count', 'sum'], ascending=[False, True]).fillna(0).astype(int)
@@ -144,6 +155,38 @@ class PivotTable(Table):
         return df_solved.pivot(index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=self._pivot_val)
 
 
+class Description:
+
+    def __init__(self, campaign_df: CampaignDataFrame, show_experiment_wares=False, show_inputs=False,
+                 show_variables=False):
+        self._campaign_df = campaign_df
+        self._show_experiment_wares = show_experiment_wares
+        self._show_inputs = show_inputs
+        self._show_variables = show_variables
+
+    def get_description(self):
+        df = self._campaign_df.data_frame
+        missing = df['missing'].sum()
+        total = len(df)
+
+        return f"""
+This Analysis is composed of:
+- {len(self._campaign_df.xp_ware_names)} experiment-wares{self._get_xp_wares()} 
+- {len(self._campaign_df.inputs)} inputs{self._get_inputs()}
+- {total - missing} experiments ({missing} missing -> more details: <Analysis>.get_error_table())
+"""
+
+    def _get_xp_wares(self):
+        if not self._show_experiment_wares:
+            return ''
+        return ':\n' + ',\n'.join(self._campaign_df.xp_ware_names) + ',\n'
+
+    def _get_inputs(self):
+        if not self._show_inputs:
+            return ''
+        return ':\n' + ',\n'.join(self._campaign_df.inputs) + ',\n'
+
+
 class CactusMPL(CactusPlot):
     """
     Creation of a static cactus plot.
@@ -214,10 +257,13 @@ class CactusMPL(CactusPlot):
                 text.set_color(color)
 
 
-class CDFMPL(CDFPlot):
+class CDFMPL(CactusMPL):
     """
-    Creation of a static cactus plot.
+    Creation of a Cumulative Distribution Function to compare the performance of several solvers.
     """
+
+    def __init__(self, campaign_df, cdf_col=EXPERIMENT_CPU_TIME, **kwargs):
+        super().__init__(campaign_df, cactus_col=cdf_col, **kwargs)
 
     def get_figure(self):
         """
@@ -229,13 +275,17 @@ class CDFMPL(CDFPlot):
 
         fig, ax = plt.subplots(figsize=self._figsize)
         ax.set_title(self.get_title())
-        ax.set_xlabel(self.get_x_axis_name())
-        ax.set_ylabel(self.get_y_axis_name())
+        ax.set_xlabel(self.get_y_axis_name())
+        ax.set_ylabel(self.get_x_axis_name())
         ax.set_xscale('log' if self._logx else 'linear')
         ax.set_yscale('log' if self._logy else 'linear')
 
         self._set_plot(df, ax)
-        self._set_legend(ax)
+
+        if self._legend_location is None:
+            ax.legend().remove()
+        else:
+            self._set_legend(df, ax)
 
         ax.set_xlim(self._get_x_lim(ax))
         ax.set_ylim(self._get_y_lim(ax))
@@ -251,27 +301,18 @@ class CDFMPL(CDFPlot):
         kwargs = [
             {
                 'color': self._color_map.get(x) if self._color_map else None,
-                'linewidth': 3 if x in self._campaign_df.vbew_names else 1,
+                'linewidth': 3 if x in self._campaign_df.vbew_names else 2,
+                'marker': 'o' if self._show_marker else None,
             } for x in df.columns
         ]
 
+        n_inputs = len(self._campaign_df.inputs)
+
         for i, col in enumerate(df.columns):
             if styles is None:
-                ax.hist(df[col].dropna(), int(self._campaign_df.campaign.timeout),
-                        label=self._get_final_xpware_name(col), density=True, histtype='step', cumulative=True,
-                        **(kwargs[i]))
+                ax.plot(df[col], df.index / n_inputs, label=self._get_final_xpware_name(col), **(kwargs[i]))
             else:
-                ax.hist(df[col].dropna(), int(self._campaign_df.campaign.timeout),
-                        label=self._get_final_xpware_name(col), density=True, histtype='step', cumulative=True,
-                        **(kwargs[i]))
-
-    def _set_legend(self, ax):
-        if self._xp_ware_name_map is None:
-            ax.legend(self.get_data_frame().columns, loc=self._legend_location, bbox_to_anchor=self._bbox_to_anchor,
-                      ncol=self._ncol_legend)
-        else:
-            ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns], loc=self._legend_location,
-                      bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
+                ax.plot(df[col], df.index / n_inputs, styles[i], label=self._get_final_xpware_name(col), **(kwargs[i]))
 
 
 class BoxMPL(BoxPlot):
@@ -333,6 +374,8 @@ class ScatterMPL(ScatterPlot):
         ax.set_xlim(self._get_x_lim(ax))
         ax.set_ylim(self._get_y_lim(ax))
 
+        self._extra_col(df, self._color_col)
+
         if self._color_col is None:
             df.plot.scatter(x=self._xp_ware_i, y=self._xp_ware_j, ax=ax)
         else:
@@ -368,3 +411,10 @@ class ScatterMPL(ScatterPlot):
         @return: the title of the plot.
         """
         return f'Comparison of {self._get_final_xpware_name(self._xp_ware_i)} and {self._get_final_xpware_name(self._xp_ware_j)}'
+
+    def _extra_col(self, df, col):
+        if col is None:
+            return
+
+        ori = self._campaign_df.data_frame
+        df[col] = ori.groupby('input')['sat'].agg(lambda x: str(set(x) - {None}))

@@ -6,67 +6,6 @@ setup:
   ram: 64GB
   timeout: 5000
   memout: 64000
-experiment-wares:
-  - MapleLCMChronoBT_DEL default
-  - MapleLCMChronoBT_Scavel_EWMA default
-  - Relaxed_LCMDistChronoBT_p9 default
-  - Minisat-v2.2.0-106-ge2dd095 simp_proof
-  - MapleLCMDistChronoBTVariableReindexing default
-  - CaDiCaL sat
-  - Topk3_Glucose3.0 default
-  - MapleLCMDiscChronoBT-DL-v3 default
-  - CaDiCaL unsat
-  - MLDChronoBT_GCBump default
-  - Relaxed_LCMDistChronoBT default
-  - Maple_LCM_OnlineDel_19a default
-  - Topk6_Glucose3.0 default
-  - smallsat default
-  - expMaple_CM default
-  - Riss7.1 default_proof
-  - CCAnrSim default
-  - Riss7.1 NOUNSAT_proof
-  - ZIB_Glucose default
-  - PADC_MapleLCMDistChronoBT nbIncRedDB_5_CT_0
-  - Relaxed_LCM_Dist default
-  - PADC_MapleLCMDistChronoBT default
-  - COMiniSatPS_Pulsar_drup drup
-  - Candy default
-  - MapleCOMSPS_CHB_VSIDS_drup CHB_VSIDS_drup
-  - Maple_LCM_BTL default
-  - glucose-4.2.1 default
-  - Topk3.2_Glucose3.0 default
-  - Relaxed_LCMDistChronoBT_Scavel default
-  - cmsatv56-yalsat-chronobt default
-  - MergeSAT simp_proof
-  - Maple_LCM_Scavel_155 default
-  - MapleLCMDistChronoBT-DL-v2.2 default
-  - cmsatv56-yalsat default
-  - glucose_421_del default
-  - MapleLCMDISTChronoBT_Scavel_EWMA_08ALL default
-  - cmsatv56-walksat default
-  - MapleCOMSPS_LRB_VSIDS_2_drup LRB_VSIDS_2_drup
-  - SLIME default
-  - SparrowToMergeSAT Sparrow2MergeSAT_proof
-  - PSIDS_MapleLCMDistChronoBT default
-  - glucose_BTL default
-  - MapleLCMChronoBT_ldcr default
-  - MapleLCMDistChronoBT-DL-v2.1 default
-  - Maple_CM_OnlineDel_19b default
-  - expMaple_CM _GCBump default
-  - Topk6.2_Glucose3.0 default
-  - glucose3.0 proofs
-  - optsat default
-  - CaDiCaL default
-  - PADC_Maple_LCM_Dist default
-  - MapleCOMSPS_LRB_VSIDS_drup LRB_VSIDS_drup
-  - cmsatv56-walksat-chronobt default
-  - expMaple_CM _GCBumpOnlyLRB default
-  - MapleLCMdistCBTcoreFirst default
-input-set:
-  name: sat-race-2019
-  type: file
-  path-list:
-    - input/sat2019.input
 source:
   path: input/sat2019.csv
 data:
