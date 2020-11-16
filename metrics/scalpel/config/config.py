@@ -1382,7 +1382,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         fmt = InputSetFormat.value_of(input_set['type'])
         name = input_set['name']
         self._listener.log_data(INPUT_SET_NAME, name)
-        paths = DictionaryScalpelConfigurationBuilder._as_list(input_set['path-list'])
+        paths = DictionaryScalpelConfigurationBuilder._as_list(input_set['files'])
         groups = self._get('input-set').get('file-name-meta')
         file_name_meta = EmptyFileNameMetaConfiguration() if groups is None else DictionaryFileNameMetaConfiguration(groups)
         extensions = self._get('input-set').get('extensions')

@@ -673,14 +673,14 @@ and giving it a proper nam, as in the following example:
 input-set:
   name: my-awesome-input-set
   type: list
-  path-list:
+  files:
     - path: path/to/instanceA.cnf
       family: F1
     - path: path/to/instanceB.cnf
       family: F2
 ```
 
-In this example, `path-list` allows to list all the inputs you used in your
+In this example, `files` allows to list all the inputs you used in your
 experiments.
 As for experiment-wares, you may specify as many data as you want for your
 inputs.
@@ -690,17 +690,17 @@ files.
 The only required key is `path`.
 
 In the example above, observe that the type `list` is declared, to specify
-that all relevant information are specified in `path-list`.
+that all relevant information are specified in `files`.
 
 Another possible type is `file-list`, if you only list the path of the
 files (in which case, you do not need to specify the `path` key).
 You may also use `file` if this list is written in a separate file (one
-path per line), in which case the `path-list` must give the list of the
+path per line), in which case the `files` must give the list of the
 files to read.
 
 Finally, you may also specify a `hierarchy` type, in which case *Scalpel*
 will explore a file hierarchy to find all input files from the file
-hierarchy rooted at the directory specified in `path-list`, as in the following
+hierarchy rooted at the directory specified in `files`, as in the following
 example:
 
 ```yaml
@@ -708,7 +708,7 @@ input-set:
   name: my-awesome-input-set
   type: hierarchy
   extensions: ".cnf"
-  path-list: /path/to/my/benchmarks
+  files: /path/to/my/benchmarks
   file-name-meta:
     pattern: /path/to/my/benchmarks/{any}/{any}.cnf
     groups:
