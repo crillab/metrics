@@ -106,6 +106,11 @@ def index():
     return flask.redirect(flask.url_for('/dash/'))
 
 
+@server.route('/about')
+def about():
+    return flask.redirect(flask.url_for('/dash/'))
+
+
 def serve_normal_layout():
     session_id = str(uuid.uuid4())
     return html.Div(id="page-content", children=[

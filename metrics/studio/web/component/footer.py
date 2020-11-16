@@ -16,7 +16,15 @@ def get_footer():
                                      href='https://twitter.com/crillab_metrics',
                                      style={'font-size': '15px'}),
                               html.A(html.I(className='fab fa-github mb-2 mr-2 mt-2', style={'font-size': '25px'}),
-                                     href='https://github.com/crillab/metrics')],
+                                     href='https://github.com/crillab/metrics'),
+
+                              html.A(html.I(className='fas fa-info-circle mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                                     href='/about'),
+
+                              html.A(html.I(className='fas fa-envelope mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                                     href='mailto:metrics@cril.fr')
+
+                              ],
                     justify="center", align="center", className='border-top'), dbc.Row(
                 [dbc.Col(html.Img(src='/static/artois', height='50'), width="auto"),
                  dbc.Col(html.Img(src='/static/cnrs', height='50'), width="auto"),
