@@ -9,16 +9,24 @@ SIDEBAR_STYLE = {
     "top": 0,
     "left": 0,
     "bottom": 0,
-    #"width": "16rem",
+    # "width": "16rem",
     "padding": "2rem 1rem",
     "background-color": "#f8f9fa",
-    "overflow-y": "scroll"
+    "overflow-y": "scroll",
+    "text-align": "center"
 }
 
 
 def data_loading(disabled=False):
     return [
-        html.H3([html.I(className='fas fa-fw fa-spinner'), "Data Loading"]),
+        html.H4([html.I(className='fas fa-fw fa-spinner'), "Data Loading"]),
+        html.Div(
+            id="error-load"
+        ),
+        html.Div(
+            id="success-load"
+        ),
+
         dbc.FormGroup(
             [
                 dbc.Label("Separator"),
@@ -52,7 +60,7 @@ def data_loading(disabled=False):
 
 def configuration(disabled=False):
     return [
-        html.H3(children=[html.I(className='fas fa-fw fa-cogs'), "Configuration"]),
+        html.H4(children=[html.I(className='fas fa-fw fa-cogs'), "Configuration"]),
         dbc.FormGroup([
             dbc.Label("Experiment ware"),
             dcc.Dropdown(
@@ -96,7 +104,7 @@ def plot_configuration(campaign=None):
         options = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
 
     return [
-        html.H3(children=[html.I(className='fas fa-fw fa-chart-bar'), "Plot Configuration"]),
+        html.H4(children=[html.I(className='fas fa-fw fa-chart-bar'), "Plot Configuration"]),
         dbc.FormGroup([
             dbc.Label("Experiment ware:"),
             dcc.Dropdown(
@@ -122,10 +130,29 @@ def get_sidebar(campaign: Campaign = None):
     if campaign is None:
         return html.Div(
             [
-                html.H3("METRICS STUDIO",  style={'text-align': 'center'}),
+                html.H3("METRICS STUDIO", style={'text-align': 'center'}),
                 html.Hr(),
 
-            ] + data_loading() + [html.Hr()] + configuration() + [html.Hr()] + plot_configuration(),
+                html.A(html.I(className='fab fa-twitter mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                       href='https://twitter.com/crillab_metrics',
+                       style={'font-size': '15px'}),
+                html.A(html.I(className='fab fa-github mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                       href='https://github.com/crillab/metrics'),
+
+                html.A(
+                    html.I(className='fas fa-info-circle mb-2 mr-2 mt-2',
+                           style={'font-size': '25px'}),
+                    id='open2'),
+
+                html.A(html.I(className='fas fa-envelope mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                       href='mailto:metrics@cril.fr'),
+                html.Hr(),
+                html.H4("Example"),
+                html.A("SAT 2019"),
+                html.Hr()
+            ]
+
+            + data_loading() + [html.Hr()] + configuration() + [html.Hr()] + plot_configuration(),
             style=SIDEBAR_STYLE, className="col-lg-3"
         )
     else:

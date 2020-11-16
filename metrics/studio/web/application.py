@@ -29,7 +29,7 @@ from metrics.scalpel.parser import CsvCampaignParser, CsvConfiguration
 from metrics.studio.web.component.content import get_content as content
 from metrics.studio.web.component.sidebar import get_sidebar as sidebar
 from metrics.studio.web.component.footer import get_footer as footer
-from metrics.studio.web.config import external_stylesheets, OPERATOR_LIST
+from metrics.studio.web.config import external_stylesheets
 from metrics.studio.web.util import util
 from metrics.studio.web.util.util import create_listener, decode
 from metrics.wallet.dataframe.builder import Analysis
@@ -222,27 +222,38 @@ def display_page(pathname):
 
 @dash.callback(
     Output("modal", "is_open"),
-    [Input("open", "n_clicks"), Input("close", "n_clicks")],
+    [Input("open", "n_clicks"), Input("open2", "n_clicks"), Input("close", "n_clicks")],
     [State("modal", "is_open")],
 )
-def toggle_modal(n1, n2, is_open):
-    if n1 or n2:
+def toggle_modal(n1, n2, n3, is_open):
+    if n1 or n2 or n3:
         return not is_open
     return is_open
 
 
 @dash.callback([Output('xp-ware', 'options'),
                 Output('time', 'options'),
-                Output('input', 'options')],
-               [Input('upload-data', 'contents')],
+                Output('input', 'options'), Output('error-load', 'children'), Output('success-load', 'children')],
+               [Input('upload-data', 'contents'), Input('sep', 'value')],
                [State('upload-data', 'filename'),
-                State('upload-data', 'last_modified'), State('sep', 'value')])
-def update_output(list_of_contents, list_of_names, list_of_dates, sep):
+                State('upload-data', 'last_modified')])
+def update_output(list_of_contents, sep, list_of_names, list_of_dates):
     if list_of_contents is None:
         raise PreventUpdate
+    if sep is None:
+        return [], [], [], [html.P("Please specify a separator", className="alert alert-danger")], []
     df = parse_contents(list_of_contents, sep)
     options = [{'label': i, 'value': i} for i in df.columns]
-    return options, options, options
+    return options, options, options, None, [html.P("Success", className="alert alert-success")]
+
+
+@dash.callback([Output('error-load', 'style')],
+               [Input('sep', 'value')])
+def error_load_update(sep):
+    if sep is None:
+        return [{'display': 'block'}]
+    else:
+        return [{'display': 'none'}]
 
 
 @dash.callback(Output('is_success', 'children'),
