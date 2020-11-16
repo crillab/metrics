@@ -1383,19 +1383,10 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         name = input_set['name']
         self._listener.log_data(INPUT_SET_NAME, name)
         paths = DictionaryScalpelConfigurationBuilder._as_list(input_set['path-list'])
-        kwargs = {}
-
-        if 'family' in self._get('input-set'):
-            kwargs['family'] = self._get('input-set').get('family')
-
-        if 'input-name' in self._get('input-set'):
-            kwargs['name'] = self._get('input-set').get('input-name')
-
+        groups = self._get('input-set').get('file-name-meta')
+        file_name_meta = EmptyFileNameMetaConfiguration() if groups is None else DictionaryFileNameMetaConfiguration(groups)
         extensions = self._get('input-set').get('extensions')
-        if extensions is not None:
-            kwargs['extensions'] = extensions
-
-        create_input_set_reader(fmt, **kwargs)(self._listener, paths)
+        create_input_set_reader(fmt, extensions, file_name_meta)(self._listener, paths)
         self._listener.end_input_set()
 
     def _get_campaign_path(self) -> Iterable[str]:
