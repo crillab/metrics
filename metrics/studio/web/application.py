@@ -106,11 +106,6 @@ def index():
     return flask.redirect(flask.url_for('/dash/'))
 
 
-@server.route('/about')
-def about():
-    return flask.redirect(flask.url_for('/dash/'))
-
-
 def serve_normal_layout():
     session_id = str(uuid.uuid4())
     return html.Div(id="page-content", children=[
@@ -224,6 +219,7 @@ def display_page(pathname):
         return serve_layout_with_content(campaign)
     return serve_normal_layout()
 
+
 @dash.callback(
     Output("modal", "is_open"),
     [Input("open", "n_clicks"), Input("close", "n_clicks")],
@@ -307,7 +303,7 @@ def box_callback(session_id, xp_ware, time, input, box_experiment_ware, is_succe
                [State('upload-data', 'contents'), State('sep', 'value'), State('url', 'pathname')])
 def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, is_success_children, contents, sep,
                      pathname):
-    if util.have_parameter(pathname):
+    if util.have_parameter(pathname) and xp_ware is not None and xp1 is not None:
         campaign = load_campaign(pathname)
         analysis = _create_analysis(campaign)
         campaign_df = analysis.campaign_df
@@ -407,20 +403,20 @@ def stat_table_callback(session_id, xp_ware, time, input, global_experiment_ware
 
 @dash.callback([Output('loading-icon-contribution', 'children')],
                [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
-                Input('input', 'value'), Input('global-experiment-ware', 'value'),
+                Input('input', 'value'), Input('global-experiment-ware', 'value'), Input('is_success', 'children'),
                 Input('deltas', 'value')],
                [State('upload-data', 'contents'), State('sep', 'value')])
-def contribution_table_callback(session_id, xp_ware, time, input, global_experiment_ware,
+def contribution_table_callback(session_id, xp_ware, time, input, global_experiment_ware, is_success,
                                 global_deltas, contents, sep):
-    if contents is None or input is None or time is None or xp_ware is None or global_deltas is None:
+    if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware)
+    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware, is_success)
     new_df = campaign_df.sub_data_frame('experiment_ware',
                                         global_experiment_ware if global_experiment_ware is not None else [
                                             e['name'] for e in campaign.experiment_wares[:LIMIT]])
     contribution_table = ContributionTable(
         new_df,
-        deltas=[int(a) for a in global_deltas],
+        deltas=[int(a) for a in global_deltas] if global_deltas is not None else [1, 10, 100, 1000],
         dollars_for_number=True,  # 123456789 -> $123456789$
         commas_for_number=True,  # 123456789 -> 123,456,789
 
