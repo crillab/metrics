@@ -108,8 +108,8 @@ def index():
 
 @server.route('/example/sat2019')
 def sat2019():
-    return flask.redirect(
-        flask.url_for('/dash/1605561933.231774-82cb32bea52c56551bd7b1a5e8d3eb51dd3bed0171336d44f0d3bdf18ab6da6c'))
+    return flask.redirect("http://crillab-metrics.cloud/dash/1605562562.205824-82cb32bea52c56551bd7b1a5e8d3eb51dd3bed0171336d44f0d3bdf18ab6da6c"
+                          )
 
 
 def serve_normal_layout():

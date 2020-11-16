@@ -161,7 +161,25 @@ def get_sidebar(campaign: Campaign = None):
                 html.H3("METRICS STUDIO", style={'text-align': 'center'}),
                 html.Hr(),
 
-            ] + plot_configuration(campaign) + [html.Hr()] + data_loading(True) + [html.Hr()] + configuration(True) + [
+                html.A(html.I(className='fab fa-twitter mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                       href='https://twitter.com/crillab_metrics',
+                       style={'font-size': '15px'}),
+                html.A(html.I(className='fab fa-github mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                       href='https://github.com/crillab/metrics'),
+
+                html.A(
+                    html.I(className='fas fa-info-circle mb-2 mr-2 mt-2',
+                           style={'font-size': '25px'}),
+                    id='open2'),
+
+                html.A(html.I(className='fas fa-envelope mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                       href='mailto:metrics@cril.fr'),
+                html.Hr(),
+                html.H4("Example"),
+                html.A("SAT 2019", href="/example/sat2019"),
+                html.Hr()
+
+            ] + data_loading(True) + plot_configuration(campaign) + [html.Hr()] + configuration(True) + [
                 html.Hr()],
             style=SIDEBAR_STYLE, className="col-lg-3"
         )
