@@ -148,7 +148,7 @@ def get_sidebar(campaign: Campaign = None):
                        href='mailto:metrics@cril.fr'),
                 html.Hr(),
                 html.H4("Example"),
-                html.A("SAT 2019"),
+                html.A("SAT 2019", href="/example/sat2019"),
                 html.Hr()
             ]
 
