@@ -1,20 +1,20 @@
 # Analyse a Campaign into *Metrics*
 
 Once the YAML file is correctly configurated ([Reading a Campaign into *Metrics*](scalpel-config.md)), we can start the analysis of data.
-To analyse the campaign of experiments thanks to *Metrics*, 
+To analyze the campaign of experiments thanks to *Metrics*, 
 you need to use the *Wallet* module of *Metrics*.
 *Wallet* stands for *"Automated tooL for expLoiting Experimental resulTs"*
 (*wALLET*).
 
 To manipulate data, *Wallet* uses a [*pandas Dataframe*](https://pandas.pydata.org/). 
-A dataframe is a table composed of rows corresponding to experimentations and columns (or variables) corresponding to experimentation informations (cpu time, memory, all the input and experiment-ware informations, ...).
-It is not necessary to have any knowledge about this library to manipulated *Wallet* data.
+A dataframe is a table composed of rows corresponding to experimentations and columns (or variables) corresponding to experimentation information (cpu time, memory, all the input, and experiment-ware information, etc.).
+It is not necessary to have any knowledge about this library to manipulate *Wallet* data.
 
 ## Create/Import/Export an Analysis
 
 ### The Classical Analysis Object
 
-To create a new analysis, we just need to import the *Wallet* module and instanciate a new Analysis object with the path to the YAML configuration file:
+To create a new analysis, we only need to import the *Wallet* module and instantiate a new Analysis object with the path to the YAML configuration file:
 
 ```python
 from metrics.wallet import Analysis
@@ -23,7 +23,7 @@ my_analysis = Analysis(input_file='path/to/YAML/file')
 
 ### Export and Import an Analysis
 
-Once the analysis is created, the user is able to export it (to save it into a file):
+Once the analysis is created, the user can export it (i.e., to save it into a file):
 
 ```python
 json_text = my_analysis.export()
@@ -35,9 +35,9 @@ and import it thanks to the `import_analysis` function:
 same_analysis = import_analysis(json_text)
 ```
 
-## Manipulate the Data Analysis
+## Manipulate the Data from Analysis
 
-Before producing the first figures, *Wallet* proposes to manipulate the different rows/experimentations composing the dataframe. It permits to the user to analyse more finely its campaign.
+Before producing the first figures, *Wallet* proposes to manipulate the different rows/experimentations composing the dataframe. It permits the user to analyze more finely its campaign.
 
 ### Describe the Current Analysis
 
@@ -55,11 +55,11 @@ my_analysis.describe(
 >- 400 inputs
 >- 22000 experiments (0 missing -> more details: <Analysis>.get_error_table())
 
-This first method permits to fastly understand how is composed our campaign dataframe. Here, we can show simple statistics, as the number of experiment-wares, inputs, or missing experiments, but also we can show exhaustively the different input and experiment-ware names (by replacing `False` by `True` for `show_experiment_wares` and `show_experiment_wares` parameters). If it exists missing data, the *Wallet* analysis is able to show you a table showing what are these missing experiments by calling `my_analysis.get_error_table()`.
+This first method permits us to fastly understand how is composed our campaign dataframe. Here, we can show simple statistics, as the number of experiment-wares, inputs, or missing experiments, but we can also show exhaustively the different input and experiment-ware names (by replacing `False` by `True` for `show_experiment_wares` and `show_experiment_wares` parameters). If it exists missing data, the *Wallet* analysis can print a table showing what are these missing experiments by calling `my_analysis.get_error_table()`.
 
-### Generate a New Information/Variable to Each Experiment
+### Generate a New Information/Variable for Each Experiment
 
-*Wallet* is able to add new informations to its dataframe by giving a function/lambda to a mapping method of Analysis. For the next example, our input name corresponds to the path of the input (i.e. '/somewhere/family/input-parameters.cnf'). It could be interesting to extract the family name to use it in our next analyses. For this, we use the method `map()` from Analysis:
+*Wallet* can add new information to its dataframe by giving a function/lambda to a mapping method of Analysis. For the next example, our input name corresponds to the path of the input (i.e. `/somewhere/family/input-parameters.cnf`). It could be interesting to extract the family name to use it in our next analyses. For this, we use the method `map()` from Analysis:
 
 ```python
 import re
@@ -71,7 +71,7 @@ my_analysis.map(
 )
 ```
 
-`map()` takes as first parameter the name of the future created column, and as second parameter the lambda that applies the regular expresion `rx` to the variable *input* of the row `x` (the regex returns a list where the second element is the family name we need).
+`map()` takes as first parameter the name of the future created column, and as second parameter the lambda that applies the regular expression `rx` to the variable `input` of the row `x` (the regex returns a list where the second element is the family name we need).
 
 
 ### Subset of Analysis Rows
@@ -96,9 +96,9 @@ my_new_analysis = my_analysis.sub_analysis(
 
 `sub_analysis` method takes two parameters:
 - `column` corresponds to the column we want to filter
-- `sub_set` corresponds to a set of value that correpond to allowed value for the column `column`
+- `sub_set` corresponds to a set of values allowed for the filtering
 
-In this previous example, only 'CaDiCaL' and 'Maple' appear in the `my_new_analysis` analysis.
+In this previous example, only `CaDiCaL` and `Maple` appear in the `my_new_analysis` analysis.
 
 ### *GroupBy* Operator
 
@@ -128,21 +128,21 @@ Here, we create a VBEW named `my_best_solver` and based on the best performances
 
 ## Draw Figures
 
-Now we have the analysis builded and we have manipulated the data we want to highlight, we can start to draw figures. Thanks to *Wallet*, we are able to build two kind of figures: static or dynamic ones.
+Now we have the analysis built and we have manipulated the data we want to highlight, we can start to draw figures. Thanks to *Wallet*, we are able to build two kinds of figures: static and dynamic.
 
 ### Static Figures
 
-*Wallet* permits to draw static plots and to compute tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables, or PNG images and vector graphics (such as SVG or EPS images). Static plots are highly configurable in order to fit in their final destination.
+*Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables, or PNG images, and vector graphics (such as SVG or EPS images). Static plots are highly configurable in order to fit in their final destination.
 
 #### Tables
 
-*Wallet* proposes two main tables showing different kind of statistics. A first one permits to show a global overview of the results. The main **statistic table** permits to show these statistics:
+*Wallet* proposes two main tables showing different kinds of statistics. The first one permits us to show a global overview of the results. The main **statistic table** permits to show these statistics:
 
 - `count` is the number of solved inputs for a given experiment-ware.
 - `sum` is the time taken by the experiment-ware to solve (or not) inputs (including timeout inputs).
 - `PARx` is equivalent to `sum` but gives a penalty of x times the timeout to failed experiments.
 - `common count` is the number of inputs commonly solved by all the experiment-wares.
-- `common sum` is the time taken to solved the commonly solved inputs.
+- `common sum` is the time taken to solve the commonly solved inputs.
 - `uncommon count` corresponds to the number of inputs solved by an experiment-ware less the common ones (the common ones could be considered as easy inputs).
 
 ```python
@@ -167,8 +167,8 @@ This first table is given by calling the previous method with different paramete
 
 The second table proposed by *Wallet* allowing to show the **contribution** of each experiment-ware:
 
-- `vbew simple` corresponds to the intersection size of an experiment-ware and the VBEW of a selection of experiment-wares.
-- `vbew x` corresponds to this previous intersection but it only allows experiment that have taken at least `x` second(s).
+- `vbew simple` corresponds to the intersection size of an experiment-ware and the VBEW.
+- `vbew x` corresponds to this previous intersection but it only allows experiments that have taken at least `x` second(s).
 - `contribution` corresponds to the case that an experiment-ware is the only one that has been able to solve an input.
 
 As the previous table, we just need to call it by this simple method:
@@ -186,7 +186,7 @@ my_analysis.get_contribution_table(
 )
 ```
 
-`deltas` correspond the list of `vbew x` we want to show in the table.
+`deltas` correspond to the list of `vbew x` we want to show in the table.
 
 #### Static Plots
 
