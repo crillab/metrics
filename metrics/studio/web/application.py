@@ -106,6 +106,12 @@ def index():
     return flask.redirect(flask.url_for('/dash/'))
 
 
+@server.route('/example/sat2019')
+def sat2019():
+    return flask.redirect(
+        flask.url_for('/dash/1605561933.231774-82cb32bea52c56551bd7b1a5e8d3eb51dd3bed0171336d44f0d3bdf18ab6da6c'))
+
+
 def serve_normal_layout():
     session_id = str(uuid.uuid4())
     return html.Div(id="page-content", children=[
