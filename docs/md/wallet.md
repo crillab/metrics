@@ -236,8 +236,7 @@ sub_analysis.get_cactus_plot(
 ```
 
 An equivalent plot is also considered to gain in generality of usage through 
-communities: the Cumulative Distribution Function (CDF). Figure \ref{bestCDF}
-provides an overview of this equivalent plot, based on a histogram: x-axis corresponds
+communities: the Cumulative Distribution Function (CDF). This plot is based on a histogram: x-axis corresponds
 to the y-axis of the cactus-plot (time), and y-axis corresponds to the normalized 
 number of solved inputs.
 
