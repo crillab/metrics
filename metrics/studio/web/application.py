@@ -29,7 +29,7 @@ from metrics.scalpel.parser import CsvCampaignParser, CsvConfiguration
 from metrics.studio.web.component.content import get_content as content
 from metrics.studio.web.component.sidebar import get_sidebar as sidebar
 from metrics.studio.web.component.footer import get_footer as footer
-from metrics.studio.web.config import external_stylesheets
+from metrics.studio.web.config import external_stylesheets, LIMIT
 from metrics.studio.web.util import util
 from metrics.studio.web.util.util import create_listener, decode
 from metrics.wallet.dataframe.builder import Analysis
@@ -37,7 +37,7 @@ from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, Scatte
 from metrics.wallet.figure.static_figure import StatTable, ContributionTable
 from datetime import datetime
 
-LIMIT = 7
+
 jsonpickle_pd.register_handlers()
 server = flask.Flask(__name__)
 dash = dash.Dash(__name__, external_stylesheets=external_stylesheets,
@@ -56,6 +56,8 @@ dash.index_string = '''
         {%metas%}
         <title>{%title%}</title>
         <script src="https://kit.fontawesome.com/0fca195f72.js" crossorigin="anonymous"></script>
+            
+        <script src='/static/js/tour.js' type='text/javascript'/></script>
         {%favicon%}
         {%css%}
     </head>
@@ -64,6 +66,7 @@ dash.index_string = '''
         <footer>
             {%config%}
             {%scripts%}
+            
             {%renderer%}
         </footer>
     </body>
@@ -72,8 +75,11 @@ dash.index_string = '''
 
 BASE_DIR = Path(__file__).resolve().parent
 image_directory = 'static/img/'
+js_directory = 'static/js/'
 list_of_images = [os.path.basename(x) for x in glob.glob(f'{BASE_DIR}/{image_directory}*.png')] + \
                  [os.path.basename(x) for x in glob.glob(f'{BASE_DIR}/{image_directory}*.jpg')]
+
+list_of_js = [os.path.basename(x) for x in glob.glob(f'{BASE_DIR}/{js_directory}/*.js')]
 static_image_route = '/static/'
 
 
@@ -101,6 +107,14 @@ def serve_image(image_path):
         raise Exception('"{}" is excluded from the allowed static files'.format(image_path))
 
 
+@server.route(f'{static_image_route}/js/<js_file>')
+def serve_js(js_file):
+    if js_file in list_of_js:
+        return flask.send_from_directory(f'{BASE_DIR}/{js_directory}', js_file)
+    else:
+        raise Exception('"{}" is excluded from the allowed static files'.format(js_file))
+
+
 @server.route('/')
 def index():
     return flask.redirect(flask.url_for('/dash/'))
@@ -108,8 +122,9 @@ def index():
 
 @server.route('/example/sat2019')
 def sat2019():
-    return flask.redirect("http://crillab-metrics.cloud/dash/1605564394.550286-82cb32bea52c56551bd7b1a5e8d3eb51dd3bed0171336d44f0d3bdf18ab6da6c"
-                          )
+    return flask.redirect(
+        "http://crillab-metrics.cloud/dash/1605564394.550286-82cb32bea52c56551bd7b1a5e8d3eb51dd3bed0171336d44f0d3bdf18ab6da6c"
+    )
 
 
 def serve_normal_layout():
@@ -180,14 +195,6 @@ def get_campaign(session_id, contents, input, sep, time, xp_ware, children):
     return query_and_serialize_data(session_id, contents, input, sep, time, xp_ware, children)
 
 
-def get_header(session_id, contents, sep):
-    @cache.memoize()
-    def query_and_serialize_data(session_id, contents, sep):
-        pass
-
-    return query_and_serialize_data(session_id, contents, sep)
-
-
 def parse_contents(contents, separator=','):
     if contents is None:
         return []
@@ -239,7 +246,7 @@ def toggle_modal(n1, n2, n3, is_open):
 
 @dash.callback([Output('xp-ware', 'options'),
                 Output('time', 'options'),
-                Output('input', 'options'), Output('error-load', 'children'), Output('success-load', 'children')],
+                Output('input', 'options'),Output('color', 'options'), Output('error-load', 'children'), Output('success-load', 'children')],
                [Input('upload-data', 'contents'), Input('sep', 'value')],
                [State('upload-data', 'filename'),
                 State('upload-data', 'last_modified')])
@@ -247,10 +254,10 @@ def update_output(list_of_contents, sep, list_of_names, list_of_dates):
     if list_of_contents is None:
         raise PreventUpdate
     if sep is None:
-        return [], [], [], [html.P("Please specify a separator", className="alert alert-danger")], []
+        return [], [], [],[], [html.P("Please specify a separator", className="alert alert-danger")], []
     df = parse_contents(list_of_contents, sep)
     options = [{'label': i, 'value': i} for i in df.columns]
-    return options, options, options, None, [html.P("Success", className="alert alert-success")]
+    return options, options, options,options, None, [html.P("Success", className="alert alert-success")]
 
 
 @dash.callback([Output('error-load', 'style')],
@@ -320,7 +327,7 @@ def box_callback(session_id, xp_ware, time, input, box_experiment_ware, is_succe
                [State('upload-data', 'contents'), State('sep', 'value'), State('url', 'pathname')])
 def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, is_success_children, contents, sep,
                      pathname):
-    if util.have_parameter(pathname) and xp_ware is not None and xp1 is not None:
+    if util.have_parameter(pathname) and xp2 is not None and xp1 is not None:
         campaign = load_campaign(pathname)
         analysis = _create_analysis(campaign)
         campaign_df = analysis.campaign_df
@@ -389,13 +396,18 @@ def cdf_callback(session_id, xp_ware, time, input, global_experiment_ware, is_su
                [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
                 Input('input', 'value'), Input('global-experiment-ware', 'value'),
                 Input('is_success', 'children')],
-               [State('upload-data', 'contents'), State('sep', 'value')])
+               [State('upload-data', 'contents'), State('sep', 'value'), State('url', 'pathname')])
 def stat_table_callback(session_id, xp_ware, time, input, global_experiment_ware,
-                        is_success_children, contents, sep):
-    if contents is None or input is None or time is None or xp_ware is None:
+                        is_success_children, contents, sep, pathname):
+    if util.have_parameter(pathname):
+        campaign = load_campaign(pathname)
+        analysis = _create_analysis(campaign)
+        campaign_df = analysis.campaign_df
+    elif contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
-                                         is_success_children)
+    else:
+        campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                             is_success_children)
     newdf = campaign_df.sub_data_frame('experiment_ware',
                                        global_experiment_ware if global_experiment_ware is not None else [
                                            e['name'] for e in campaign.experiment_wares[:LIMIT]])
@@ -422,12 +434,18 @@ def stat_table_callback(session_id, xp_ware, time, input, global_experiment_ware
                [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
                 Input('input', 'value'), Input('global-experiment-ware', 'value'), Input('is_success', 'children'),
                 Input('deltas', 'value')],
-               [State('upload-data', 'contents'), State('sep', 'value')])
+               [State('upload-data', 'contents'), State('sep', 'value'), State('url', 'pathname')])
 def contribution_table_callback(session_id, xp_ware, time, input, global_experiment_ware, is_success,
-                                global_deltas, contents, sep):
-    if contents is None or input is None or time is None or xp_ware is None:
+                                global_deltas, contents, sep, pathname):
+    if util.have_parameter(pathname):
+        campaign = load_campaign(pathname)
+        analysis = _create_analysis(campaign)
+        campaign_df = analysis.campaign_df
+    elif contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware, is_success)
+    else:
+        campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                             is_success)
     new_df = campaign_df.sub_data_frame('experiment_ware',
                                         global_experiment_ware if global_experiment_ware is not None else [
                                             e['name'] for e in campaign.experiment_wares[:LIMIT]])
