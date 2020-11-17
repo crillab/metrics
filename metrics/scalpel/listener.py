@@ -278,6 +278,14 @@ class CampaignParserListener:
         """
         self._key_mapping[scalpel_key] = campaign_key
 
+    def get_mapping(self, scalpel_key: str) -> List[str]:
+        """
+        Gives the mapping for the given Scalpel key.
+
+        :param scalpel_key: The key expected by Scalpel.
+        """
+        return self._key_mapping.get_sorted_keys(scalpel_key)
+
     def start_campaign(self) -> None:
         """
         Notifies this listener that a new campaign is going to be parsed.
