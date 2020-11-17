@@ -9,9 +9,6 @@ version: 2
 sphinx:
   configuration: docs/rst/conf.py
   builder: html
-install:
-    - method: setuptools
-      path: .
 
 # Optionally build your docs in additional formats such as PDF
 formats: all
@@ -20,3 +17,5 @@ python:
   version: 3.8
   install:
     - requirements: requirements.txt
+    - method: setuptools
+        path: .
