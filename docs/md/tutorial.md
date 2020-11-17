@@ -137,41 +137,41 @@ campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
 
 ### Dynamic Plots
 
-Notebook example [here](example/sat-competition/dynamic_analysis.ipynb)
+Notebook example [here](example/sat-competition/2019/dynamic_analysis.ipynb)
 
 
 ### Static Cactus Plot
 
-Notebook example [here](example/sat-competition/static_cactus_and_output.ipynb)
+Notebook example [here](example/sat-competition/2019/static_cactus_and_output.ipynb)
 
-![Comparison of all competition solvers](example/sat-competition/output/cactus.svg)
-![Comparison of all competition solvers zoom](example/sat-competition/output/cactus_zoom.svg)
+![Comparison of all competition solvers](example/sat-competition/2019/output/cactus.svg)
+![Comparison of all competition solvers zoom](example/sat-competition/2019/output/cactus_zoom.svg)
 
 
 ### Static CDF Plot
 
-Notebook example [here](example/sat-competition/static_cdf_and_output.ipynb)
+Notebook example [here](example/sat-competition/2019/static_cdf_and_output.ipynb)
 
-![Comparison of all competition solvers](example/sat-competition/output/cdf.svg)
+![Comparison of all competition solvers](example/sat-competition/2019/output/cdf.svg)
 
 
 ### Static Scatter Plot
 
-Notebook example [here](example/sat-competition/static_scatter_and_output.ipynb)
+Notebook example [here](example/sat-competition/2019/static_scatter_and_output.ipynb)
 
-![Comparison of all competition solvers](example/sat-competition/output/scatter_zoom.svg)
+![Comparison of all competition solvers](example/sat-competition/2019/output/scatter_zoom.svg)
 
 
 ### Static Box Plot
 
-Notebook example [here](example/sat-competition/static_box_and_output.ipynb)
+Notebook example [here](example/sat-competition/2019/static_box_and_output.ipynb)
 
-![Comparison of all competition solvers](example/sat-competition/output/box.svg)
+![Comparison of all competition solvers](example/sat-competition/2019/output/box.svg)
 
 
 ### Static Tables
 
-Notebook example [here](example/sat-competition/tables_and_output.ipynb)
+Notebook example [here](example/sat-competition/2019/tables_and_output.ipynb)
 
 
 
