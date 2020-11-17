@@ -62,7 +62,12 @@ def data_loading(disabled=False):
 
 
 def configuration(disabled=False):
-    return [
+    if disabled:
+        style = {'display': 'none'}
+    else:
+        style = {}
+
+    return [html.Div(style=style, children=[
         html.H4(children=[html.I(className='fas fa-fw fa-cogs'), "Parameters Mapping"]),
         dbc.FormGroup([
             dbc.Label("Experiment ware (Solver, Software)"),
@@ -103,7 +108,7 @@ def configuration(disabled=False):
         html.A("Documentation",
                href='https://github.com/crillab/metrics/blob/dev/docs/md/scalpel-config.md#identifying-successful-experiments'),
         html.Div(id="is_success",
-                 children=[dbc.Button('Add predicate', id='add', color="primary", )])]
+                 children=[dbc.Button('Add predicate', id='add', color="primary", )])])]
 
 
 def plot_configuration(campaign=None):
@@ -188,7 +193,6 @@ def get_sidebar(campaign: Campaign = None):
                 html.Hr(),
                 html.H4("Example"),
                 html.A("SAT 2019", href="/example/sat2019"),
-                html.Button("Start the tour", id="button-start"),
                 html.Hr()
 
             ] + data_loading(True) + plot_configuration(campaign) + [html.Hr()] + configuration(True) + [
