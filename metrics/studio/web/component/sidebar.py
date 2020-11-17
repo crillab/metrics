@@ -100,15 +100,15 @@ def configuration(disabled=False):
 
                 ],
                 placeholder="Select field for time",
-            )], className='mt-2', ),
-        html.Hr(),
-        html.H4(children=[html.I(className="fas fa-fw fa-check"), "Success Identification",
+            )], className='mt-2', )]),
+            html.Hr(),
+            html.H4(children=[html.I(className="fas fa-fw fa-check"), "Success Identification",
 
-                          ]),
-        html.A("Documentation",
-               href='https://github.com/crillab/metrics/blob/dev/docs/md/scalpel-config.md#identifying-successful-experiments'),
-        html.Div(id="is_success",
-                 children=[dbc.Button('Add predicate', id='add', color="primary", )])])]
+                              ]),
+            html.A("Documentation",
+                   href='https://github.com/crillab/metrics/blob/dev/docs/md/scalpel-config.md#identifying-successful-experiments'),
+            html.Div(id="is_success",
+                     children=[dbc.Button('Add predicate', id='add', color="primary", )])]
 
 
 def plot_configuration(campaign=None):
