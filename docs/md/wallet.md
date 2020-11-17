@@ -1,4 +1,4 @@
-# Analyse a Campaign into *Metrics*
+# Analyse a Campaign in *Metrics*
 
 Once the YAML file is correctly configurated ([Reading a Campaign into *Metrics*](scalpel-config.md)), we can start the analysis of data.
 To analyze the campaign of experiments thanks to *Metrics*, 
