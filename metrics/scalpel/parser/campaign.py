@@ -35,8 +35,9 @@ from __future__ import annotations
 from glob import glob
 from os import path, scandir
 from os.path import basename, splitext
-from typing import Any, List, TextIO
+from typing import Any, Dict, List, TextIO
 
+from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE
 from metrics.scalpel.config import ScalpelConfiguration
 from metrics.scalpel.config.config import FileNameMetaConfiguration, CsvConfiguration
 from metrics.scalpel.config.format import OutputFormat
@@ -213,6 +214,102 @@ class CsvCampaignParser(FileCampaignParser):
         :return: Whether the given row is relevant.
         """
         return True
+
+
+class ReverseCsvCampaignParser(CsvCampaignParser):
+    """
+    The ReverseCsvCampaignParser is a parser that allows to parse a CSV file
+    in which each line corresponds to an input, and the column to the values
+    collected for different experiment-wares on the corresponding input.
+    """
+
+    def __init__(self, listener: CampaignParserListener, file_name_meta: FileNameMetaConfiguration,
+                 csv_configuration: CsvConfiguration, name_separator: str = '.') -> None:
+        """
+        Creates a new CsvCampaignParser.
+
+        :param listener: The listener to notify while parsing.
+        :param file_name_meta: The configuration object describing how to
+                               extract metadata from the path of the file to
+                               parse.
+        :param csv_configuration: The configuration for the CSV reader.
+        :param name_separator: The separator used in the name of the column to separate the
+                               name of the experiment-ware and the identifier of the statistic.
+        """
+        super().__init__(listener, file_name_meta, csv_configuration)
+        self._name_separator = name_separator
+        self._input_mapping = listener.get_mapping(EXPERIMENT_INPUT)
+        self._experiment_wares = set()
+        self._data_names = set()
+        self._current_input = 0
+
+    def parse_header(self, stream: TextIO) -> List[str]:
+        """
+        Parses the header of a CSV stream.
+
+        :param stream: The stream to read.
+
+        :return: The header of the CSV stream
+        """
+        header = super().parse_header(stream)
+
+        # Extracting the experiment-wares and the statistics to collect.
+        for key in header:
+            if key not in self._input_mapping:
+                splitted_key = key.split(self._name_separator, 1)
+                self._experiment_wares.add(splitted_key[0])
+                self._data_names.add('' if len(splitted_key) == 1 else splitted_key[1])
+
+        return header
+
+    def parse_content(self) -> None:
+        """
+        Parses the content of a CSV stream using the associated reader.
+        This reader must have been initialized using "parse_header()" before
+        invoking this method.
+        """
+        for line in self._reader.read_content():
+            line_data = {key: value for key, value in line}
+            input_data = self._extract_input_data(line_data)
+            for xp_ware in self._experiment_wares:
+                self.start_experiment()
+                self._log_experiment(xp_ware, input_data, line_data)
+                self.end_experiment()
+
+    def _extract_input_data(self, line: Dict[str, str]) -> Dict[str, str]:
+        """
+        Extracts the data corresponding to an input from the given line.
+
+        :param line: The line to extract data from.
+
+        :return: The data corresponding to the input.
+        """
+        if len(self._input_mapping) == 1 and self._input_mapping[0] not in line:
+            self._current_input += 1
+            return {EXPERIMENT_INPUT: f'unknown input #{self._current_input}'}
+        return {key: line[key] for key in self._input_mapping}
+
+    def _log_experiment(self, experiment_ware: str, input_data: Dict[str, str], line: Dict[str, str]) -> None:
+        """
+        Logs data about an experiment.
+
+        :param experiment_ware: The experiment-ware used for the experiment.
+        :param input_data: The data about the input used for the experiment.
+        :param line: The data about the experiment.
+        """
+        # Logging data about the input.
+        for key, value in input_data.items():
+            self.log_data(key, value)
+
+        # Logging the name of the experiment-ware.
+        self.log_data(EXPERIMENT_XP_WARE, experiment_ware)
+
+        # Logging statistics about the experiment.
+        for data in self._data_names:
+            if data == '':
+                self.log_data(EXPERIMENT_CPU_TIME, line[experiment_ware])
+            else:
+                self.log_data(data, line[f'{experiment_ware}.{data}'])
 
 
 class EvaluationCampaignParser(CsvCampaignParser):

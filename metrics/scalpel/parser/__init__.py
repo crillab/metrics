@@ -58,6 +58,9 @@ def create_parser(configuration: ScalpelConfiguration, listener: CampaignParserL
     if campaign_format in (CampaignFormat.CSV, CampaignFormat.CSV2, CampaignFormat.TSV):
         return CsvCampaignParser(listener, configuration.get_file_name_meta(), configuration.get_csv_configuration())
 
+    if campaign_format in (CampaignFormat.REVERSE_CSV, CampaignFormat.REVERSE_CSV2, CampaignFormat.REVERSE_TSV):
+        return ReverseCsvCampaignParser(listener, configuration.get_file_name_meta(), configuration.get_csv_configuration())
+
     if campaign_format == CampaignFormat.EVALUATION:
         return EvaluationCampaignParser(listener, configuration.get_file_name_meta())
 

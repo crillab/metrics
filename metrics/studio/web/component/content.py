@@ -43,8 +43,19 @@ def scatter_plot(campaign=None):
                         placeholder="Select experiment ware",
                     )], className='mt-2', )]),
 
+            dbc.Col(
+                children=[dbc.FormGroup([
+                    dbc.Label("Color:"),
+                    dcc.Dropdown(
+                        id="color",
+                        options=options,
+                        multi=False,
+                        placeholder="Select experiment ware",
+                    )], className='mt-2', )]
+            )
+
         ]),
-        dbc.Row(children=[dcc.Loading(id="loading-icon-scatter", children=html.Div(id='scatter'))])
+        html.Div(children=[dcc.Loading(id="loading-icon-scatter", children=html.Div(id='scatter'))])
     ]
 
 
