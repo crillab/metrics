@@ -65,7 +65,7 @@ experiment-wares:
 input-set:
   name: sat-race-2019
   type: file
-  path-list:
+  files:
     - example/sat-competition/input/data/sat2019.input
 source:
   path: example/sat-competition/input/data/sat2019.csv
