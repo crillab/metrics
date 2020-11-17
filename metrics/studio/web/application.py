@@ -37,7 +37,6 @@ from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, Scatte
 from metrics.wallet.figure.static_figure import StatTable, ContributionTable
 from datetime import datetime
 
-
 jsonpickle_pd.register_handlers()
 server = flask.Flask(__name__)
 dash = dash.Dash(__name__, external_stylesheets=external_stylesheets,
@@ -246,7 +245,8 @@ def toggle_modal(n1, n2, n3, is_open):
 
 @dash.callback([Output('xp-ware', 'options'),
                 Output('time', 'options'),
-                Output('input', 'options'),Output('color', 'options'), Output('error-load', 'children'), Output('success-load', 'children')],
+                Output('input', 'options'), Output('color', 'options'), Output('error-load', 'children'),
+                Output('success-load', 'children')],
                [Input('upload-data', 'contents'), Input('sep', 'value')],
                [State('upload-data', 'filename'),
                 State('upload-data', 'last_modified')])
@@ -254,10 +254,10 @@ def update_output(list_of_contents, sep, list_of_names, list_of_dates):
     if list_of_contents is None:
         raise PreventUpdate
     if sep is None:
-        return [], [], [],[], [html.P("Please specify a separator", className="alert alert-danger")], []
+        return [], [], [], [], [html.P("Please specify a separator", className="alert alert-danger")], []
     df = parse_contents(list_of_contents, sep)
     options = [{'label': i, 'value': i} for i in df.columns]
-    return options, options, options,options, None, [html.P("Success", className="alert alert-success")]
+    return options, options, options, options, None, [html.P("Success", className="alert alert-success")]
 
 
 @dash.callback([Output('error-load', 'style')],
@@ -323,9 +323,9 @@ def box_callback(session_id, xp_ware, time, input, box_experiment_ware, is_succe
 @dash.callback([Output('loading-icon-scatter', 'children')],
                [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
                 Input('input', 'value'), Input('experiment-ware-1', 'value'),
-                Input('experiment-ware-2', 'value'), Input('is_success', 'children')],
+                Input('experiment-ware-2', 'value'), Input('is_success', 'children'), Input('color', 'value')],
                [State('upload-data', 'contents'), State('sep', 'value'), State('url', 'pathname')])
-def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, is_success_children, contents, sep,
+def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, is_success_children, color, contents, sep,
                      pathname):
     if util.have_parameter(pathname) and xp2 is not None and xp1 is not None:
         campaign = load_campaign(pathname)
