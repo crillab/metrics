@@ -85,6 +85,7 @@ class Analysis:
     def map(self, new_col, function):
         df = self._campaign_df.data_frame
         df[new_col] = df.apply(function, axis=1)
+        return self
 
     def sub_analysis(self, column, sub_set) -> Analysis:
         """
