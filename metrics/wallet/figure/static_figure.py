@@ -349,9 +349,8 @@ class ScatterMPL(ScatterPlot):
     Creation of a static scatter plot.
     """
 
-    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, color_col=None, **kwargs):
+    def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, **kwargs):
         super().__init__(campaign_df, xp_ware_x, xp_ware_y, **kwargs)
-        self._color_col = color_col
 
     def get_figure(self):
         """
@@ -411,10 +410,3 @@ class ScatterMPL(ScatterPlot):
         @return: the title of the plot.
         """
         return f'Comparison of {self._get_final_xpware_name(self._xp_ware_i)} and {self._get_final_xpware_name(self._xp_ware_j)}'
-
-    def _extra_col(self, df, col):
-        if col is None:
-            return
-
-        ori = self._campaign_df.data_frame
-        df[col] = ori.groupby('input')['sat'].agg(lambda x: str(set(x) - {None}))

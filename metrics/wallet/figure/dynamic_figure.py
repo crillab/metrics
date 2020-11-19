@@ -26,6 +26,7 @@ This module provides classes for dynamic plots.
 """
 
 import plotly.graph_objects as go
+import plotly.express as px
 
 from metrics.wallet.figure.abstract_figure import CactusPlot, ScatterPlot, BoxPlot, CDFPlot
 import plotly.io as pio
@@ -66,6 +67,7 @@ class CactusPlotly(CactusPlot):
             'xaxis.title.text': self.get_x_axis_name(),
             'yaxis.title.text': self.get_y_axis_name(),
         }
+
 
 class CDFPlotly(CDFPlot):
     """
@@ -119,12 +121,23 @@ class ScatterPlotly(ScatterPlot):
         })
 
     def _get_data(self):
-        return [{
-            'x': self._df_scatter[self._xp_ware_i],
-            'y': self._df_scatter[self._xp_ware_j],
-            'text': self._df_scatter.index,
-            'mode': 'markers',
-        }]
+        self._extra_col(self._df_scatter, self._color_col)
+
+        if self._color_col is None:
+            return [{
+                'x': self._df_scatter[self._xp_ware_i],
+                'y': self._df_scatter[self._xp_ware_j],
+                'text': self._df_scatter.index,
+                'mode': 'markers',
+            }]
+        else:
+            return [{
+                'x': sub[self._xp_ware_i],
+                'y': sub[self._xp_ware_j],
+                'text': sub.index,
+                'mode': 'markers',
+                'name': name
+            } for name, sub in self._df_scatter.groupby(self._color_col)]
 
     def _get_layout(self):
         timeout = self._campaign_df.campaign.timeout
