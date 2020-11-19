@@ -1,0 +1,211 @@
+mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity
+==========================================================================
+
+|License| |PyPI - Python Version| |PyPI - Status| |Travis (.org)| |Sonar
+Quality Gate| |Sonar Coverage|
+
+Authors
+-------
+
+-  Thibault Falque - Exakis Nelite
+-  `Romain Wallon - CRIL, Univ Artois &
+   CNRS <https://www.cril.univ-artois.fr/~wallon/en>`__
+-  `Hugues Wattez - CRIL, Univ Artois &
+   CNRS <https://www.cril.univ-artois.fr/~wattez>`__
+
+Why Metrics?
+------------
+
+When developing a SAT solver, one of the most important parts is to
+perform experiments so as to evaluate its performance. Most of the time,
+this process remains the same, so that everybody collects almost the
+same statistics about the solver execution. However, how many scripts
+are there to retrieve experimental data and draw scatter or cactus
+plots? Probably as many as researchers in the domain. Based on this
+observation, this repository provides Metrics, a Python library, aiming
+to unify and make easier the analysis of solver experiments. The
+ambition of Metrics is to provide a complete toolchain from the
+execution of the solver to the analysis of its performance. In
+particular, this library simplifies the retrieval of experimental data
+from many different inputs (including the solver’s output), and provides
+a nice interface for drawing commonly used plots, computing statistics
+about the execution of the solver, and effortlessly organizing them
+(e.g., in Jupyter notebooks). In the end, the main purpose of Metrics is
+to favor the sharing and reproducibility of experimental results and
+their analysis.
+
+Installation
+============
+
+To execute *Metrics* on your computer, you first need to install
+`Python <https://www.python.org/downloads/>`__ on your computer (at
+least version 3.8).
+
+As the ``metrics`` library is `available on
+PyPI <https://pypi.org/project/crillab-metrics/>`__, you install it
+using ``pip``.
+
+.. code:: bash
+
+   pip install crillab-metrics
+
+Note that, depending on your Python installation, you may need to use
+``pip3`` to install it, or to execute ``pip`` as a module, as follows.
+
+.. code:: bash
+
+   python3 -m pip install crillab-metrics
+
+Using mETRICS
+=============
+
+To present how to use ``metrics``, let us consider an example, based on
+the results of the `SAT Race
+2019 <http://sat-race-2019.ciirc.cvut.cz/index.php?cat=results>`__, in
+which 51 solvers have been run on 400 instances. Each experiment
+(corresponding to the execution of a solver on a particular instance)
+has a timeout set to 5000 seconds and a memory limit set to 128GB.
+
+.. code:: python
+
+   from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
+   campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
+
+Extracting Data with metrics-scalpel
+------------------------------------
+
+Experimental data can be retrieved with metrics-scalpel. To do so, a
+YAML configuration file has to be given to the program to allow it to
+retrieve the required data. A sample configuration is given below.
+
+.. code:: yaml
+
+   name: SAT Race 2019
+   date: July 12th, 2019
+   setup:
+       timeout: 5000
+       memout: 128000
+   experiment-wares:
+       - CCAnrSim default
+       - ...
+       - smallsat default
+   input-set:
+       name: sat-race-2019
+       type: hierarchy
+       path-list:
+       - /path/to/the/benchmarks/of/sat/race/2019/
+   source:
+     path: /path/to/the/results/of/sat-2019.csv
+   data:
+     mapping:
+       input: benchmark
+       experiment_ware:
+       - solver
+       - configuration
+       cpu_time: solver time
+
+The first elements of this configuration give informations about the
+campaign: ``name`` , ``date``, ``timeout`` and ``memout``.
+
+Observe that the different solvers are listed in this file. This is
+quite a strong requirement (and we plan to automatically discover the
+solvers in future version of Metrics), but this approach has been
+designed to allow, when needed, to specify more informations about the
+solvers (such as their compilation date, their command line, etc.).
+
+Regarding the input-set, note that it is considered as a hierarchy.
+Whenever this is the case, metrics-scalpel explore the file hierarchy
+rooted at the given directory to discover each file it contains. It is
+also possible to give directly the list of the file, or to give a path
+to a file that contains this list.
+
+The last part, concerning the ``mapping``, allow to retrieve from the
+CSV file (in this case) which columns corresponds to the data expected
+by Scalpel.
+
+Now, from this configuration, we can now load the whole campaign
+corresponding to the SAT competition.
+
+.. code:: python
+
+   from metrics.scalpel import read_yaml
+   campaign = read_yaml("/path/to/configuration.yml")
+
+Exploiting Data with metrics-wallet
+-----------------------------------
+
+Now that we have extracted relevant data from our campaign, we can start
+building figures. The first step consists in extracting a data-frame
+from the read campaign.
+
+.. code:: python
+
+   from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
+   campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
+
+Dynamic Plots
+~~~~~~~~~~~~~
+
+Notebook example
+`here <example/sat-competition/2019/dynamic_analysis.ipynb>`__
+
+Static Cactus Plot
+~~~~~~~~~~~~~~~~~~
+
+Notebook example
+`here <example/sat-competition/2019/static_cactus_and_output.ipynb>`__
+
+|Comparison of all competition solvers| |Comparison of all competition
+solvers zoom|
+
+Static CDF Plot
+~~~~~~~~~~~~~~~
+
+Notebook example
+`here <example/sat-competition/2019/static_cdf_and_output.ipynb>`__
+
+.. figure:: example/sat-competition/2019/output/cdf.svg
+   :alt: Comparison of all competition solvers
+
+   Comparison of all competition solvers
+
+Static Scatter Plot
+~~~~~~~~~~~~~~~~~~~
+
+Notebook example
+`here <example/sat-competition/2019/static_scatter_and_output.ipynb>`__
+
+.. figure:: example/sat-competition/2019/output/scatter_zoom.svg
+   :alt: Comparison of all competition solvers
+
+   Comparison of all competition solvers
+
+Static Box Plot
+~~~~~~~~~~~~~~~
+
+Notebook example
+`here <example/sat-competition/2019/static_box_and_output.ipynb>`__
+
+.. figure:: example/sat-competition/2019/output/box.svg
+   :alt: Comparison of all competition solvers
+
+   Comparison of all competition solvers
+
+Static Tables
+~~~~~~~~~~~~~
+
+Notebook example
+`here <example/sat-competition/2019/tables_and_output.ipynb>`__
+
+Citing mETRICS
+==============
+
+.. |License| image:: https://img.shields.io/pypi/l/crillab-metrics
+   :target: LICENSE.md
+.. |PyPI - Python Version| image:: https://img.shields.io/pypi/pyversions/crillab-metrics
+.. |PyPI - Status| image:: https://img.shields.io/pypi/status/crillab-metrics
+.. |Travis (.org)| image:: https://img.shields.io/travis/crillab/metrics?style=plastic
+.. |Sonar Quality Gate| image:: https://img.shields.io/sonar/quality_gate/crillab_metrics?server=https%3A%2F%2Fsonarcloud.io
+.. |Sonar Coverage| image:: https://img.shields.io/sonar/coverage/crillab_metrics?server=https%3A%2F%2Fsonarcloud.io
+.. |Comparison of all competition solvers| image:: example/sat-competition/2019/output/cactus.svg
+.. |Comparison of all competition solvers zoom| image:: example/sat-competition/2019/output/cactus_zoom.svg

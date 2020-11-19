@@ -23,11 +23,15 @@
 import urllib
 from pathlib import Path
 
-import jsonpickle
-
 from metrics.core.model import Campaign
 from metrics.wallet.dataframe.builder import Analysis
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
+from metrics.wallet.figure.static_figure import LINE_STYLES, DEFAULT_COLORS
+
+import jsonpickle
+import jsonpickle.ext.pandas as jsonpickle_pd
+
+jsonpickle_pd.register_handlers()
 
 
 def import_campaigns(jsons) -> Campaign:

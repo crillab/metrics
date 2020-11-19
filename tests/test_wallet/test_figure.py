@@ -132,6 +132,7 @@ class MyTestCase(unittest.TestCase):
     def test_stat_table_no_vbs(self):
         analysis = Analysis(campaign=self.campaign)
         self.assertEqual(self.STAT_TABLE_RESULT_NO_VBS, analysis.get_stat_table().T.to_dict())
+        self.assertEqual([45802, 103638, 105837], list(analysis.get_stat_table(par=[2, 10])['sumPAR2']))
 
     def test_stat_table_vbs(self):
         analysis = Analysis(campaign=self.campaign).add_vbew(['CHS', 'WDegCAxCD'], 'cpu_time')
@@ -156,15 +157,20 @@ class MyTestCase(unittest.TestCase):
         self.campaign.experiments = self.campaign.experiments[600:]
         analysis = Analysis(campaign=self.campaign)
         self.assertEqual(600, analysis.get_error_table().n_errors.sum())
+        self.assertTrue('600' in analysis.describe())
 
     def test_stat_table_common(self):
         self.campaign.experiments = self.campaign.experiments[200:]
         analysis = Analysis(campaign=self.campaign)
         self.assertTrue(len(set(analysis.get_stat_table()['common count'])) <= 1)
 
-    def test_stat_table_common(self):
+    def test_pivot_table_common(self):
         analysis = Analysis(campaign=self.campaign)
         self.assertEqual(500, len(analysis.get_pivot_table(pivot_val='cpu_time')))
+
+    def test_description(self):
+        analysis = Analysis(campaign=self.campaign)
+        self.assertTrue('1500' in analysis.describe())
 
 
     def test_static_cactus_and_cdf(self):
@@ -193,7 +199,7 @@ class MyTestCase(unittest.TestCase):
         analysis.get_cactus_plot(x_min=300, cumulated=True, color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map)
         plt.show()
 
-        analysis.get_cdf(color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map, y_min=0.6, y_max=0.8)
+        analysis.get_cdf(color_map=color_map, style_map=style_map, xp_ware_name_map=xp_ware_name_map, y_min=0.7, y_max=0.8)
         plt.show()
 
 

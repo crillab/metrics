@@ -3,7 +3,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 
 CONTENT_STYLE = {
-    "margin-left": "18rem",
+    "margin-left": "25%",
     "margin-right": "2rem",
     "padding": "2rem 1rem",
 }
@@ -43,8 +43,19 @@ def scatter_plot(campaign=None):
                         placeholder="Select experiment ware",
                     )], className='mt-2', )]),
 
+            dbc.Col(
+                children=[dbc.FormGroup([
+                    dbc.Label("Color:"),
+                    dcc.Dropdown(
+                        id="color",
+                        options=options,
+                        multi=False,
+                        placeholder="Select experiment ware",
+                    )], className='mt-2', )]
+            )
+
         ]),
-        dbc.Row(children=[dcc.Loading(id="loading-icon-scatter", children=html.Div(id='scatter'))])
+        html.Div(children=[dcc.Loading(id="loading-icon-scatter", children=html.Div(id='scatter'))])
     ]
 
 
@@ -92,6 +103,6 @@ def get_content(campaign=None):
                 dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(table())))], className="mt-5"),
                 dbc.Row(children=[dbc.Col(children=dbc.Card(dbc.CardBody(contribution())))], className="mt-5")
             ],
-            style=CONTENT_STYLE, className="col-md-10"
+            style=CONTENT_STYLE, className="col-lg-9"
         )
 

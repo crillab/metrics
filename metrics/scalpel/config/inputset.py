@@ -87,7 +87,7 @@ class ListInputSetReader(InputSetReader):
     """
 
     def __init__(self, listener: CampaignParserListener,
-                 input_set: List[Dict[str, Any]]) -> None:
+                 input_set: List[Dict[str, Any]], extensions, file_name_meta) -> None:
         """
         Creates a new ListInputSetReader.
 
@@ -97,6 +97,8 @@ class ListInputSetReader(InputSetReader):
         """
         super().__init__(listener)
         self._input_set = input_set
+        self._file_name_meta = file_name_meta
+        self._extensions = extensions
 
     def read(self):
         """
@@ -104,9 +106,32 @@ class ListInputSetReader(InputSetReader):
         """
         for input_description in self._input_set:
             self._start_input()
+            file = input_description['path']
+            if self._is_ignored(file):
+                continue
+            for k, v in self._file_name_meta.extract_from(file).items():
+                self._log_data(k, v)
             for key, value in input_description.items():
                 self._log_data(key, value)
             self._end_input()
+
+    def _is_ignored(self, file: str) -> bool:
+        """
+        Checks whether the given file is ignored while exploring the file hierarchy.
+
+        :param file: The file to check.
+
+        :return: If the file is ignored.
+        """
+        if self._extensions is None:
+            # All files are considered.
+            return False
+
+        # Checking if the file has one of the expected extensions.
+        for ext in self._extensions:
+            if file.endswith(ext):
+                return False
+        return True
 
 
 class FileListInputSetReader(InputSetReader):
@@ -116,8 +141,7 @@ class FileListInputSetReader(InputSetReader):
     """
 
     def __init__(self, listener: CampaignParserListener, files: Iterable[str],
-                 family: Union[int, str, None] = -2, name: int = -1,
-                 extensions: Optional[List] = None) -> None:
+                 extensions, file_name_meta):
         """
         Creates a new FileListInputSetReader.
 
@@ -136,8 +160,7 @@ class FileListInputSetReader(InputSetReader):
         """
         super().__init__(listener)
         self._file_list = files
-        self._family = family
-        self._name = name
+        self._file_name_meta = file_name_meta
         self._extensions = extensions
 
     def read(self) -> None:
@@ -162,15 +185,8 @@ class FileListInputSetReader(InputSetReader):
         self._log_data('path', file)
 
         # Retrieving the name of the input.
-        path_elements = file.split(sep)
-        self._log_data('name', path_elements[self._name])
-
-        # Retrieving the family of the input, if any.
-        if self._family is not None:
-            if isinstance(self._family, str):
-                self._log_data('family', self._family)
-            else:
-                self._log_data('family', path_elements[self._family])
+        for k, v in self._file_name_meta.extract_from(file).items():
+            self._log_data(k, v)
 
     def _is_ignored(self, file: str) -> bool:
         """
@@ -198,8 +214,7 @@ class HierarchyInputSetReader:
     """
 
     def __init__(self, listener: CampaignParserListener, root_dir: str,
-                 family: Union[int, str, None] = -2, name: int = -1,
-                 extensions: Optional[List] = None) -> None:
+                 extensions, file_name_meta):
         """
         Creates a new HierarchyInputSetReader.
 
@@ -218,8 +233,7 @@ class HierarchyInputSetReader:
         """
         self._listener = listener
         self._root_dir = root_dir
-        self._family = family
-        self._name = name
+        self._file_name_meta = file_name_meta
         self._extensions = extensions
 
     def read(self) -> None:
@@ -227,8 +241,7 @@ class HierarchyInputSetReader:
         Reads the files of the input set, and extracts their description.
         """
         reader = FileListInputSetReader(self._listener, self._walk(),
-                                        self._family, self._name,
-                                        self._extensions)
+                                        self._extensions, self._file_name_meta)
         reader.read()
 
     def _walk(self) -> Generator[str, None, None]:
@@ -242,28 +255,27 @@ class HierarchyInputSetReader:
                 yield path.join(directory, file)
 
 
-def create_input_set_reader(fmt: InputSetFormat, **kwargs) -> Callable[[CampaignParserListener, Any], None]:
+def create_input_set_reader(fmt: InputSetFormat, extensions, file_name_meta) -> Callable[[CampaignParserListener, Any], None]:
     """
     Creates a reader for an input-set in the given format.
 
     :param fmt: The format of the input-set to read.
-    :param kwargs: The options for the input set reader.
 
     :return: The function to use to read the input-set.
     """
     if fmt == InputSetFormat.LIST:
-        return lambda l, s: _str_reader(ListInputSetReader, l, s)
+        return lambda l, s: _str_reader(ListInputSetReader, l, s, extensions, file_name_meta)
 
     if fmt == InputSetFormat.FILE_LIST:
-        return lambda l, s: _str_reader(FileListInputSetReader, l, s, **kwargs)
+        return lambda l, s: _str_reader(FileListInputSetReader, l, s, extensions, file_name_meta)
 
     if fmt == InputSetFormat.FILE:
-        return lambda l, s: _file_reader(l, s[0], **kwargs)
+        return lambda l, s: _file_reader(l, s[0], extensions, file_name_meta)
 
-    return lambda l, s: _str_reader(HierarchyInputSetReader, l, s[0], **kwargs)
+    return lambda l, s: _str_reader(HierarchyInputSetReader, l, s[0], extensions, file_name_meta)
 
 
-def _str_reader(factory: Callable, listener: CampaignParserListener, source: Any, **kwargs) -> None:
+def _str_reader(factory: Callable, listener: CampaignParserListener, source: Any, extensions, file_name_meta) -> None:
     """
     Reads an input-set from a list containing the description of the inputs.
 
@@ -271,11 +283,11 @@ def _str_reader(factory: Callable, listener: CampaignParserListener, source: Any
     :param listener: The listener to notify while reading.
     :param source: The source from which to read the input.
     """
-    reader = factory(listener, source, **kwargs)
+    reader = factory(listener, source, extensions, file_name_meta)
     reader.read()
 
 
-def _file_reader(listener: CampaignParserListener, source: Any, **kwargs):
+def _file_reader(listener: CampaignParserListener, source: Any, extensions, file_name_meta):
     """
     Reads an input-set from a file containing the list of the inputs to consider.
 
@@ -283,5 +295,5 @@ def _file_reader(listener: CampaignParserListener, source: Any, **kwargs):
     :param source: The source from which to read the input.
     """
     with open(source, 'r') as file:
-        reader = FileListInputSetReader(listener, file, **kwargs)
+        reader = FileListInputSetReader(listener, file, extensions, file_name_meta)
         reader.read()

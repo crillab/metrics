@@ -8,6 +8,7 @@
    tutorial
    code
    scalpel-config
+   wallet
 ```
 
 ## Indices and tables

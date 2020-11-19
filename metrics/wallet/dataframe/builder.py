@@ -38,7 +38,7 @@ from metrics.scalpel import read_campaign, ScalpelConfiguration
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
 from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable, \
-    ErrorTable, PivotTable
+    ErrorTable, PivotTable, Description, CDFMPL
 
 
 class Analysis:
@@ -140,6 +140,9 @@ class Analysis:
 
     def delete_input_when(self, f):
         return Analysis(campaign_df=self._campaign_df.delete_input_when(f))
+
+    def describe(self, **kwargs: dict):
+        return Description(self._campaign_df, **kwargs).get_description()
 
     def get_cactus_plot(self, dynamic: bool = False, **kwargs: dict):
         return (CactusPlotly(self._campaign_df, **kwargs) if dynamic else CactusMPL(self._campaign_df, **kwargs)).get_figure()

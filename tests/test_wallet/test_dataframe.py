@@ -119,7 +119,6 @@ class TestCampaignDataFrameBuilder(unittest.TestCase):
 
     def test_add_vbs_diff_10(self):
         df = self.campaign_df.add_vbew({'CHS', 'WDegCAxCD'}, 'cpu_time', diff=.1).data_frame
-        print(df)
         self.assertEqual(532, len(df))
 
     def test_groupby(self):
