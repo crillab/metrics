@@ -4,6 +4,7 @@ import unittest
 import jsonpickle
 
 from metrics.core.builder.builder import CampaignBuilder
+from metrics.core.constants import *
 from metrics.core.model import Campaign
 
 
@@ -24,10 +25,10 @@ JSON_CAMPAIGN = {
         "name": "Ukulele bench",
         "inputs": [
             {
-                "path": "/somewhere/over/the/rainbow/"
+                "name": "/somewhere/over/the/rainbow/"
             },
             {
-                "path": "/somewhere/under/the/rainbow/"
+                "name": "/somewhere/under/the/rainbow/"
             }
         ]
     },
@@ -48,33 +49,33 @@ JSON_CAMPAIGN = {
 class CampaignTestCase(unittest.TestCase):
 
     def _create_input(self, builder, path):
-        builder['path'] = path
+        builder[INPUT_NAME] = path
 
     def _create_inputset(self, builder):
-        builder['name'] = 'Ukulele bench'
+        builder[INPUT_SET_NAME] = 'Ukulele bench'
         self._create_input(builder.add_input_builder(), '/somewhere/over/the/rainbow/')
         self._create_input(builder.add_input_builder(), '/somewhere/under/the/rainbow/')
 
     def _create_experiment_ware(self, builder):
         builder['id'] = 1
-        builder['name'] = 'MySolver'
+        builder[XP_WARE_NAME] = 'MySolver'
         builder['date'] = 'now'
         builder['checksum'] = 'afhjlsdgjdgsf2q2d3'
         builder['last_modified'] = 'now'
 
     def _create_experiment_builder(self, builder):
         builder['id'] = 1
-        builder['input'] = 'input'
+        builder[EXPERIMENT_INPUT] = 'input'
         builder['start_time'] = 'now'
-        builder['experiment_ware'] = 'ConAbs'
-        builder['cpu_time'] = 1200.
+        builder[EXPERIMENT_XP_WARE] = 'ConAbs'
+        builder[EXPERIMENT_CPU_TIME] = 1200.
 
     def _create_campaign_builder(self):
         self.cb = CampaignBuilder()
         self.cb['id'] = 1
-        self.cb['name'] = 'Une campagne de Napoléon'
-        self.cb['timeout'] = 0.015
-        self.cb['memout'] = 0.015
+        self.cb[CAMPAIGN_NAME] = 'Une campagne de Napoléon'
+        self.cb[CAMPAIGN_TIMEOUT] = 0.015
+        self.cb[CAMPAIGN_MEMOUT] = 0.015
         self.cb['date'] = 'now'
         self._create_experiment_ware(self.cb.add_experiment_ware_builder())
         self._create_inputset(self.cb.add_input_set_builder())
@@ -92,8 +93,8 @@ class CampaignTestCase(unittest.TestCase):
             self._create_experiment_ware(self.cb.add_experiment_ware_builder())
 
     def test_double_input_inside_builder(self):
-        self.assertTrue((self.cb.has_input_with_path('/somewhere/over/the/rainbow/')))
-        self.assertFalse((self.cb.has_input_with_path('/somewhere/over/the/rainbow/blue/birds/fly/')))
+        self.assertTrue((self.cb.has_input_with_name('/somewhere/over/the/rainbow/')))
+        self.assertFalse((self.cb.has_input_with_name('/somewhere/over/the/rainbow/blue/birds/fly/')))
 
     def test_success_build_campaign(self):
         c = self.cb.build()

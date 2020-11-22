@@ -33,7 +33,7 @@ from typing import Any
 import jsonpickle
 
 from metrics.core.constants import XP_WARE_NAME, CAMPAIGN_NAME, CAMPAIGN_TIMEOUT, CAMPAIGN_MEMOUT, CAMPAIGN_XP_WARES, \
-    CAMPAIGN_INPUT_SET, CAMPAIGN_EXPERIMENTS, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, INPUT_PATH, \
+    CAMPAIGN_INPUT_SET, CAMPAIGN_EXPERIMENTS, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, INPUT_NAME, \
     INPUT_SET_NAME, INPUT_SET_INPUTS
 
 """
@@ -124,7 +124,7 @@ class Input(Model):
         Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
         @param attributes: dictionary of attribute to add in this model
         """
-        self.path = attributes.pop(INPUT_PATH)
+        self.name = attributes.pop(INPUT_NAME)
         super().__init__(attributes)
 
 

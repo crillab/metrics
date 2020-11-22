@@ -48,7 +48,9 @@ EXPERIMENT_XP_WARE = 'experiment_ware'
 EXPERIMENT_CPU_TIME = 'cpu_time'
 
 ## Input constants
-INPUT_PATH = 'path'
+INPUT_NAME = 'name'
+
+## Input set constants
 INPUT_SET_NAME = 'name'
 INPUT_SET_INPUTS = 'inputs'
 

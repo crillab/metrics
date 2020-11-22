@@ -170,7 +170,7 @@ class Description:
         total = len(df)
 
         return f"""
-This Analysis is composed of:
+This analysis is composed of:
 - {len(self._campaign_df.xp_ware_names)} experiment-wares{self._get_xp_wares()} 
 - {len(self._campaign_df.inputs)} inputs{self._get_inputs()}
 - {total - missing} experiments ({missing} missing -> more details: <Analysis>.get_error_table())

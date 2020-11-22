@@ -35,7 +35,7 @@ from metrics.core.builder.attribute_manager import AttributeManager, AttributeMa
 from metrics.core.builder.typing_strategy import TypingStrategyEnum
 from metrics.core.model import ExperimentWare, Campaign, Experiment, Input, InputSet, Model
 from metrics.core.constants import XP_WARE_NAME, CAMPAIGN_NAME, CAMPAIGN_TIMEOUT, CAMPAIGN_MEMOUT, CAMPAIGN_XP_WARES, \
-    CAMPAIGN_INPUT_SET, CAMPAIGN_EXPERIMENTS, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, INPUT_PATH, \
+    CAMPAIGN_INPUT_SET, CAMPAIGN_EXPERIMENTS, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, INPUT_NAME, \
     INPUT_SET_NAME, INPUT_SET_INPUTS
 
 
@@ -118,6 +118,13 @@ class ModelBuilder:
         """
         return self._model(self._get_final_data())
 
+    def check_if_complete(self):
+        """
+        Verifies if all the constraints are respected.
+        """
+        for value in self._log_data.values():
+            value.get_value()
+
     def _get_final_data(self) -> dict:
         return {
             key: value.get_value() for key, value in self._log_data.items()
@@ -171,8 +178,8 @@ class CampaignBuilder(ModelBuilder):
     def has_experiment_ware_with_name(self, param):
         return not self._attribute_manager_sets.xp_ware_attr_set.get_attribute_manager(XP_WARE_NAME).is_unique(param)
 
-    def has_input_with_path(self, param):
-        return not self._attribute_manager_sets.input_attr_set.get_attribute_manager(INPUT_PATH).is_unique(param)
+    def has_input_with_name(self, param):
+        return not self._attribute_manager_sets.input_attr_set.get_attribute_manager(INPUT_NAME).is_unique(param)
 
 
 class ExperimentWareBuilder(ModelBuilder):
@@ -225,7 +232,7 @@ class InputSetBuilder(ModelBuilder):
         return input
 
     def has_input_with_path(self, param):
-        return not self._input_attribute_set.get_attribute_manager(INPUT_PATH).is_unique(param)
+        return not self._input_attribute_set.get_attribute_manager(INPUT_NAME).is_unique(param)
 
 
 class InputBuilder(ModelBuilder):
@@ -299,7 +306,7 @@ class AttributeManagerSets:
                                                                    nullable=False)
 
     def _init_input_builder_attribute_set(self):
-        self._input_attr_set.add_attribute_manager_for_typing(name=INPUT_PATH, ordered_typing=[TypingStrategyEnum.STRING],
+        self._input_attr_set.add_attribute_manager_for_typing(name=INPUT_NAME, ordered_typing=[TypingStrategyEnum.STRING],
                                                               is_list=False, empty=False,
                                                               nullable=False, unique=True)
 
