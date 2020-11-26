@@ -61,6 +61,13 @@ class Model:
         """
         return self.__dict__[key]
 
+    def keys(self):
+        """
+
+        @return:
+        """
+        return self.__dict__.keys()
+
 
 class ExperimentWare(Model):
     """
@@ -97,6 +104,12 @@ class Campaign(Model):
     def export(self):
         return jsonpickle.encode(self)
 
+    def get_input_set(self):
+        """
+
+        @return:
+        """
+        return self.input_set
 
 class Experiment(Model):
     """
@@ -142,4 +155,9 @@ class InputSet(Model):
         self.inputs = attributes.pop(INPUT_SET_INPUTS)
         super().__init__(attributes)
 
+    def get_inputs(self):
+        """
 
+        @return:
+        """
+        return self.inputs

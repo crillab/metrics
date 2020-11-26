@@ -18,8 +18,12 @@ def box_plot():
 def scatter_plot(campaign=None):
     if campaign is None:
         options = []
+        options_color = []
     else:
         options = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
+
+        columns = campaign.get_input_set().get_inputs()[0].keys()
+        options_color = [{'label': e, 'value': e} for e in columns]
 
     return [
         html.H4("Scatter Plot", className="card-title"),
@@ -48,9 +52,9 @@ def scatter_plot(campaign=None):
                     dbc.Label("Color:"),
                     dcc.Dropdown(
                         id="color",
-                        options=options,
+                        options=options_color,
                         multi=False,
-                        placeholder="Select experiment ware",
+                        placeholder="Select",
                     )], className='mt-2', )]
             )
 

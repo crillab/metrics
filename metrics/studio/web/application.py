@@ -189,7 +189,7 @@ def get_campaign(session_id, contents, input, sep, time, xp_ware, children):
         is_success = _create_is_success_expression(children)
         analysis_web = _create_analysis(campaign, is_success=is_success)
         campaign_df = analysis_web.campaign_df
-        return campaign_df, campaign
+        return campaign_df, campaign, analysis_web
 
     return query_and_serialize_data(session_id, contents, input, sep, time, xp_ware, children)
 
@@ -246,7 +246,7 @@ def toggle_modal(n1, n2, n3, is_open):
 @dash.callback([Output('xp-ware', 'options'),
                 Output('time', 'options'),
                 Output('input', 'options'), Output('color', 'options'), Output('error-load', 'children'),
-                Output('success-load', 'children')],
+                Output('success-load', 'children'), Output('warning-load', 'children')],
                [Input('upload-data', 'contents'), Input('sep', 'value')],
                [State('upload-data', 'filename'),
                 State('upload-data', 'last_modified')])
@@ -257,7 +257,10 @@ def update_output(list_of_contents, sep, list_of_names, list_of_dates):
         return [], [], [], [], [html.P("Please specify a separator", className="alert alert-danger")], []
     df = parse_contents(list_of_contents, sep)
     options = [{'label': i, 'value': i} for i in df.columns]
-    return options, options, options, options, None, [html.P("Success", className="alert alert-success")]
+    return options, options, options, options, None, [html.P("File loaded!",
+                                                             className="alert alert-success")], [
+               html.P("Please fill in the following parameters.",
+                      className="alert alert-warning")]
 
 
 @dash.callback([Output('error-load', 'style')],
@@ -289,7 +292,7 @@ def is_success_form(n_clicks, children, contents):
 def campaign_callback(session_id, xp_ware, time, input, children, contents, sep):
     if contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
-    campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware, children)
+    campaign_df, campaign, _ = get_campaign(session_id, contents, input, sep, time, xp_ware, children)
 
     experiment_ware = [{'label': e['name'], 'value': e['name']} for e in campaign.experiment_wares]
     return experiment_ware, experiment_ware, experiment_ware
@@ -309,8 +312,8 @@ def box_callback(session_id, xp_ware, time, input, box_experiment_ware, is_succe
     elif contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
     else:
-        campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
-                                             is_success_children)
+        campaign_df, campaign, _ = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                                is_success_children)
 
     newdf = campaign_df.sub_data_frame('experiment_ware',
                                        box_experiment_ware if box_experiment_ware is not None else [
@@ -335,8 +338,8 @@ def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, is_success_chil
             or xp2 is None:
         raise PreventUpdate
     else:
-        campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
-                                             is_success_children)
+        campaign_df, campaign, _ = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                                is_success_children)
     scatter = ScatterPlotly(campaign_df, xp1, xp2)
 
     return [dcc.Graph(figure=scatter.get_figure()), ],
@@ -353,18 +356,18 @@ def cactus_callback(session_id, xp_ware, time, input, cactus_experiment_ware, is
     if util.have_parameter(pathname):
         campaign = load_campaign(pathname)
         analysis = _create_analysis(campaign)
-        campaign_df = analysis.campaign_df
     elif contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
     else:
-        campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
-                                             is_success_children)
-    new_df = campaign_df.sub_data_frame('experiment_ware',
-                                        cactus_experiment_ware if cactus_experiment_ware is not None else [
-                                            e['name'] for e in campaign.experiment_wares[:LIMIT]])
-    cactus = CactusPlotly(new_df)
+        campaign_df, campaign, analysis = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                                       is_success_children)
 
-    return [dcc.Graph(figure=cactus.get_figure()), ],
+    wares = cactus_experiment_ware if cactus_experiment_ware is not None else [
+        e['name'] for e in campaign.experiment_wares[:LIMIT]]
+    my_local_analysis = analysis.sub_analysis('experiment_ware', wares)
+    my_local_analysis = my_local_analysis.add_vbew(wares, 'cpu_time', vbew_name='vbs1')
+
+    return [dcc.Graph(figure=my_local_analysis.get_cactus_plot(dynamic=True)), ],
 
 
 @dash.callback([Output('loading-cdf', 'children')],
@@ -377,19 +380,18 @@ def cdf_callback(session_id, xp_ware, time, input, global_experiment_ware, is_su
     if util.have_parameter(pathname):
         campaign = load_campaign(pathname)
         analysis = _create_analysis(campaign)
-        campaign_df = analysis.campaign_df
     elif contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
     else:
-        campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
-                                             is_success_children)
+        campaign_df, campaign, analysis = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                                       is_success_children)
 
-    new_df = campaign_df.sub_data_frame('experiment_ware',
-                                        global_experiment_ware if global_experiment_ware is not None else [
-                                            e['name'] for e in campaign.experiment_wares[:LIMIT]])
-    cdf = CDFPlotly(new_df)
+    wares = global_experiment_ware if global_experiment_ware is not None else [
+        e['name'] for e in campaign.experiment_wares[:LIMIT]]
+    my_local_analysis = analysis.sub_analysis('experiment_ware', wares)
+    my_local_analysis = my_local_analysis.add_vbew(wares, 'cpu_time', vbew_name='vbs1')
 
-    return [dcc.Graph(figure=cdf.get_figure()), ],
+    return [dcc.Graph(figure=my_local_analysis.get_cdf(dynamic=True)), ],
 
 
 @dash.callback([Output('loading-summary', 'children')],
@@ -406,8 +408,8 @@ def stat_table_callback(session_id, xp_ware, time, input, global_experiment_ware
     elif contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
     else:
-        campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
-                                             is_success_children)
+        campaign_df, campaign, _ = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                                is_success_children)
     newdf = campaign_df.sub_data_frame('experiment_ware',
                                        global_experiment_ware if global_experiment_ware is not None else [
                                            e['name'] for e in campaign.experiment_wares[:LIMIT]])
@@ -444,8 +446,8 @@ def contribution_table_callback(session_id, xp_ware, time, input, global_experim
     elif contents is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
     else:
-        campaign_df, campaign = get_campaign(session_id, contents, input, sep, time, xp_ware,
-                                             is_success)
+        campaign_df, campaign, _ = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                                is_success)
     new_df = campaign_df.sub_data_frame('experiment_ware',
                                         global_experiment_ware if global_experiment_ware is not None else [
                                             e['name'] for e in campaign.experiment_wares[:LIMIT]])

@@ -13,7 +13,7 @@ SIDEBAR_STYLE = {
     "padding": "2rem 1rem",
     "background-color": "#f8f9fa",
     "overflow-y": "scroll",
-    "text-align": "center"
+    "text-align": "center",
 }
 
 
@@ -62,14 +62,17 @@ def data_loading(disabled=False):
 
 
 def configuration(disabled=False):
-
     if disabled:
         style = {'display': 'none'}
     else:
         style = {}
 
-    return [html.Div(style=style,children=[
+    return [html.Div(style=style, children=[
         html.H4(children=[html.I(className='fas fa-fw fa-cogs'), "Parameters Mapping"]),
+
+        html.Div(
+            id="warning-load"
+        ),
         dbc.FormGroup([
             dbc.Label("Experiment ware (Solver, Software)"),
             dcc.Dropdown(
@@ -146,57 +149,34 @@ def plot_configuration(campaign=None):
 
 
 def get_sidebar(campaign: Campaign = None):
-    if campaign is None:
-        return html.Div(
-            [
-                html.H3("METRICS STUDIO", style={'text-align': 'center'}),
-                html.Hr(),
+    b = campaign is not None
 
-                html.A(
-                    html.I(className='fas fa-info-circle mb-2 mr-2 mt-2',
-                           style={'font-size': '25px'}),
-                    id='open2'),
-                html.A(html.I(className='fab fa-twitter mb-2 mr-2 mt-2', style={'font-size': '25px'}),
-                       href='https://twitter.com/crillab_metrics',
-                       style={'font-size': '15px'}),
-                html.A(html.I(className='fab fa-github mb-2 mr-2 mt-2', style={'font-size': '25px'}),
-                       href='https://github.com/crillab/metrics'),
+    return html.Div(
+        [
+            html.Button(children=[html.I(className='fas fa-bars')],
+                        className="btn btn-link d-md-none rounded-circle mr-3"),
+            html.H3("METRICS STUDIO", style={'text-align': 'center'}),
+            html.Hr(),
 
-                html.A(html.I(className='fas fa-envelope mb-2 mr-2 mt-2', style={'font-size': '25px'}),
-                       href='mailto:metrics@cril.fr'),
-                html.Hr(),
-                html.H4("Example"),
-                html.A("SAT 2019", href="/example/sat2019"),
-                html.Hr()
-            ]
+            html.A(
+                html.I(className='fas fa-info-circle mb-2 mr-2 mt-2',
+                       style={'font-size': '25px'}),
+                id='open2'),
+            html.A(html.I(className='fab fa-twitter mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                   href='https://twitter.com/crillab_metrics',
+                   style={'font-size': '15px'}),
+            html.A(html.I(className='fab fa-github mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                   href='https://github.com/crillab/metrics'),
 
-            + data_loading() + [html.Hr()] + configuration() + [html.Hr()] + plot_configuration(),
-            style=SIDEBAR_STYLE, className="col-lg-3"
-        )
-    else:
-        return html.Div(
-            [
-                html.H3("METRICS STUDIO", style={'text-align': 'center'}),
-                html.Hr(),
+            html.A(html.I(className='fas fa-envelope mb-2 mr-2 mt-2', style={'font-size': '25px'}),
+                   href='mailto:metrics@cril.fr'),
+            html.Hr(),
+            html.H4("Example"),
+            html.A("SAT 2019", href="/example/sat2019"),
+            html.Hr()
+        ]
 
-                html.A(
-                    html.I(className='fas fa-info-circle mb-2 mr-2 mt-2',
-                           style={'font-size': '25px'}),
-                    id='open2'),
-                html.A(html.I(className='fab fa-twitter mb-2 mr-2 mt-2', style={'font-size': '25px'}),
-                       href='https://twitter.com/crillab_metrics',
-                       style={'font-size': '15px'}),
-                html.A(html.I(className='fab fa-github mb-2 mr-2 mt-2', style={'font-size': '25px'}),
-                       href='https://github.com/crillab/metrics'),
-
-                html.A(html.I(className='fas fa-envelope mb-2 mr-2 mt-2', style={'font-size': '25px'}),
-                       href='mailto:metrics@cril.fr'),
-                html.Hr(),
-                html.H4("Example"),
-                html.A("SAT 2019", href="/example/sat2019"),
-                html.Hr()
-
-            ] + data_loading(True) + plot_configuration(campaign) + [html.Hr()] + configuration(True) + [
-                html.Hr()],
-            style=SIDEBAR_STYLE, className="col-lg-3"
-        )
+        + data_loading(b) + [html.Hr()] + configuration(b) + [html.Hr()] + plot_configuration(campaign),
+        style=SIDEBAR_STYLE,
+        className="col-lg-3"
+    )
