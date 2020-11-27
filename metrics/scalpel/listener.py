@@ -38,7 +38,7 @@ from warnings import warn
 
 from metrics.core.builder import CampaignBuilder
 from metrics.core.builder.builder import ModelBuilder, InputSetBuilder
-from metrics.core.constants import EXPERIMENT_XP_WARE, EXPERIMENT_INPUT, XP_WARE_NAME, INPUT_PATH, INPUT_SET_NAME
+from metrics.core.constants import EXPERIMENT_XP_WARE, EXPERIMENT_INPUT, XP_WARE_NAME, INPUT_NAME, INPUT_SET_NAME
 from metrics.core.model import Campaign
 
 
@@ -216,17 +216,17 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         :param all_values: The values that has been read about the input.
         """
         # If the path has been read and corresponds to an existing input, there is nothing to do.
-        if INPUT_PATH in all_values and campaign_builder.has_input_with_path(all_values[INPUT_PATH]):
+        if INPUT_NAME in all_values and campaign_builder.has_input_with_name(all_values[INPUT_NAME]):
             return
 
         # If the inferred path corresponds to an existing input, there is nothing to do.
-        if campaign_builder.has_input_with_path(path):
+        if campaign_builder.has_input_with_name(path):
             return
 
         # This is the first time we read this input: we need to create it on the fly.
         input_set_builder = self._listener.get_input_set_builder('auto_name')
         input_builder = input_set_builder.add_input_builder()
-        InExperimentCampaignParserListenerState._build_on_the_fly(input_builder, INPUT_PATH, path, all_values)
+        InExperimentCampaignParserListenerState._build_on_the_fly(input_builder, INPUT_NAME, path, all_values)
 
     @staticmethod
     def _build_on_the_fly(builder: ModelBuilder, element_key: str, element_id: str,

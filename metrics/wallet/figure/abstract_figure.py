@@ -321,7 +321,7 @@ class ScatterPlot(Plot):
     """
 
     def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col=EXPERIMENT_CPU_TIME,
-                 marker_alpha: float = 0.3, **kwargs):
+                 marker_alpha: float = 0.3, color_col=None, **kwargs):
         """
         Creates a scatter plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -337,6 +337,7 @@ class ScatterPlot(Plot):
         self._df_scatter = self.get_data_frame()
         self._min = self._df_scatter[[self._xp_ware_i, self._xp_ware_j]].min(skipna=True).min()
         self._marker_alpha = marker_alpha
+        self._color_col = color_col
 
     def get_data_frame(self):
         """
@@ -369,6 +370,13 @@ class ScatterPlot(Plot):
         @return: the title of the plot.
         """
         return self._title or f'Comparison of {self._xp_ware_i} and {self._xp_ware_j}'
+
+    def _extra_col(self, df, col):
+        if col is None:
+            return
+
+        ori = self._campaign_df.data_frame
+        df[col] = ori.groupby('input')[col].agg(lambda x: str(set(x) - {None}))
 
 
 class BoxPlot(Plot):

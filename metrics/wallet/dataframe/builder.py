@@ -32,7 +32,7 @@ from pandas import DataFrame
 from itertools import product
 
 from metrics.core.model import Campaign
-from metrics.core.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_PATH, EXPERIMENT_INPUT, XP_WARE_NAME, \
+from metrics.core.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_NAME, EXPERIMENT_INPUT, XP_WARE_NAME, \
     EXPERIMENT_XP_WARE
 from metrics.scalpel import read_campaign, ScalpelConfiguration
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
@@ -73,7 +73,7 @@ class Analysis:
         self._campaign_df.data_frame[EXPERIMENT_CPU_TIME] = self._campaign_df.data_frame.apply(lambda x: x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else self._campaign_df.campaign.timeout, axis=1)
 
     def _complete_missing_experiments(self):
-        inputs = [i.path for i in self._campaign_df.campaign.input_set.inputs]
+        inputs = [i.name for i in self._campaign_df.campaign.input_set.inputs]
         xp_wares = [ew.name for ew in self._campaign_df.campaign.experiment_wares]
         theorical_xps = DataFrame(product(inputs, xp_wares), columns=['input', 'experiment_ware'])
         df = self._campaign_df._data_frame
@@ -85,6 +85,7 @@ class Analysis:
     def map(self, new_col, function):
         df = self._campaign_df.data_frame
         df[new_col] = df.apply(function, axis=1)
+        return self
 
     def sub_analysis(self, column, sub_set) -> Analysis:
         """
@@ -201,7 +202,7 @@ class CampaignDataFrameBuilder:
         experiments_df = self._make_experiments_df()
 
         campaign_df = experiments_df \
-            .join(inputs_df.set_index(INPUT_PATH), on=EXPERIMENT_INPUT, lsuffix='_experiment', rsuffix='_input', how='inner') \
+            .join(inputs_df.set_index(INPUT_NAME), on=EXPERIMENT_INPUT, lsuffix='_experiment', rsuffix='_input', how='inner') \
             .join(experiment_wares_df.set_index(XP_WARE_NAME),
                   on=EXPERIMENT_XP_WARE, lsuffix='_experiment', rsuffix='_xpware', how='inner'
                   )
