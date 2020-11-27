@@ -338,9 +338,9 @@ def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, is_success_chil
             or xp2 is None:
         raise PreventUpdate
     else:
-        campaign_df, campaign, _ = get_campaign(session_id, contents, input, sep, time, xp_ware,
-                                                is_success_children)
-    scatter = ScatterPlotly(campaign_df, xp1, xp2)
+        campaign_df, campaign, analysis = get_campaign(session_id, contents, input, sep, time, xp_ware,
+                                                       is_success_children)
+    scatter = analysis.get_scatter_plot(dynamic=True, xp_ware_x=xp1, xp_ware_y=xp2, color_col=color)
 
     return [dcc.Graph(figure=scatter.get_figure()), ],
 
