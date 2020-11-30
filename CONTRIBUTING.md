@@ -16,10 +16,6 @@ personal configuration file on this repository.
 
 In this project, we try to follow development best practices.
 
-In particular, *Metrics-Scalpel* is heavily tested and its code is statically
-analyzed to check its quality and to make sure it follows Python's coding
-conventions.
-
 Because this requires to execute many different tasks, we have gathered them
 all in a `Makefile` to make easier their execution.
 The available targets are described below.
