@@ -206,27 +206,27 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         InExperimentCampaignParserListenerState._build_on_the_fly(xp_ware_builder, XP_WARE_NAME, name, all_values)
 
     def _create_input_if_missing(self, campaign_builder: CampaignBuilder,
-                                 path: str, all_values: Dict[str, str]) -> None:
+                                 name: str, all_values: Dict[str, str]) -> None:
         """
-        Creates an input if no input with the given path has already been
+        Creates an input if no input with the given name has already been
         encountered in the campaign that is being parsed.
 
         :param campaign_builder: The builder of the campaign that is being parsed.
-        :param path: The path of the input to create if needed.
+        :param name: The name of the input to create if needed.
         :param all_values: The values that has been read about the input.
         """
-        # If the path has been read and corresponds to an existing input, there is nothing to do.
+        # If the name has been read and corresponds to an existing input, there is nothing to do.
         if INPUT_NAME in all_values and campaign_builder.has_input_with_name(all_values[INPUT_NAME]):
             return
 
-        # If the inferred path corresponds to an existing input, there is nothing to do.
-        if campaign_builder.has_input_with_name(path):
+        # If the inferred name corresponds to an existing input, there is nothing to do.
+        if campaign_builder.has_input_with_name(name):
             return
 
         # This is the first time we read this input: we need to create it on the fly.
         input_set_builder = self._listener.get_input_set_builder('auto_name')
         input_builder = input_set_builder.add_input_builder()
-        InExperimentCampaignParserListenerState._build_on_the_fly(input_builder, INPUT_NAME, path, all_values)
+        InExperimentCampaignParserListenerState._build_on_the_fly(input_builder, INPUT_NAME, name, all_values)
 
     @staticmethod
     def _build_on_the_fly(builder: ModelBuilder, element_key: str, element_id: str,
@@ -309,6 +309,7 @@ class CampaignParserListener:
         :raises ValueError: If some keys are still pending for the current
                             campaign.
         """
+        self._current_builder.check_if_complete()
         self._commit_pending_keys()
         self._current_builder = None
 
@@ -323,6 +324,7 @@ class CampaignParserListener:
         Notifies this listener that the current experiment-ware has been
         fully parsed.
         """
+        self._current_builder.check_if_complete()
         self._commit_pending_keys()
         self._current_builder = self._campaign_builder
 
@@ -353,6 +355,7 @@ class CampaignParserListener:
         """
         Notifies this listener that the current input set has been fully parsed.
         """
+        self._current_builder.check_if_complete()
         self._commit_pending_keys()
         self._input_set_builder = None
         self._current_builder = self._campaign_builder
@@ -367,6 +370,7 @@ class CampaignParserListener:
         """
         Notifies this listener that the current input has been fully parsed.
         """
+        self._current_builder.check_if_complete()
         self._commit_pending_keys()
         self._current_builder = self._input_set_builder
 
@@ -382,6 +386,7 @@ class CampaignParserListener:
         Notifies this listener that the current experiment has been
         fully parsed.
         """
+        self._current_builder.check_if_complete()
         self._commit_pending_keys()
         self._current_builder = self._campaign_builder
         self._state = DefaultCampaignParserListenerState(self)
