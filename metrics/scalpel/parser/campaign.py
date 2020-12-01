@@ -169,7 +169,7 @@ class CsvCampaignParser(FileCampaignParser):
         :param csv_configuration: The configuration for the CSV reader.
         """
         super().__init__(listener, file_name_meta)
-        self.csv_configuration = csv_configuration
+        self._csv_configuration = csv_configuration
         self._reader = None
 
     def parse_stream(self, stream: TextIO) -> None:
@@ -189,7 +189,7 @@ class CsvCampaignParser(FileCampaignParser):
 
         :return: The header of the CSV stream
         """
-        self._reader = CsvReader(stream, self.csv_configuration, self._row_filter)
+        self._reader = CsvReader(stream, self._csv_configuration, self._row_filter)
         return self._reader.read_header()
 
     def parse_content(self) -> None:
@@ -224,7 +224,7 @@ class ReverseCsvCampaignParser(CsvCampaignParser):
     """
 
     def __init__(self, listener: CampaignParserListener, file_name_meta: FileNameMetaConfiguration,
-                 csv_configuration: CsvConfiguration, name_separator: str = '.') -> None:
+                 csv_configuration: CsvConfiguration) -> None:
         """
         Creates a new CsvCampaignParser.
 
@@ -233,11 +233,8 @@ class ReverseCsvCampaignParser(CsvCampaignParser):
                                extract metadata from the path of the file to
                                parse.
         :param csv_configuration: The configuration for the CSV reader.
-        :param name_separator: The separator used in the name of the column to separate the
-                               name of the experiment-ware and the identifier of the statistic.
         """
         super().__init__(listener, file_name_meta, csv_configuration)
-        self._name_separator = name_separator
         self._input_mapping = listener.get_mapping(EXPERIMENT_INPUT)
         self._experiment_wares = set()
         self._data_names = set()
@@ -256,7 +253,7 @@ class ReverseCsvCampaignParser(CsvCampaignParser):
         # Extracting the experiment-wares and the statistics to collect.
         for key in header:
             if key not in self._input_mapping:
-                splitted_key = key.split(self._name_separator, 1)
+                splitted_key = key.split(self._csv_configuration.get_title_separator(), 1)
                 self._experiment_wares.add(splitted_key[0])
                 self._data_names.add('' if len(splitted_key) == 1 else splitted_key[1])
 

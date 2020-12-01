@@ -53,7 +53,8 @@ from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex,
 
 class CsvConfiguration:
 
-    def __init__(self, separator: str = ',', quote_char: Optional[str] = None, has_header: bool = True):
+    def __init__(self, separator: str = ',', quote_char: Optional[str] = None, has_header: bool = True,
+                 title_separator: str = '.'):
         """
         Creates a new CsvReader.
 
@@ -65,6 +66,7 @@ class CsvConfiguration:
         self._separator = separator
         self._quote_char = quote_char
         self._has_header = has_header
+        self._title_separator = title_separator
 
     def has_header(self):
         return self._has_header
@@ -74,6 +76,9 @@ class CsvConfiguration:
 
     def get_quote_char(self):
         return self._quote_char
+
+    def get_title_separator(self):
+        return self._title_separator
 
     def create_loader(self, stream: TextIO):
         """
@@ -902,6 +907,10 @@ class IScalpelConfigurationBuilder(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def _title_separator(self):
+        pass
+
+    @abstractmethod
     def _get_custom_parser(self):
         """
         Gives the (completely specified) class of the custom parser to use to parse
@@ -1187,7 +1196,7 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
             return None
 
     def read_csv_configuration(self):
-        self._csv_configuration = CsvConfiguration(self._separator(), self._quote_char(), self._has_header())
+        self._csv_configuration = CsvConfiguration(self._separator(), self._quote_char(), self._has_header(), self._title_separator())
 
     def _has_header(self) -> bool:
         """
@@ -1204,6 +1213,12 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         raise NotImplementedError('Method "_quote_char()" is abstract!')
 
     def _separator(self) -> str:
+        """
+        :return: Return the separator
+        """
+        raise NotImplementedError('Method "_separator()" is abstract!')
+
+    def _title_separator(self) -> str:
         """
         :return: Return the separator
         """
@@ -1442,6 +1457,13 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         if self._format == CampaignFormat.TSV:
             return '\t'
         return ','
+
+    def _title_separator(self) -> str:
+        sep = self._get('source').get('title-separator')
+        if sep is not None:
+            return sep
+        return '.'
+
 
     def _get_is_success(self):
         expr = self._get('source').get('is-success')

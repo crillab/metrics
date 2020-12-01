@@ -33,6 +33,7 @@ campaign from different formats.
 from os import path, sep, walk
 from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Union
 
+from metrics.core.constants import INPUT_NAME
 from metrics.scalpel.config.format import InputSetFormat
 from metrics.scalpel.listener import CampaignParserListener
 
@@ -106,7 +107,7 @@ class ListInputSetReader(InputSetReader):
         """
         for input_description in self._input_set:
             self._start_input()
-            file = input_description['path']
+            file = input_description[INPUT_NAME]
             if self._is_ignored(file):
                 continue
             for k, v in self._file_name_meta.extract_from(file).items():
@@ -182,7 +183,7 @@ class FileListInputSetReader(InputSetReader):
             return
 
         # Considering the file.
-        self._log_data('path', file)
+        self._log_data(INPUT_NAME, file)
 
         # Retrieving the name of the input.
         for k, v in self._file_name_meta.extract_from(file).items():
