@@ -212,12 +212,23 @@ input-a,0.01,10,0.02,20,0.03,30
 
 Here, we collect more statistics, as we consider both the `cpu_time` and
 `memory` needed for an experiment.
-These statistics are logged with those names.
+Those names are used to identify the corresponding statistics in the
+representation of the experiment.
+In the example above, the experiment-ware and the statistics identifiers
+are separated with a dot (`.`), which is the default.
+If you want to specify a different separator, you can specify it in the
+YAML configuration as follows (make sure not to use the same separator
+as for the columns):
 
-To configure how a reverse CSV file is parsed, you can use the same properties
-as those used in classical CSV file (see the previous section), and specify
-one of the formats `reverse-csv`, `reverse-csv2` or `reverse-table` (using the
-same naming convention as before).
+```yaml
+source:
+  title-separator: "!"
+```
+
+To configure how a reverse CSV file is parsed, you can aslo use the same
+properties as those used in classical CSV file (see the previous section),
+and specify one of the formats `reverse-csv`, `reverse-csv2` or
+`reverse-table` (using the same naming convention as before).
 
 ### Parsing Raw Data from a File Hierarchy
 

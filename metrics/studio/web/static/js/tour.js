@@ -14,7 +14,6 @@ $(document).ready(function () {
 
 
     $("#button-start").on('click',function(){
-        alert('click!');
         // Start the tour
         tour.start();
     });
