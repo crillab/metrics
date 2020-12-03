@@ -31,7 +31,7 @@ from regex import regex
 
 class NumberValidator(Validator):
     def validate(self, document):
-        ok = regex.match('^(?P<min>\d+),(?P<max>\d+)$', document.text)
+        ok = regex.match(r'^(?P<min>\d+),(?P<max>\d+)$', document.text)
         if not ok:
             raise ValidationError(
                 message='Please enter a valid number',

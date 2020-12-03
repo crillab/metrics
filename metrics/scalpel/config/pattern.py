@@ -201,7 +201,7 @@ class UserDefinedPatterns(AbstractUserDefinedPattern):
         values = []
         for child in self._children:
             value = child.search(string)
-            if len(value) == 0:
+            if not value:
                 return tuple()
             values.extend(value)
         return tuple(values)
@@ -224,7 +224,7 @@ def _compile_all(string: str, group_ids: Tuple[int],
                         indices is incorrect given the specified pattern.
     """
     # Checking that there is at least one group.
-    if len(group_ids) == 0:
+    if not group_ids:
         raise ValueError(f'Missing group indices for pattern "{string}"')
 
     # Aggregating the patterns.
