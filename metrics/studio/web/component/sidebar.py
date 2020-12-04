@@ -73,6 +73,9 @@ def configuration(disabled=False):
         html.Div(
             id="warning-load"
         ),
+        html.Div(
+            id="success-fill"
+        ),
         dbc.FormGroup([
             dbc.Label("Experiment ware (Solver, Software)"),
             dcc.Dropdown(
