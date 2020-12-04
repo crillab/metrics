@@ -307,8 +307,7 @@ def thank_you_callback(session_id, xp_ware, time, input, contents, sep):
     if contents is None or sep is None or input is None or time is None or xp_ware is None:
         raise PreventUpdate
 
-    return{'display': 'None'}, html.P("Thank you!", className="alert alert-success")
-
+    return {'display': 'None'}, html.P("Thank you!", className="alert alert-success")
 
 
 @dash.callback(
@@ -362,9 +361,9 @@ def scatter_callback(session_id, xp_ware, time, input, xp1, xp2, is_success_chil
 @dash.callback([Output('loading-icon-cactus', 'children')],
                [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
                 Input('input', 'value'), Input('global-experiment-ware', 'value'),
-                Input('is_success', 'children')],
+                Input('is_success', 'children'), Input('logarithmic', 'value')],
                [State('upload-data', 'contents'), State('sep', 'value'), State('url', 'pathname')])
-def cactus_callback(session_id, xp_ware, time, input, cactus_experiment_ware, is_success_children,
+def cactus_callback(session_id, xp_ware, time, input, cactus_experiment_ware, is_success_children, logarithmic,
                     contents, sep,
                     pathname):
     if util.have_parameter(pathname):
@@ -380,8 +379,10 @@ def cactus_callback(session_id, xp_ware, time, input, cactus_experiment_ware, is
         e['name'] for e in campaign.experiment_wares[:LIMIT]]
     my_local_analysis = analysis.sub_analysis('experiment_ware', wares)
     my_local_analysis = my_local_analysis.add_vbew(wares, 'cpu_time', vbew_name='vbs1')
-
-    return [dcc.Graph(figure=my_local_analysis.get_cactus_plot(dynamic=True)), ],
+    logarithmicx = 'x' in logarithmic
+    logarithmicy = 'y' in logarithmic
+    return [dcc.Graph(
+        figure=my_local_analysis.get_cactus_plot(dynamic=True, logx=logarithmicx, logy=logarithmicy)), ],
 
 
 @dash.callback([Output('loading-cdf', 'children')],
