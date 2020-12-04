@@ -1,6 +1,6 @@
-# Analyse a Campaign in *Metrics*
+# Analyze a Campaign in *Metrics*
 
-Once the YAML file is correctly configurated ([Reading a Campaign into *Metrics*](scalpel-config.md)), we can start the analysis of data.
+Once the YAML file is correctly configured ([Reading a Campaign into *Metrics*](scalpel-config.html)), we can start the analysis of data.
 To analyze the campaign of experiments thanks to *Metrics*, 
 you need to use the *Wallet* module of *Metrics*.
 *Wallet* stands for *"Automated tooL for expLoiting Experimental resulTs"*
@@ -14,7 +14,7 @@ It is not necessary to have any knowledge about this library to manipulate *Wall
 
 ### The Classical Analysis Object
 
-To create a new analysis, we only need to import the *Wallet* module and instantiate a new Analysis object with the path to the YAML configuration file:
+To create a new analysis, you only need to import the `Analysis` class from *Wallet* module and instantiate a new `Analysis` object with the path to the YAML configuration file:
 
 ```python
 from metrics.wallet import Analysis
@@ -23,23 +23,24 @@ my_analysis = Analysis(input_file='path/to/YAML/file')
 
 ### Export and Import an Analysis
 
-Once the analysis is created, the user can export it (i.e., to save it into a file):
+Once the analysis is created, it is possible to export it (e.g., to save it to a file):
 
 ```python
 json_text = my_analysis.export()
 ```
 
-and import it thanks to the `import_analysis` function:
+and to import it with the `import_analysis` function:
 
 ```python
 same_analysis = import_analysis(json_text)
 ```
 
-> You can observe an example of these commands in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb)
+> You can observe an example of these functions in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb).
 
 ## Manipulate the Data from Analysis
 
-Before producing the first figures, *Wallet* proposes to manipulate the different rows/experimentations composing the dataframe. It permits the user to analyze more finely its campaign.
+Before producing the first figures, *Wallet* proposes to manipulate the different rows/experimentations composing the dataframe.
+It allows to analyze more finely the campaign.
 
 ### Describe the Current Analysis
 
@@ -52,43 +53,47 @@ my_analysis.describe(
 )
 ```
 
->This Analysis is composed of:
->- 55 experiment-wares 
->- 400 inputs
->- 22000 experiments (0 missing -> more details: <Analysis>.get_error_table())
+which yields the following:
 
-This first method permits us to fastly understand how is composed our campaign. Here, we can show simple statistics, as the number of experiment-wares, inputs, or missing experiments, but we can also show exhaustively the different input and experiment-ware names (by replacing `False` by `True` for `show_experiment_wares` and `show_experiment_wares` parameters). If it exists missing data, the *Wallet* analysis can print a table showing what are these missing experiments by calling `my_analysis.get_error_table()`.
+```
+This Analysis is composed of:
+- 55 experiment-wares 
+- 400 inputs
+- 22000 experiments (0 missing -> more details: <Analysis>.get_error_table())
+```
 
-> You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb)
+This first method allows to fastly understand how is composed the campaign. Here, simple statistics are shown, as the number of experiment-wares, inputs, or missing experiments, but one can also show exhaustively the different input and experiment-ware names (by replacing `False` by `True` for the `show_experiment_wares` and `show_experiment_wares` parameters). If it exists missing data, the *Wallet* analysis can print a table showing what are these missing experiments by calling `my_analysis.get_error_table()`.
+
+> You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb).
 
 ### Generate a New Information/Variable for Each Experiment
 
-*Wallet* can add new information to its dataframe by giving a function/lambda to a mapping method of Analysis. For the next example, our input name corresponds to the path of the input (i.e. `/somewhere/family/input-parameters.cnf`). It could be interesting to extract the family name to use it in our next analyses. For this, we use the method `map()` from Analysis:
+*Wallet* can add new information to the underlying dataframe by giving a function/lambda to a mapping method of `Analysis`. For the next example, the input name corresponds to the path of the input (e.g., `/somewhere/family/input-parameters.cnf`). It could be interesting to extract the family name to use it in the rest of the analysis. For this, we use the method `map()` from `Analysis`:
 
 ```python
 import re
 
-rx = re.compile("^/somewhere/(.*?)/")
+rx = re.compile('^/somewhere/(.*?)/')
 my_analysis.map(
 	new_col='family', 
 	function=lambda x: rx.findall(x['input'])[1]
 )
 ```
 
-`map()` takes as first parameter the name of the future created column, and as second parameter the lambda that applies the regular expression `rx` to the variable `input` of the row `x` (the regex returns a list where the second element is the family name we need).
+`map()` takes as first parameter the name of the future created column, and as second parameter the lambda that applies the regular expression `rx` to the variable `input` of the row `x` (the regular expression returns a list in which the second element is the family name we need).
 
-> You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb). Here, we extract the satisfiability information from the experimentation (we create a *sat* column).
+> You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb). Here, the satisfiability information from the experimentation is extracted into a `sat` column.
 
-### Subset of Analysis Rows
+### Subset of `Analysis` Rows
 
-Thanks to Analysis, we are also able to make a subset of the analysis. By default, it exists some useful subset methods into Analysis object:
+Thanks to `Analysis`, we are also able to make a subset of the analysis. By default, it exists some useful subset methods in `Analysis` object:
 
-+ `get_only_failed()`: returns a new Analysis with only the failed experiments.
-+ `get_only_common_failed()`: returns a new Analysis with only the common failed experiments. It corresponds to inputs for which no experiment-ware has succeeded.
-+ `get_only_success()`: returns a new Analysis with only the successful experiments.
-+ `get_only_common_success()`: returns a new Analysis with only the common successful experiments. It corresponds to inputs for which no experiment-ware has failed.
-+ `delete_common_failed()`: returns a new Analysis where commonly failed inputs are removed.
-+ `delete_common_success()`: returns a new Analysis where commonly succeeded inputs are removed.
++ `get_only_failed()`: returns a new `Analysis` with only the failed experiments.
++ `get_only_common_failed()`: returns a new `Analysis` with only the common failed experiments. It corresponds to inputs for which no experiment-ware has succeeded.
++ `get_only_success()`: returns a new `Analysis` with only the successful experiments.
++ `get_only_common_success()`: returns a new `Analysis` with only the common successful experiments. It corresponds to inputs for which no experiment-ware has failed.
++ `delete_common_failed()`: returns a new `Analysis` where commonly failed inputs are removed.
++ `delete_common_success()`: returns a new `Analysis` where commonly succeeded inputs are removed.
 
 Finally, we present a last and generic method to make a subset of an analysis. In the next example, we show how to keep only two experiment-wares:
 
@@ -99,17 +104,17 @@ my_new_analysis = my_analysis.sub_analysis(
 )
 ```
 
-`sub_analysis` method takes two parameters:
+The `sub_analysis` method takes two parameters:
 - `column` corresponds to the column we want to filter
 - `sub_set` corresponds to a set of values allowed for the filtering
 
-In this previous example, only `CaDiCaL` and `Maple` appear in the `my_new_analysis` analysis.
+In the example above, only `CaDiCaL` and `Maple` appear in the `my_new_analysis` analysis.
 
 > You can observe an example of this subset in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb). Here, we want to have a clearer view on these manifold exepriment-wares.
 
-### *GroupBy* Operator
+### `groupby` Operator
 
-The *GroupBy* operator permits to create a list of new Analysis grouped by a column value. For example, if we have the family name `family` of inputs in the dataframe, it could be interesting to make separated analysis of each of them:
+The `groupby` operator allows to create a list of new `Analysis` instances grouped by a column value. For example, if we have the family name `family` of inputs in the dataframe, it could be interesting to make separated analysis of each of them:
 
 ```python
 for sub_analysis in my_analysis.groupby('family'):
@@ -120,7 +125,8 @@ These previous lines will describe the analysis of each family of `my_analysis`.
 
 ### Add a Virtual Best Experiment-Ware
 
-Sometimes, it could be interesting to introduce what we call a *Virtual Best Experiment-Ware (VBEW)* in order to compare our current experiment-wares to this virtual best one. A VBEW selects the best experiment for each input from a selection of real experiment-ware:
+Sometimes, it may be interesting to introduce what we call a *Virtual Best Experiment-Ware (VBEW)*, which generalize the well-known *Virtual Best Solvers* (VBS).
+It allows to compare our current experiment-wares to the virtual best one. A VBEW selects the best experiment for each input from a selection of real experiment-ware:
 
 ```python
 my_analysis_plus_vbs = my_analysis.add_vbew(
@@ -137,9 +143,9 @@ Here, we create a VBEW named `my_best_solver` and based on the best performances
 
 ## Draw Figures
 
-Now we have the analysis built and we have manipulated the data we want to highlight, we can start to draw figures. Thanks to *Wallet*, we are able to build two kinds of figures: static and dynamic.
+After having built the analysis and manipulated the data we want to highlight, we can start drawing figures. Thanks to *Wallet*, we are able to build two kinds of figures: static and dynamic.
 
-*Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables and PNG or vectorial graphics (such as SVG or EPS images). Static plots are highly configurable in order to fit in their final destination (e.g., in slides or articles).
+*Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables and PNG or vectorial graphics (such as SVG or EPS) for images. Static plots are highly configurable in order to fit in their final destination (e.g., in slides or articles).
 
 ### Static Tables
 
@@ -147,11 +153,11 @@ Now we have the analysis built and we have manipulated the data we want to highl
 
 #### The Statistic Table
 
-The first one permits us to show a global overview of the results. The main **statistic table** permits to show these statistics:
+The first one allows to show a global overview of the results through the following statistics:
 
 - `count` is the number of solved inputs for a given experiment-ware.
 - `sum` is the time taken by the experiment-ware to solve (or not) inputs (including timeout inputs).
-- `PARx` is equivalent to `sum` but gives a penalty of `x` times the timeout to failed experiments.
+- `PARx` is equivalent to `sum` but adds a penalty of `x` times the timeout to failed experiments (*PAR* stands for *Penalised Average Runtime*).
 - `common count` is the number of inputs commonly solved by all the experiment-wares.
 - `common sum` is the time taken to solve the commonly solved inputs.
 - `uncommon count` corresponds to the number of inputs solved by an experiment-ware less the common ones (the common ones could be considered as easy inputs).
@@ -171,10 +177,10 @@ my_analysis.get_stat_table(
 
 This first table is given by calling the previous method with different parameters:
 - `par` corresponds to the different values we want to give to the PARx column(s).
-- `output` is the path to the output we want to produce (i.e. a LaTeX table).
-- `dollars_for_number` permits to put numbers in maths mode (for the LaTeX output).
-- `commas_for_number` permits to split numbers with commas in maths mode (for the LaTeX output).
-- `xp_ware_name_map` is a map that permits to rename each experiment_ware names for the output table.
+- `output` is the path to the output we want to produce (e.g., a LaTeX table).
+- `dollars_for_number` puts numbers in math mode (for LaTeX outputs).
+- `commas_for_number` splits numbers with commas in math mode (for LaTeX outputs).
+- `xp_ware_name_map` is a map allowing to rename each experiment-ware names in the output table.
 
 > A statistic table is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/tables_and_output.ipynb).
 
@@ -182,11 +188,11 @@ This first table is given by calling the previous method with different paramete
 
 The second table proposed by *Wallet* allowing to show the **contribution** of each experiment-ware:
 
-- `vbew simple` corresponds to the intersection size of an experiment-ware and the VBEW.
-- `vbew x` corresponds to this previous intersection but it only allows experiments that have taken at least `x` second(s).
-- `contribution` corresponds to the case that an experiment-ware is the only one that has been able to solve an input.
+- `vbew simple` corresponds to the number of times an experiment-ware has been selected in the VBEW.
+- `vbew d` corresponds to the number of times an experiment-ware solves an instance at `d` second(s) faster than all other solvers.
+- `contribution` corresponds to the case that an experiment-ware is the only one that has been able to solve an input (a.k.a. state-of-the-art contribution).
 
-As the previous table, we just need to call it by this simple method:
+As for the previous table, one just needs to call the following method:
 
 ```python
 my_analysis.get_contribution_table(
@@ -201,34 +207,34 @@ my_analysis.get_contribution_table(
 )
 ```
 
-`deltas` correspond to the list of `vbew x` we want to show in the table.
+`deltas` correspond to the list of `vbew d` we want to show in the table.
 
 > A contribution table is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/tables_and_output.ipynb).
 
 ### Static Plots
 
-*Wallet* proposed many plots to show data. Static plots possess some common parameters:
+*Wallet* proposed many plots to show data. Static plots have some common parameters:
 
-- `output`: output path to save the figure or None
-- `figsize`: size of the figure to output (inch)
-- `color_map`: a map to force the color of each experiment-ware line
-- `style_map`: a map to force the line style of each experiment-ware line
-- `xp_ware_name_map`: a map to rename the experiment-wares
-- `font_name`: the font name to set
-- `font_size`: the size name to set
-- `font_color`: the font color to set
-- `latex_writing`: if True, it permits to write in latex mode
-- `logx`: log scale for x-axis
-- `logy`: log scale for y-axis
-- `[x|y]_[min|max]`: set the limit of axis, or -1 to take the default value of matplotlib
-- `legend_location` and `bbox_to_anchor`: see the [*matplotlib documentation for legend placement*](https://matplotlib.org/3.1.1/tutorials/intermediate/legend_guide.html#legend-location) 
-- `ncol_legend`: number of columns for the legend (default: 1)
+- `output`: output path to save the figure or `None`.
+- `figsize`: size of the figure to output (inches).
+- `color_map`: a map to force the color of each experiment-ware line.
+- `style_map`: a map to force the line style of each experiment-ware line.
+- `xp_ware_name_map`: a map to rename the experiment-wares.
+- `font_name`: the font name to set.
+- `font_size`: the size name to set.
+- `font_color`: the font color to set.
+- `latex_writing`: if `True`, allows to write in LaTeX mode.
+- `logx`: log scale for the x-axis.
+- `logy`: log scale for the y-axis.
+- `[x|y]_[min|max]`: set the limit of an axis, or `-1` to take the default value of `matplotlib`.
+- `legend_location` and `bbox_to_anchor`: see the [`matplotlib` documentation for legend placement](https://matplotlib.org/3.1.1/tutorials/intermediate/legend_guide.html#legend-location).
+- `ncol_legend`: number of columns for the legend (default: `1`).
 
 #### Static Cactus-Plot
 
 A first kind of plots that allows to consider an overview of all the
 experiment-wares is the *cactus plot*. A cactus plot considers all solved inputs of each
-experiment-ware. Each line in the plot represent an experiment-ware. Inputs are
+experiment-ware. Each line in the plot represents an experiment-ware. Inputs are
 ordered by solving time for each experiment-ware to build this figure: the x-axis
 corresponds to the rank of the solved input and the y-axis to the time taken to
 solve the input, so that the righter the line, the better the solver. Note that
@@ -269,16 +275,17 @@ sub_analysis.get_cactus_plot(
 )
 ```
 
-By default, the cactus plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cactus_col` parameter. We can ask to this plot to cumulate the runtime by giving `cumulated=True`. We can show and hide markers thanks to `show_marker` parameter.
+By default, the cactus plot draws its graphic by using the `cpu_time` of the results: you are free to change this behaviour by replacing the `cactus_col` parameter. You can ask this plot to cumulate the runtime by giving `cumulated=True`. We can show and hide markers thanks to `show_marker` parameter.
 
 > A full example of a static cactus-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb).
 
 #### Static CDF-Plot
 
-An equivalent plot is also considered to gain in generality of usage through 
-communities: the Cumulative Distribution Function (CDF). This plot is based on a histogram: x-axis corresponds
-to the y-axis of the cactus-plot (time), and y-axis corresponds to the normalized 
-number of solved inputs.
+Equivalently to cactus plot, one may instead use the so-called *Cumulative Distribution Function*
+(CDF), which is well-known when considering statistics.
+In this plot x-axis corresponds to the y-axis of the cactus-plot (time), and the y-axis corresponds to
+the normalized number of solved inputs.
+A point on the line of the CDF may be interpreted as the probability to solve an input given a time limit.
 
 ```python
 my_analysis.get_cdf( # CDF = Cumulative distributive Function
@@ -313,7 +320,7 @@ my_analysis.get_cdf( # CDF = Cumulative distributive Function
 )
 ```
 
-By default, the CDF plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cdf_col` parameter.
+By default, the CDF plot draws its graphic by using the `cpu_time` of results: you are free to change this behaviour by replacing the `cdf_col` parameter.
 
 > A full example of a static CDF-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cdf_and_output.ipynb).
 
@@ -390,7 +397,7 @@ my_analysis.get_scatter_plot(
 )
 ```
 
-To draw a scatter-plot, we need to specify the experiment-wares in x-axis and y-axis: `xp_ware_x` and `xp_ware_y`. By default, the scatter plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cdf_col` parameter.
+To draw a scatter-plot, we need to specify the experiment-wares on the x-axis and tge y-axis: `xp_ware_x` and `xp_ware_y`. By default, the scatter plot draw its graphic by using the `cpu_time` of results: you are free to change this behaviour by replacing the `cdf_col` parameter.
 
 > A full example of a static scatter-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb).
 
@@ -408,12 +415,12 @@ my_analysis.get_scatter_plot(dynamic=True)
 
 ## Advanced Usage
 
-For advanced users, it is possible to get the original *pandas Dataframe* and manipulate it thanks to this command:
+For a more advanced usage, it is possible to get the original *pandas Dataframe* and to manipulate it thanks to this instruction:
 
 ```python
 df = my_analysis.campaign_df.data_frame
 ```
 
-The advanced user could now follow the [*pandas documentation*](https://pandas.pydata.org/docs/) or more concisely this [*pandas cheat sheet*](https://pandas.pydata.org/Pandas_Cheat_Sheet.pdf).
+Then simply foloow [*pandas documentation*](https://pandas.pydata.org/docs/) or more concisely this [*pandas cheat sheet*](https://pandas.pydata.org/Pandas_Cheat_Sheet.pdf).
 
 
