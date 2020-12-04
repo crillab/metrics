@@ -42,6 +42,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, TextIO
 from yaml import safe_load as load_yaml
 
 from metrics.core.constants import *
+from metrics.scalpel.config.datafile import DataFile, create_data_file
 from metrics.scalpel.config.filters import create_filter
 from metrics.scalpel.config.format import CampaignFormat, InputSetFormat, OutputFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
@@ -135,7 +136,7 @@ class ScalpelConfiguration:
     """
 
     def __init__(self, fmt: Optional[CampaignFormat], csv_configuration: CsvConfiguration, main_file: str,
-                 data_files: Optional[List[str]],
+                 data_files: Optional[Dict[str, DataFile]],
                  log_datas: Optional[Dict[str, List[LogData]]],
                  custom_parser: Optional[str], file_name_meta: FileNameMetaConfiguration,
                  is_success) -> None:
@@ -253,6 +254,12 @@ class ScalpelConfiguration:
         if fmt == OutputFormat.TSV:
             return fmt, CsvConfiguration('\t')
         return fmt, None
+
+    def get_data_file(self, name):
+        for file, data_file in self._data_files.items():
+            if fnmatch(name, file):
+                return data_file
+        return None
 
 
 class ConfigurationIterator:
@@ -1248,7 +1255,30 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
             pattern = raw_data.get_compiled_pattern()
             self._log_datas[file].append(LogData(name, pattern))
             raw_data.next()
-        self._data_files = self._get_data_files()
+
+        self._data_files = {}
+        for data_file in self._get_data_files():
+            if isinstance(data_file, str):
+                self._data_files[data_file] = create_data_file(data_file)
+            else:
+                name = data_file['name']
+                header = data_file.get('has-header')
+                quote_char = data_file.get('quote-char')
+                separator = data_file.get('separator')
+                title_separator = data_file.get('title-separator')
+                parser = data_file.get('parser')
+                fmt_tmp = data_file.get('format')
+                fmt = None if fmt_tmp is None else OutputFormat.value_of(fmt_tmp)
+                if separator is None:
+                    if fmt == CampaignFormat.CSV2:
+                        separator = ';'
+                    elif fmt == CampaignFormat.TSV:
+                        separator = '\t'
+                    else:
+                        separator = ','
+                csv_config = CsvConfiguration(separator, quote_char, header, title_separator)
+                self._data_files[name] = create_data_file(name, fmt, csv_config, parser)
+
 
     def _get_file_name_meta(self) -> FileNameMetaConfiguration:
         raise NotImplementedError('Method "_get_file_name_meta()" is abstract!')
@@ -1264,7 +1294,7 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         """
         raise NotImplementedError('Method "_get_raw_data()" is abstract!')
 
-    def _get_data_files(self) -> Iterable[str]:
+    def _get_data_files(self) -> Iterable:
         """
         Gives the output files to consider for each experiment, which must be in
         a format that Scalpel natively recognizes (JSON, CSV, etc.).
@@ -1499,7 +1529,7 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         data_list = DictionaryScalpelConfigurationBuilder._as_list(data)
         return DictionaryRawDataConfiguration(data_list)
 
-    def _get_data_files(self) -> Iterable[str]:
+    def _get_data_files(self) -> Iterable:
         """
         Gives the output files to consider for each experiment, which must be in
         a format that Scalpel natively recognizes (JSON, CSV, etc.).

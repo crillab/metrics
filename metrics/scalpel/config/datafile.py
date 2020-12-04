@@ -30,23 +30,38 @@ will extract campaign data.
 """
 
 
+from pydoc import locate
+
 from metrics.scalpel.config.format import OutputFormat
 
 
 class DataFile:
+    """
+    A DataFile object gathers all the information about a data-file to parse.
+    """
 
-    def __init__(self, name: str, fmt: OutputFormat):
-        pass
+    def __init__(self, name: str, fmt: OutputFormat, csv_configuration, parser: str):
+        self._name = name
+        self._format = fmt
+        self._csv_configuration = csv_configuration
+        self._parser = parser
 
     def get_name(self):
-        pass
+        return self._name
 
     def get_format(self):
-        pass
+        if self._format is None:
+            self._format = OutputFormat.guess_format(self._name)
+        return self._format
 
     def get_configuration(self):
-        pass
+        return self._csv_configuration
+
+    def get_parser(self):
+        if self._parser is None:
+            return None
+        return locate(self._parser)
 
 
-def create_data_file():
-    pass
+def create_data_file(file_name, fmt=None, csv_config=None, parser=None):
+    return DataFile(file_name, fmt, csv_config, parser)
