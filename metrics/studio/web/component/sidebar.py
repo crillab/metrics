@@ -169,6 +169,8 @@ def get_sidebar(campaign: Campaign = None):
         [
             html.Button(children=[html.I(className='fas fa-bars')],
                         className="btn btn-link d-md-none rounded-circle mr-3"),
+
+            html.Img(src='/static/logo',height=200),
             html.H3("METRICS STUDIO", style={'text-align': 'center'}),
             html.Hr(),
 
