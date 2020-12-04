@@ -254,14 +254,20 @@ class SimpleExpression(AbstractExpression):
         if operator is None:
             return bool(main_variable)
 
-        # If there is another variable, we check the condition based on the two variables.
+        # Determining the value used in the operation.
         if 'second_variable' in self._tokens:
-            return operator(main_variable, data[self.get_second_variable()])
+            value = data[self.get_second_variable()]
+        else:
+            value = self.get_value()
 
-        # Evaluating the condition, depending on the position of the variable w.r.t. the value.
+        # Determining the position of the main variable.
         if 'right' in self._tokens:
-            return operator(self.get_value(), main_variable)
-        return operator(main_variable, self.get_value())
+            left, right = value, main_variable
+        else:
+            left, right = main_variable, value
+
+        # Computing the result of the operation.
+        return operator(left, right)
 
     def get_main_variable(self) -> str:
         """

@@ -604,6 +604,31 @@ The same identifiers are inferred for the following XML output:
 </experiment>
 ```
 
+If needed, you can also configure the parser to use for reading data from such
+data-files, as in the following example:
+
+```yaml
+data:
+  data-files:
+    - name: "*.json"
+      format: json
+    - name: "*.csv"
+      format: csv
+      has-header: false
+      separator: " "
+    - name: "*.txt"
+      parser: my.completely.specified.AwesomeParser
+```
+
+Observe in the example above that CSV files may be configured as for
+CSV campaigns (the same fields are used to describe the format of the file).
+
+Moreover, it is also possible to specify a custom parser, provided you
+give the *completely specified* name of this class.
+This parser must extend `CampaignOutputParser`, and its constructor must take
+as input a `ScalpelConfiguration`, a `CampaignParserListener`, the path of the
+file to parse and its name.
+
 ### Mapping Data to *Scalpel*'s Expectations
 
 When parsing an experiment, *Scalpel* expects to find several required

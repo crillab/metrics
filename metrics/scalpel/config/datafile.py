@@ -25,112 +25,43 @@
 
 
 """
-This module provides tools for saving as YAML the configuration of Scalpel.
-These tools are intended to be used when the
+This module provides classes used to manage the data files from which Scalpel
+will extract campaign data.
 """
 
 
-from metrics.scalpel.config.config import IScalpelConfigurationBuilder
+from pydoc import locate
+
+from metrics.scalpel.config.format import OutputFormat
 
 
-class ScalpelConfigurationBuilderSaveDecorator(IScalpelConfigurationBuilder):
+class DataFile:
+    """
+    A DataFile object gathers all the information about a data-file to parse.
+    """
 
-    def __init__(self, decorated: IScalpelConfigurationBuilder):
-        self._decorated = decorated
-        self._dict_config = {}
+    def __init__(self, name: str, fmt: OutputFormat, csv_configuration, parser: str):
+        self._name = name
+        self._format = fmt
+        self._csv_configuration = csv_configuration
+        self._parser = parser
 
-    def _get_mapping(self):
-        pass
+    def get_name(self):
+        return self._name
 
-    def read_mapping(self):
-        pass
+    def get_format(self):
+        if self._format is None:
+            self._format = OutputFormat.guess_format(self._name)
+        return self._format
 
-    def read_metadata(self):
-        pass
+    def get_configuration(self):
+        return self._csv_configuration
 
-    def read_setup(self):
-        pass
+    def get_parser(self):
+        if self._parser is None:
+            return None
+        return locate(self._parser)
 
-    def build(self):
-        pass
 
-    def _get_campaign_name(self):
-        pass
-
-    def _get_campaign_date(self):
-        pass
-
-    def _get_os_description(self):
-        pass
-
-    def _get_cpu_description(self):
-        pass
-
-    def _get_total_memory(self):
-        pass
-
-    def _get_time_out(self):
-        pass
-
-    def _get_memory_out(self):
-        pass
-
-    def read_experiment_wares(self):
-        pass
-
-    def read_input_set(self):
-        pass
-
-    def read_source(self):
-        pass
-
-    def _get_campaign_path(self):
-        pass
-
-    def _get_format(self):
-        pass
-
-    def _guess_directory_format(self):
-        pass
-
-    def _guess_regular_format(self):
-        pass
-
-    def _guess_format(self):
-        pass
-
-    def read_csv_configuration(self):
-        pass
-
-    def _has_header(self):
-        pass
-
-    def _quote_char(self):
-        pass
-
-    def _separator(self):
-        pass
-
-    def _get_hierarchy_depth(self):
-        pass
-
-    def _get_experiment_ware_depth(self):
-        pass
-
-    def _get_custom_parser(self):
-        pass
-
-    def _get_data_files(self):
-        pass
-
-    def read_data(self):
-        pass
-
-    def _get_file_name_meta(self):
-        pass
-
-    def _get_raw_data(self):
-        pass
-
-    def _log_data(self, key, value):
-        pass
+def create_data_file(file_name, fmt=None, csv_config=None, parser=None):
+    return DataFile(file_name, fmt, csv_config, parser)

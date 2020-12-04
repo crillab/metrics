@@ -22,4 +22,5 @@ data:
     mem: resolutions.resolution.solver.global.mem
     result: resolutions.resolution.solver.global.Stop
   data-files:
-    - "*.xml"
+    - name: "*.xml"
+      format: xml

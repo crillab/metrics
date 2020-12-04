@@ -295,7 +295,7 @@ class RawCampaignOutputParser(CampaignOutputParser):
             values = log_data.extract_value_from(line)
 
             # If there were no data in the line, there is nothing to do.
-            if len(values) == 0:
+            if not values:
                 return
 
             # Unpacking and logging the read data.

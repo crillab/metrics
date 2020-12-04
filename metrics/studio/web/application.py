@@ -298,11 +298,25 @@ def campaign_callback(session_id, xp_ware, time, input, children, contents, sep)
     return experiment_ware, experiment_ware, experiment_ware
 
 
-@dash.callback([Output('loading-icon-box', 'children')],
-               [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
-                Input('input', 'value'), Input('global-experiment-ware', 'value'),
-                Input('is_success', 'children')],
-               [State('upload-data', 'contents'), State('sep', 'value'), State('url', 'pathname')])
+@dash.callback(
+    [Output('warning-load', 'style'), Output('success-fill', 'children')],
+    [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+     Input('input', 'value')],
+    [State('upload-data', 'contents'), State('sep', 'value')])
+def thank_you_callback(session_id, xp_ware, time, input, contents, sep):
+    if contents is None or sep is None or input is None or time is None or xp_ware is None:
+        raise PreventUpdate
+
+    return{'display': 'None'}, html.P("Thank you!", className="alert alert-success")
+
+
+
+@dash.callback(
+    [Output('loading-icon-box', 'children')],
+    [Input('session-id', 'children'), Input('xp-ware', 'value'), Input('time', 'value'),
+     Input('input', 'value'), Input('global-experiment-ware', 'value'),
+     Input('is_success', 'children')],
+    [State('upload-data', 'contents'), State('sep', 'value'), State('url', 'pathname')])
 def box_callback(session_id, xp_ware, time, input, box_experiment_ware, is_success_children,
                  contents, sep, pathname):
     if util.have_parameter(pathname):
