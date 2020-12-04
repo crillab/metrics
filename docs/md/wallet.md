@@ -139,7 +139,7 @@ Here, we create a VBEW named `my_best_solver` and based on the best performances
 
 Now we have the analysis built and we have manipulated the data we want to highlight, we can start to draw figures. Thanks to *Wallet*, we are able to build two kinds of figures: static and dynamic.
 
-### Static Figures
+### Static Tables
 
 *Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables and PNG or vectorial graphics (such as SVG or EPS images). Static plots are highly configurable in order to fit in their final destination (e.g., in slides or articles).
 
@@ -203,6 +203,25 @@ my_analysis.get_contribution_table(
 
 > A contribution table is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/tables_and_output.ipynb).
 
+### Static Plots
+
+Static plots possess some common parameters:
+
+- `output`: output path to save the figure or None
+- `figsize`: size of the figure to output (inch)
+- `color_map`: a map to force the color of each experiment-ware line
+- `style_map`: a map to force the line style of each experiment-ware line
+- `xp_ware_name_map`: a map to rename the experiment-wares
+- `font_name`: the font name to set
+- `font_size`: the size name to set
+- `font_color`: the font color to set
+- `latex_writing`: if True, it permits to write in latex mode
+- `logx`: log scale for x-axis
+- `logy`: log scale for y-axis
+- `[x|y]_[min|max]`: set the limit of axis, or -1 to take the default value of matplotlib
+- `legend_location` and `bbox_to_anchor`: see the [*matplotlib documentation for legend placement*]https://matplotlib.org/3.1.1/tutorials/intermediate/legend_guide.html#legend-location 
+- `ncol_legend`: number of columns for the legend (default: 1)
+
 #### Static Cactus-Plot
 
 *Wallet* proposed many plots to show data.
@@ -250,6 +269,8 @@ sub_analysis.get_cactus_plot(
 )
 ```
 
+By default, the cactus plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cactus_col` parameter. We can ask to this plot to cumulate the runtime by giving `cumulated=True`. We can show and hide marker thanks to `show_marker` parameter.
+
 > A full example of a static cactus-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb).
 
 #### Static CDF-Plot
@@ -292,6 +313,8 @@ my_analysis.get_cdf( # CDF = Cumulative distributive Function
 )
 ```
 
+By default, the CDF plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cdf_col` parameter.
+
 > A full example of a static CDF-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cdf_and_output.ipynb).
 
 #### Static Box-Plot
@@ -306,33 +329,25 @@ it permits to visualize the variance and to simply compare the effect of changin
 the random function seed for a given fixed solver configuration using it.
 
 ```python
-my_analysis.get_scatter_plot(
-    xp_ware_x='CaDiCaL default', 
-    xp_ware_y='MapleLCMDistChronoBT-DL-v2.2 default',
-    scatter_col='cpu_time',
+my_analysis.get_box_plot( 
+    box_col='cpu_time',
     
-    # We precise here the new created column to take into account
-    color_col='sat',
+    output='output/box.pdf', # output path or None
+    figsize=(15,10),         # size of the figure to output (inch)
     
-    output='output/scatter.pdf',
-    figsize=(7,6),
+    xp_ware_name_map=xpware_map, # a map to rename experimentwares
     
-    xp_ware_name_map=xpware_map,
-    
+    # font properties
     font_name='DejaVu Sans',
     font_size=11,
     font_color='#000000',
-    latex_writing=True,
+    latex_writing=True, # if True, permits to write in latex mode (make attention to some characters)
     
-    logx=True,
-    logy=True,
-    
-    x_min=-1,
-    y_min=-1,
-    x_max=-1,
-    y_max=-1,
+    logy=True, # log scale to y-axis
 )
 ```
+
+By default, the box plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cdf_col` parameter.
 
 > A full example of a static box-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_box_and_output.ipynb).
 
@@ -375,9 +390,11 @@ my_analysis.get_scatter_plot(
 )
 ```
 
+To draw a scatter-plot, we need to specify the experiment-wares in x-axis and y-axis: `xp_ware_x` and `xp_ware_y`. By default, the scatter plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cdf_col` parameter.
+
 > A full example of a static scatter-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb).
 
-#### Dynamic Plots
+### Dynamic Plots
 
 Dynamic plots can be called by simply giving a new parameter of these previous static figures `dynamic`.
 
