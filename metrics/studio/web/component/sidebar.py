@@ -148,6 +148,17 @@ def plot_configuration(campaign=None):
                 multi=True,
                 placeholder="Select deltas",
             )], className='mt-2', ),
+
+        dbc.FormGroup([
+            dbc.Label("Logarithmic:"),
+            dcc.Checklist(id="logarithmic",
+                options=[
+                    {'label': 'X', 'value': 'x'},
+                    {'label': 'Y', 'value': 'y'},
+                ],
+                value=[]
+            )
+        ], className='mt-2',),
     ]
 
 
