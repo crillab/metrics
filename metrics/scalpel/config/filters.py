@@ -28,25 +28,39 @@
 This module provides tools for writing simple filters that are used by Scalpel
 to define filter functions.
 """
-
-
+from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from pyparsing import alphanums, delimitedList, oneOf, ParserElement, pyparsing_common, quotedString, Word
 
 
-# The operators that are recognized in a filter.
-# To recognize a new operator, simply add it to the dictionary.
-_OPERATORS = {
-    '<': lambda a, b: a < b,
-    '<=': lambda a, b: a <= b,
-    '==': lambda a, b: a == b,
-    '!=': lambda a, b: a != b,
-    '>=': lambda a, b: a >= b,
-    '>': lambda a, b: a > b,
-    'in': lambda a, b: a in b,
-    'notin': lambda a, b: a not in b
-}
+class Operator(Enum):
+    LT = '<', lambda a, b: a < b
+    LE = '<=', lambda a, b: a <= b
+    EQ = '==', lambda a, b: a == b
+    NE = '!=', lambda a, b: a != b
+    GE = '>=', lambda a, b: a >= b
+    GT = '>', lambda a, b: a > b
+    IN = 'in', lambda a, b: a in b
+    NOT_IN = 'notin', lambda a, b: a not in b
+
+    def __init__(self, symbol, function):
+        self.symbol = symbol
+        self.function = function
+
+    def __call__(self, a, b):
+        return self.function(a, b)
+
+    @classmethod
+    def value_of(cls, symbol):
+        for operator in cls:
+            if operator.symbol == symbol:
+                return operator
+        raise ValueError(f"Unrecognised symbol {symbol}")
+
+    @classmethod
+    def symbols(cls):
+        return [o.symbol for o in cls]
 
 
 class ExpressionParser:
@@ -96,9 +110,8 @@ class ExpressionParser:
             second_variable = main_variable.copy().setResultsName('second_variable')
 
             # Defining what an operator is.
-            operator = oneOf(' '.join(_OPERATORS.keys()))
+            operator = oneOf(' '.join(Operator.symbols()))
             operator = operator.setResultsName('operator')
-            operator.setParseAction(lambda tokens: list(map(lambda o: _OPERATORS[o], tokens)))
 
             # Defining what the different possible values are.
             real = pyparsing_common.real.setResultsName('real')
@@ -291,7 +304,10 @@ class SimpleExpression(AbstractExpression):
 
         :return: The function corresponding to the operator.
         """
-        return self._tokens.get('operator')
+        o = self._tokens.get('operator')
+        if o is None:
+            return None
+        return Operator.value_of(o)
 
     def get_value(self) -> Optional[Any]:
         """
