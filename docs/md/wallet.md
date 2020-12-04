@@ -139,13 +139,15 @@ Here, we create a VBEW named `my_best_solver` and based on the best performances
 
 Now we have the analysis built and we have manipulated the data we want to highlight, we can start to draw figures. Thanks to *Wallet*, we are able to build two kinds of figures: static and dynamic.
 
+*Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables and PNG or vectorial graphics (such as SVG or EPS images). Static plots are highly configurable in order to fit in their final destination (e.g., in slides or articles).
+
 ### Static Tables
 
-*Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables and PNG or vectorial graphics (such as SVG or EPS images). Static plots are highly configurable in order to fit in their final destination (e.g., in slides or articles).
+*Wallet* proposes two main tables showing different kinds of statistics.
 
 #### The Statistic Table
 
-*Wallet* proposes two main tables showing different kinds of statistics. The first one permits us to show a global overview of the results. The main **statistic table** permits to show these statistics:
+The first one permits us to show a global overview of the results. The main **statistic table** permits to show these statistics:
 
 - `count` is the number of solved inputs for a given experiment-ware.
 - `sum` is the time taken by the experiment-ware to solve (or not) inputs (including timeout inputs).
@@ -163,7 +165,7 @@ my_analysis.get_stat_table(
     dollars_for_number=True, # 123456789 -> $123456789$
     commas_for_number=True,  # 123456789 -> 123,456,789
     
-    xp_ware_name_map=None, # a map to rename experimentwares
+    xp_ware_name_map=None, # a map to rename experiment-wares
 )
 ```
 
@@ -195,7 +197,7 @@ my_analysis.get_contribution_table(
     dollars_for_number=True, # if True, 123456789 -> $123456789$
     commas_for_number=True,  # if True, 123456789 -> 123,456,789
     
-    xp_ware_name_map=None, # a map to rename experimentwares
+    xp_ware_name_map=None, # a map to rename experiment-wares
 )
 ```
 
@@ -205,7 +207,7 @@ my_analysis.get_contribution_table(
 
 ### Static Plots
 
-Static plots possess some common parameters:
+*Wallet* proposed many plots to show data. Static plots possess some common parameters:
 
 - `output`: output path to save the figure or None
 - `figsize`: size of the figure to output (inch)
@@ -219,16 +221,14 @@ Static plots possess some common parameters:
 - `logx`: log scale for x-axis
 - `logy`: log scale for y-axis
 - `[x|y]_[min|max]`: set the limit of axis, or -1 to take the default value of matplotlib
-- `legend_location` and `bbox_to_anchor`: see the [*matplotlib documentation for legend placement*]https://matplotlib.org/3.1.1/tutorials/intermediate/legend_guide.html#legend-location 
+- `legend_location` and `bbox_to_anchor`: see the [*matplotlib documentation for legend placement*](https://matplotlib.org/3.1.1/tutorials/intermediate/legend_guide.html#legend-location) 
 - `ncol_legend`: number of columns for the legend (default: 1)
 
 #### Static Cactus-Plot
 
-*Wallet* proposed many plots to show data.
-
 A first kind of plots that allows to consider an overview of all the
-experimentwares is the *cactus plot*. A cactus plot considers all solved inputs of each
-experimentware. Each line in the plot represent an experimentware. Inputs are
+experiment-wares is the *cactus plot*. A cactus plot considers all solved inputs of each
+experiment-ware. Each line in the plot represent an experiment-ware. Inputs are
 ordered by solving time for each experiment-ware to build this figure: the x-axis
 corresponds to the rank of the solved input and the y-axis to the time taken to
 solve the input, so that the righter the line, the better the solver. Note that
@@ -243,9 +243,9 @@ sub_analysis.get_cactus_plot(
     output='output/cactus_zoom.pdf', # output path or None
     figsize=(10,7),                  # size of the figure to output (inch)
     
-    color_map=xpware_color,        # a map to force the color of each experimentware line
-    style_map=xpware_type,         # a map to force forces the line style of each experimentware line
-    xp_ware_name_map=xpware_map,   # a map to rename experimentwares
+    color_map=xpware_color,        # a map to force the color of each experiment-ware line
+    style_map=xpware_type,         # a map to force forces the line style of each experiment-ware line
+    xp_ware_name_map=xpware_map,   # a map to rename experiment-wares
     
     # font properties
     font_name='Times New Roman',
@@ -269,7 +269,7 @@ sub_analysis.get_cactus_plot(
 )
 ```
 
-By default, the cactus plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cactus_col` parameter. We can ask to this plot to cumulate the runtime by giving `cumulated=True`. We can show and hide marker thanks to `show_marker` parameter.
+By default, the cactus plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cactus_col` parameter. We can ask to this plot to cumulate the runtime by giving `cumulated=True`. We can show and hide markers thanks to `show_marker` parameter.
 
 > A full example of a static cactus-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb).
 
@@ -289,7 +289,7 @@ my_analysis.get_cdf( # CDF = Cumulative distributive Function
     
     color_map=None, 
     style_map=None,
-    xp_ware_name_map=None, # a map to rename experimentwares
+    xp_ware_name_map=None, # a map to rename experiment-wares
     
     # font properties
     font_name='Times New Roman',
@@ -322,8 +322,8 @@ By default, the CDF plot draw its graphic by using the `cpu_time` of results: th
 In addition to cactus and CDF plots, one may consider *box plots*
 to get more detailed results about the runtime of each solver. A
 box in such a plot represents the distribution of each experiment time of a
-given experimentware. In particular, such plots allow to easily locate medians,
-quartiles and means for all experimentwares in a single figure.
+given experiment-ware. In particular, such plots allow to easily locate medians,
+quartiles and means for all experiment-wares in a single figure.
 We can find a practical application of this plot in the case of randomized algorithms: 
 it permits to visualize the variance and to simply compare the effect of changing 
 the random function seed for a given fixed solver configuration using it.
@@ -335,7 +335,7 @@ my_analysis.get_box_plot(
     output='output/box.pdf', # output path or None
     figsize=(15,10),         # size of the figure to output (inch)
     
-    xp_ware_name_map=xpware_map, # a map to rename experimentwares
+    xp_ware_name_map=xpware_map, # a map to rename experiment-wares
     
     # font properties
     font_name='DejaVu Sans',
@@ -353,12 +353,12 @@ By default, the box plot draw its graphic by using the `cpu_time` of results: th
 
 #### Static Scatter-Plot
 
-Finally, to get a more detailed comparison of two experimentwares, one can use
+Finally, to get a more detailed comparison of two experiment-wares, one can use
 scatter plots. Each axis in
-this plot corresponds to an experimentware and displays its runtime (between
+this plot corresponds to an experiment-ware and displays its runtime (between
 $`0`$ and the timeout). We can place each input in the plot as a point
-corresponding to the time taken by both experimentwares to solve this input. We
-can quickly observe if there exists a trend for one experimentware or the other in
+corresponding to the time taken by both experiment-wares to solve this input. We
+can quickly observe if there exists a trend for one experiment-ware or the other in
 terms of efficiency.
 
 ```python
