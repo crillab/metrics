@@ -65,7 +65,10 @@ class CactusPlotly(CactusPlot):
         return {
             'title.text': self.get_title(),
             'xaxis.title.text': self.get_x_axis_name(),
-            'yaxis.title.text': self.get_y_axis_name(),
+            'yaxis': {
+                'title': self.get_y_axis_name(),
+                'type': 'log' if self._logy else 'linear'
+            },
         }
 
 
