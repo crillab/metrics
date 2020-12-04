@@ -156,7 +156,6 @@ class DefaultCampaignParserListenerState(AbstractCampaignParserListenerState):
         :param identifier: The identifier of the element to create if needed.
         :param all_values: The values that has been read about the element.
         """
-        return
 
 
 class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerState):

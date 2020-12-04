@@ -445,22 +445,29 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
     def _get_parser_for(self, file_name: str, file_path: str) -> CampaignOutputParser:
         """
         Gives the parser to use to extract data from the given file.
+        It is supposed that the file has indeed to be parsed.
 
         :param file_name: The name of the file to get the parser for.
         :param file_path: The path of the file to get the parser for.
 
         :return: The parser to use.
         """
-        fmt, config = self._configuration.get_output_format(file_name)
+        data_file = self._configuration.get_data_file(file_name)
 
-        if fmt == OutputFormat.CSV:
-            return CsvCampaignOutputParser(self._listener, file_path, config)
+        # By default, a raw parser is used.
+        if data_file is None:
+            return RawCampaignOutputParser(self._configuration, self._listener, file_path, file_name)
 
-        if fmt == OutputFormat.CSV2:
-            return CsvCampaignOutputParser(self._listener, file_path, config)
+        # Looking for a user-implemented parser.
+        parser = data_file.get_parser()
+        if parser is not None:
+            return parser(self._configuration, self._listener, file_path, file_name)
 
-        if fmt == OutputFormat.TSV:
-            return CsvCampaignOutputParser(self._listener, file_path, config)
+        # Using the most appropriate parser, based on the format.
+        fmt = data_file.get_format()
+
+        if fmt in (OutputFormat.CSV, OutputFormat.CSV2, OutputFormat.TSV):
+            return CsvCampaignOutputParser(self._listener, file_path, data_file.get_configuration())
 
         if fmt == OutputFormat.JSON:
             return JsonCampaignOutputParser(self._listener, file_path)
