@@ -189,7 +189,7 @@ This first table is given by calling the previous method with different paramete
 The second table proposed by *Wallet* allowing to show the **contribution** of each experiment-ware:
 
 - `vbew simple` corresponds to the number of times an experiment-ware has been selected in the VBEW.
-- `vbew d` corresponds to the number of times an experiment-ware solves an instance at `d` second(s) faster than all other solvers.
+- `vbew d` corresponds to the number of times an experiment-ware solves an instance `d` second(s) faster than all other solvers.
 - `contribution` corresponds to the case that an experiment-ware is the only one that has been able to solve an input (a.k.a. state-of-the-art contribution).
 
 As for the previous table, one just needs to call the following method:

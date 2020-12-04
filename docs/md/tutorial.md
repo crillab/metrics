@@ -15,24 +15,41 @@
 
 ## Why Metrics? 
  
-When developing a SAT solver, one of the most important parts is to perform
-experiments so as to evaluate its performance.
-Most of the time, this process remains the same, so that everybody collects
-almost the same statistics about the solver execution.
-However, how many scripts are there to retrieve experimental data and draw
-scatter or cactus plots?
-Probably as many as researchers in the domain. Based on this observation, this
-repository provides Metrics, a Python library, aiming to unify and make
-easier the analysis of solver experiments.
-The ambition of Metrics is to provide a complete toolchain from the execution
-of the solver to the analysis of its performance.
-In particular, this library simplifies the retrieval of experimental data from
-many different inputs (including the solver’s output), and provides a nice
-interface for drawing commonly used plots, computing statistics about
-the execution of the solver, and effortlessly organizing them
-(e.g., in Jupyter notebooks).
+
+*Metrics* is an [open-source](https://github.com/crillab/metrics) Python
+library and a web-app developed at [CRIL](http://www.cril.fr) by the
+*WWF Team* ([Hugues Wattez](http://www.cril.fr/~wattez),
+[Romain Wallon](http://www.cril.fr/~wallon/en) and Thibault Falque),
+designed to facilitate the conduction of experiments and their analysis.
+
+The main objective of *Metrics* is to provide a complete toolchain from
+the execution of software programs to the analysis of their performance.
+In particular, the development of *Metrics* started with the observation
+that, in the SAT community, the process of experimenting solver remains
+mostly the same: everybody collects almost the same statistics about the
+solver execution.
+However, there are probably as many scripts as researchers in the domain
+for retrieving experimental data and drawing figures.
+There is thus clearly a need for a tool that unifies and makes easier the
+analysis of solver experiments.
+
+The ambition of Metrics is thus to simplify the retrieval of experimental data
+from many different inputs (including the solver’s output), and provide a
+nice interface for drawing commonly used plots, computing statistics about
+the execution of the solver, and effortlessly organizing them.
 In the end, the main purpose of Metrics is to favor the sharing and
 reproducibility of experimental results and their analysis.
+
+Towards this direction, *Metrics*' web-app, a.k.a.
+[*Metrics-Studio*](http://crillab-metrics.cloud), allows to draw common figures,
+such as cactus plots and scatter plots from CSV or JSON files so as to provide
+a quick overview of the conducted experiments.
+From this overview, one can then use locally the
+[*Metrics*' library](https://pypi.org/project/crillab-metrics/) for a
+fine-grained control of the drawn figures, for instance through the use of
+[Jupyter notebooks](https://jupyter.org/).
+
+
 
 # Installation 
 
@@ -54,126 +71,4 @@ to install it, or to execute `pip` as a module, as follows.
 ```bash
 python3 -m pip install crillab-metrics
 ```
-
-# Using mETRICS
-
-To present how to use `metrics`, let us consider an example, based on the
-results of the [SAT Race 2019](http://sat-race-2019.ciirc.cvut.cz/index.php?cat=results),
-in which 51 solvers have been run on 400 instances. 
-Each experiment (corresponding to the execution of a solver on a particular
-instance) has a timeout set to 5000 seconds and a memory limit set to 128GB.
-
-```python
-from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
-campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
-```
-
-## Extracting Data with metrics-scalpel
-
-Experimental data can be retrieved with metrics-scalpel. To do so, a YAML configuration file
-has to be given to the program to allow it to retrieve the required data. A sample configuration
-is given below.
-
-```yaml
-name: SAT Race 2019
-date: July 12th, 2019
-setup:
-    timeout: 5000
-    memout: 128000
-experiment-wares:
-    - CCAnrSim default
-    - ...
-    - smallsat default
-input-set:
-    name: sat-race-2019
-    type: hierarchy
-    path-list:
-    - /path/to/the/benchmarks/of/sat/race/2019/
-source:
-  path: /path/to/the/results/of/sat-2019.csv
-data:
-  mapping:
-    input: benchmark
-    experiment_ware:
-    - solver
-    - configuration
-    cpu_time: solver time
-```
-
-The first elements of this configuration give informations about the campaign: `name` , `date`, `timeout` and `memout`. 
-
-Observe that the different solvers are listed in this file. This is quite a strong requirement (and we plan to automatically discover the solvers
-in future version of Metrics), but this approach has been designed to allow, when needed, to
-specify more informations about the solvers (such as their compilation date, their command
-line, etc.).
-
-
-Regarding the input-set, note that it is considered as a hierarchy. Whenever this is the
-case, metrics-scalpel explore the file hierarchy rooted at the given directory to discover each
-file it contains. It is also possible to give directly the list of the file, or to give a path to a file
-that contains this list.
-
-
-The last part, concerning the `mapping`, allow to retrieve from the CSV file (in this case) which columns corresponds to 
-the data expected by Scalpel. 
-
-Now, from this configuration, we can now load the whole campaign corresponding to the
-SAT competition.
-
-```python
-from metrics.scalpel import read_yaml
-campaign = read_yaml("/path/to/configuration.yml")
-```
-
-## Exploiting Data with metrics-wallet
-
-Now that we have extracted relevant data from our campaign, we can start building figures.
-The first step consists in extracting a data-frame from the read campaign.
-
-```python
-from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
-campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
-```
-
-### Dynamic Plots
-
-Notebook example [here](example/sat-competition/2019/dynamic_analysis.ipynb)
-
-
-### Static Cactus Plot
-
-Notebook example [here](example/sat-competition/2019/static_cactus_and_output.ipynb)
-
-![Comparison of all competition solvers](example/sat-competition/2019/output/cactus.svg)
-![Comparison of all competition solvers zoom](example/sat-competition/2019/output/cactus_zoom.svg)
-
-
-### Static CDF Plot
-
-Notebook example [here](example/sat-competition/2019/static_cdf_and_output.ipynb)
-
-![Comparison of all competition solvers](example/sat-competition/2019/output/cdf.svg)
-
-
-### Static Scatter Plot
-
-Notebook example [here](example/sat-competition/2019/static_scatter_and_output.ipynb)
-
-![Comparison of all competition solvers](example/sat-competition/2019/output/scatter_zoom.svg)
-
-
-### Static Box Plot
-
-Notebook example [here](example/sat-competition/2019/static_box_and_output.ipynb)
-
-![Comparison of all competition solvers](example/sat-competition/2019/output/box.svg)
-
-
-### Static Tables
-
-Notebook example [here](example/sat-competition/2019/tables_and_output.ipynb)
-
-
-
-# Citing mETRICS 
 
