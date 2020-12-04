@@ -140,6 +140,12 @@ def plot_configuration(campaign=None):
             )], className='mt-2', ),
         dbc.FormGroup([
             dbc.Label("Deltas:"),
+            html.P(children=[
+                f"Deltas are used in the computation of the contribution of each experiment-ware to the VBEW.",
+                html.Br(),
+                "The contribution with a delta 'd' corresponds to the number of times an experiment-ware solves an instance 'd' second(s) faster than all other solvers."],
+                style={'font-size': '0.8em', 'font-style': 'italic'}),
+
             dcc.Dropdown(
                 id="deltas",
                 options=[
@@ -150,15 +156,18 @@ def plot_configuration(campaign=None):
             )], className='mt-2', ),
 
         dbc.FormGroup([
-            dbc.Label("Logarithmic:"),
+            dbc.Label("Logarithmic scale:"),
+            html.P(children=[
+                f"Check this box for setting up a logarithmic scale on the y-axis of the cactus plot."
+            ],
+                style={'font-size': '0.8em', 'font-style': 'italic'}),
             dcc.Checklist(id="logarithmic",
-                options=[
-                    {'label': 'X', 'value': 'x'},
-                    {'label': 'Y', 'value': 'y'},
-                ],
-                value=[]
-            )
-        ], className='mt-2',),
+                          options=[
+                              {'label': 'Enable logarithmic scale.', 'value': 'y'},
+                          ],
+                          value=[]
+                          )
+        ], className='mt-2', ),
     ]
 
 
@@ -170,7 +179,7 @@ def get_sidebar(campaign: Campaign = None):
             html.Button(children=[html.I(className='fas fa-bars')],
                         className="btn btn-link d-md-none rounded-circle mr-3"),
 
-            html.Img(src='/static/logo',height=200),
+            html.Img(src='/static/logo', height=200),
             html.H3("METRICS STUDIO", style={'text-align': 'center'}),
             html.Hr(),
 
