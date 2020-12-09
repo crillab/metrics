@@ -296,7 +296,7 @@ class RawCampaignOutputParser(CampaignOutputParser):
 
             # If there were no data in the line, there is nothing to do.
             if not values:
-                return
+                continue
 
             # Unpacking and logging the read data.
             if len(names) == len(values):

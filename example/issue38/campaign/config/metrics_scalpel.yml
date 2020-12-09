@@ -9,7 +9,7 @@ setup:
   memout: 16384
 
 source:
-  path: campaign/experiments
+  path: example/issue38/campaign/
   format: dir
 #  is-success:
 #    - ${status} == "COMPLETE"
@@ -30,11 +30,11 @@ data:
     - log-data: status
       file: "execution.out"
       pattern: "d {word} EXPLORATION"
-    # - log-data:
-    #     - timestamp
-    #     - bound
-    #   file: "*execution.out"
-    #   pattern: "o {integer} \t{real}"
-    #   group:
-    #     - 1
-    #     - 2
+    - log-data:
+        - timestamp
+        - bound
+      file: "*execution.out"
+      pattern: "o {integer} \t{real}"
+      group:
+        - 1
+        - 2
