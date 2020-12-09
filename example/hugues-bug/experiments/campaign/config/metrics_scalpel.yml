@@ -1,0 +1,40 @@
+name: campaign
+date: 8 décembre 2020
+
+setup:
+  os: Linux CentOS 7 (x86_64)
+  cpu: Intel XEON X5550
+  ram: 32GB
+  timeout: 3600
+  memout: 16384
+
+source:
+  path: campaign/experiments
+  format: dir
+#  is-success:
+#    - ${status} == "COMPLETE"
+data:
+  raw-data:
+    - log-data: experiment_ware
+      file: "*stdout"
+      regex: "c launch: .*? [^ ]+/(.*?) "
+    - log-data: input
+      file: "*stdout"
+      regex: "c launch: .+/(.*?).xml.lzma "
+    - log-data: cpu_time
+      file: "*statistics.out"
+      pattern: "CPUTIME={real}"
+    - log-data: best_bound
+      file: "execution.out"
+      pattern: "s {word}"
+    - log-data: status
+      file: "execution.out"
+      pattern: "d {word} EXPLORATION"
+    # - log-data:
+    #     - timestamp
+    #     - bound
+    #   file: "*execution.out"
+    #   pattern: "o {integer} \t{real}"
+    #   group:
+    #     - 1
+    #     - 2
