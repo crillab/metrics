@@ -18,7 +18,6 @@ from dash.exceptions import PreventUpdate
 import flask
 from flask import request
 from flask_caching import Cache
-
 import jsonpickle.ext.pandas as jsonpickle_pd
 import jsonpickle
 import pandas as pd
@@ -165,7 +164,6 @@ def _create_analysis(campaign, is_success=None):
 
 
 def _create_is_success_expression(children):
-    # print(children[1:])
     result = []
     for c in children:
         element = c['props']['children']
@@ -178,7 +176,8 @@ def _create_is_success_expression(children):
 
 def get_campaign(session_id, contents, input, sep, time, xp_ware, children):
     @cache.memoize()
-    def query_and_serialize_data(session_id, contents, input, separator, time, xp_ware, children):
+    def query_and_serialize_data(session_id):
+        separator = sep
         if separator is None:
             separator = ','
         listener = create_listener(xp_ware, input, time)
@@ -191,7 +190,7 @@ def get_campaign(session_id, contents, input, sep, time, xp_ware, children):
         campaign_df = analysis_web.campaign_df
         return campaign_df, campaign, analysis_web
 
-    return query_and_serialize_data(session_id, contents, input, sep, time, xp_ware, children)
+    return query_and_serialize_data(session_id)
 
 
 def parse_contents(contents, separator=','):
@@ -327,7 +326,7 @@ def box_callback(session_id, xp_ware, time, input, box_experiment_ware, is_succe
     else:
         campaign_df, campaign, _ = get_campaign(session_id, contents, input, sep, time, xp_ware,
                                                 is_success_children)
-
+    print(session_id)
     newdf = campaign_df.sub_data_frame('experiment_ware',
                                        box_experiment_ware if box_experiment_ware is not None else [
                                            e['name'] for e in campaign.experiment_wares[:LIMIT]])

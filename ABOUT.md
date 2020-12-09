@@ -33,4 +33,4 @@ From this overview, one can then use locally the
 fine-grained control of the drawn figures, for instance through the use of
 [Jupyter notebooks](https://jupyter.org/).
 For more details on how to use *Metrics*' tools, you may want to
-[read its documentation]().
+[read its documentation](https://metrics.readthedocs.io).

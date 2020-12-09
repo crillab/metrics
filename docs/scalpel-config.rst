@@ -214,10 +214,20 @@ A more complete example of a “reverse” CSV file is given below:
    input-a,0.01,10,0.02,20,0.03,30
 
 Here, we collect more statistics, as we consider both the ``cpu_time``
-and ``memory`` needed for an experiment. These statistics are logged
-with those names.
+and ``memory`` needed for an experiment. Those names are used to
+identify the corresponding statistics in the representation of the
+experiment. In the example above, the experiment-ware and the statistics
+identifiers are separated with a dot (``.``), which is the default. If
+you want to specify a different separator, you can specify it in the
+YAML configuration as follows (make sure not to use the same separator
+as for the columns):
 
-To configure how a reverse CSV file is parsed, you can use the same
+.. code:: yaml
+
+   source:
+     title-separator: "!"
+
+To configure how a reverse CSV file is parsed, you can aslo use the same
 properties as those used in classical CSV file (see the previous
 section), and specify one of the formats ``reverse-csv``,
 ``reverse-csv2`` or ``reverse-table`` (using the same naming convention
@@ -603,6 +613,31 @@ The same identifiers are inferred for the following XML output:
      <value>51</value>
      <value>1664</value>
    </experiment>
+
+If needed, you can also configure the parser to use for reading data
+from such data-files, as in the following example:
+
+.. code:: yaml
+
+   data:
+     data-files:
+       - name: "*.json"
+         format: json
+       - name: "*.csv"
+         format: csv
+         has-header: false
+         separator: " "
+       - name: "*.txt"
+         parser: my.completely.specified.AwesomeParser
+
+Observe in the example above that CSV files may be configured as for CSV
+campaigns (the same fields are used to describe the format of the file).
+
+Moreover, it is also possible to specify a custom parser, provided you
+give the *completely specified* name of this class. This parser must
+extend ``CampaignOutputParser``, and its constructor must take as input
+a ``ScalpelConfiguration``, a ``CampaignParserListener``, the path of
+the file to parse and its name.
 
 Mapping Data to *Scalpel*\ ’s Expectations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

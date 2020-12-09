@@ -6,7 +6,7 @@
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 MDDIR         = md
-RSTDIR        = rst
+RSTDIR        = .
 BUILDDIR      = build
 
 MDFILES     = $(shell ls $(MDDIR)/*.md)
