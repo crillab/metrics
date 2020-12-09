@@ -513,7 +513,7 @@ pattern, any whitespace is interpreted as a sequence of whitespace characters.
 + `{any}` for any sequence of characters (not greedy).
 
 If the same line contains multiple relevant data, you can extract them
-by using lists for both `log-data` and `group` (you need to use the
+by using lists for both `log-data` and `groups` (you need to use the
 same order for both lists), as in the following example:
 
 ```yaml
@@ -524,7 +524,7 @@ data:
         - wall_time
       file: "*.out"
       pattern: "runtime: {real} seconds (cpu), {real} seconds (wallclock)"
-      group:
+      groups:
         - 1
         - 2
 ```
