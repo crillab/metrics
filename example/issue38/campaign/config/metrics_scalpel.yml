@@ -9,7 +9,7 @@ setup:
   memout: 16384
 
 source:
-  path: example/hugues-bug/campaign/
+  path: example/issue38/campaign/
   format: dir
 #  is-success:
 #    - ${status} == "COMPLETE"
