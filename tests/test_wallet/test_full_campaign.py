@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 import jsonpickle.ext.pandas as jsonpickle_pd
@@ -14,7 +15,9 @@ class TestFullCampaign(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.analysis = Analysis(input_file='full_campaign_data/campaign/config/metrics_scalpel.yml')
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, 'full_campaign_data/campaign/config/metrics_scalpel.yml')
+        cls.analysis = Analysis(input_file=filename)
 
     def test_analysis_columns(self):
         self.assertFalse('experiment_ware_experiment' in self.analysis.campaign_df.data_frame.columns)
