@@ -15,8 +15,7 @@ class TestFullCampaign(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, 'full_campaign_data/campaign/config/metrics_scalpel.yml')
+        filename = 'tests/test_wallet/full_campaign_data/campaign/config/metrics_scalpel.yml'
         cls.analysis = Analysis(input_file=filename)
 
     def test_analysis_columns(self):

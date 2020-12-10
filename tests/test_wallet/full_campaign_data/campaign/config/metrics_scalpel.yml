@@ -9,7 +9,7 @@ setup:
   memout: 16384
 
 source:
-  path: full_campaign_data/campaign/
+  path: tests/test_wallet/
   format: dir
 #  is-success:
 #    - ${status} == "COMPLETE"
