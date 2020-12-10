@@ -477,7 +477,7 @@ data:
   raw-data:
     - log-data: cpu_time
       file: "*.out"
-      regex: "overall runtime: (\d+.\d+) seconds"
+      regex: 'overall runtime: (\d+.\d+) seconds'
       group: 1
 ```
 
