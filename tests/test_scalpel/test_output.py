@@ -8,7 +8,7 @@ class TestReadConfigurationBug(TestCase):
     def setUp(self) -> None:
         self._example_dir = 'example/'
 
-    def test_bug_38(self):
+    def test_bug_gitlab_38(self):
         analysis = Analysis(
             input_file=os.path.join(self._example_dir, 'issue38/campaign/config/metrics_scalpel.yml'))
         columns = analysis.campaign_df.data_frame.columns
