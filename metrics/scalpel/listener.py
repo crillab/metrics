@@ -239,6 +239,11 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         :param element_id: The identifier of the element.
         :param all_values: All the values characterizing the element.
         """
+        # If there is only one read value, then this value is the identifier.
+        if len(all_values) == 1:
+            builder[element_key] = element_id
+            return
+
         # Setting up all data about the element to build.
         element_key_already_declared = False
         for key, value in all_values.items():
