@@ -75,7 +75,7 @@ class ValueManager:
         if not self._attribute_manager.empty and not elt:
             raise TypeError(f'{self._attribute_manager.name} must contain at least one element.')
         if not elt:
-            return None
+            return [] if self._attribute_manager.is_list else None
         return elt if len(elt) > 1 or self._attribute_manager.is_list else elt[0]
 
     def __str__(self):
@@ -107,7 +107,7 @@ class ModelBuilder:
         @param value: value to add to the item.
         """
         if key not in self._log_data:
-            attr = self._attribute_manager_set.add_attribute_manager_for_typing_finder(name=key)
+            attr = self._attribute_manager_set.add_attribute_manager_for_typing_finder(name=key, is_list='list' in key)
             self._log_data[attr.name] = ValueManager(attr)
         self._log_data[key].add(value)
 

@@ -20,7 +20,7 @@
 #  along with this program.                                                    #
 #  If not, see <https://www.gnu.org/licenses/>.                                #
 # ##############################################################################
-import urllib
+import os
 from pathlib import Path
 
 from metrics.core.model import Campaign
@@ -28,10 +28,7 @@ from metrics.wallet.dataframe.builder import Analysis
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.static_figure import LINE_STYLES, DEFAULT_COLORS
 
-import jsonpickle
-import jsonpickle.ext.pandas as jsonpickle_pd
-
-jsonpickle_pd.register_handlers()
+import pickle
 
 
 def import_campaigns(jsons) -> Campaign:
@@ -46,26 +43,37 @@ def import_campaigns(jsons) -> Campaign:
     return campaign
 
 
-def import_from_api_and_store(url, path):
-    file = Path(path)
+def get_cache_or_parse(input_file):
 
-    if file.exists():
-        content = file.read_text()
+    if os.path.isfile('.cache'):
+        with open('.cache', 'rb') as file:
+            return import_analysis_from_file(file)
     else:
-        with urllib.request.urlopen(url) as url:
-            content = url.read().decode()
-            file.write_text(content)
-
-    return import_campaign(content)
-
-
-def import_campaign(content) -> Campaign:
-    return jsonpickle.decode(content)
+        with open('.cache', 'wb') as file:
+            analysis = Analysis(input_file=input_file)
+            analysis.export(file=file)
+            return analysis
 
 
-def import_campaign_data_frame(content) -> CampaignDataFrame:
-    return jsonpickle.decode(content)
+def import_campaign(str) -> Campaign:
+    return pickle.loads(str)
 
 
-def import_analysis(content) -> Analysis:
-    return jsonpickle.decode(content)
+def import_campaign_from_file(file):
+    return pickle.load(file)
+
+
+def import_campaign_data_frame(str) -> CampaignDataFrame:
+    return pickle.loads(str)
+
+
+def import_campaign_data_frame_from_file(file):
+    return pickle.load(file)
+
+
+def import_analysis(str) -> Analysis:
+    return pickle.loads(str)
+
+
+def import_analysis_from_file(file):
+    return pickle.load(file)

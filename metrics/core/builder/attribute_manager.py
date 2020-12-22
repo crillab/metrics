@@ -81,7 +81,7 @@ class AttributeManager:
 
         @return: True if the attribute needs to be a list.
         """
-        return self._is_list
+        return self._is_list or 'list' in self._name
 
     def verify(self, obj: Any) -> None:
         """

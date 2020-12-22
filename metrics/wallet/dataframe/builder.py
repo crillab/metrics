@@ -25,9 +25,10 @@
 This module provides a simple class corresponding to the builder of the dataframe linked to a campaign.
 """
 from __future__ import annotations
+
+import pickle
 from typing import Set, Callable, Any, List, Tuple
 
-import jsonpickle
 from pandas import DataFrame
 from itertools import product
 
@@ -120,6 +121,9 @@ class Analysis:
             Analysis(campaign_df=cdf) for cdf in self._campaign_df.groupby(column)
         ]
 
+    def normalize_by(self, xp_ware, on) -> Analysis:
+        return Analysis(campaign_df=self._campaign_df.normalize_by(xp_ware, on))
+
     def get_only_failed(self):
         return Analysis(campaign_df=self._campaign_df.get_only_failed())
 
@@ -168,8 +172,10 @@ class Analysis:
     def get_pivot_table(self, **kwargs: dict):
         return PivotTable(self._campaign_df, **kwargs).get_figure()
 
-    def export(self):
-        return jsonpickle.encode(self)
+    def export(self, file=None):
+        if file is None:
+            return pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
+        return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 class CampaignDataFrameBuilder:

@@ -28,6 +28,7 @@ This module uses the DataFrame object pandas library.
 
 from __future__ import annotations
 
+import pickle
 from enum import Enum
 
 
@@ -222,6 +223,12 @@ class CampaignDataFrame:
             self.build_data_frame(group, name=name) for name, group in gb
         ]
 
+    def normalize_by(self, xp_ware, on):
+        df = self.data_frame.copy()
+        map = df[df.experiment_ware == xp_ware].set_index('input')[on].to_dict() #.replace([np.nan, 0], 1000000000000).to_dict()
+        df[on] = df.apply(lambda x: (map[x['input']] - x[on]) / map[x['input']], axis=1)
+        return self.build_data_frame(df, self._name)
+
     def delete_input_when(self, f):
         df = self._data_frame.copy()
         df['f_res'] = df.apply(f, axis=1)
@@ -241,5 +248,7 @@ class CampaignDataFrame:
         """
         return self._campaign_df_builder.build_from_data_frame(df, name=name, vbew_names=self._vbew_names)
 
-    def export(self):
-        return jsonpickle.encode(self)
+    def export(self, file=None):
+        if file is None:
+            return pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
+        return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)

@@ -32,3 +32,6 @@ class TestAnalysis(unittest.TestCase):
         rx = re.compile("^/home/cril/wattez/XCSP17/(.*?)/")
         self.analysis.map('family', lambda x: rx.findall(x['input'])[0])
         self.assertEqual('SuperSolutions', self.analysis.campaign_df.data_frame['family'][0])
+
+    def test_normalize_by(self):
+        self.analysis.normalize_by('ExplorationLuby', 'cpu_time')

@@ -5,7 +5,7 @@ import unittest
 
 import jsonpickle.ext.pandas as jsonpickle_pd
 
-from metrics.wallet import import_campaign_data_frame, import_from_api_and_store
+from metrics.wallet import import_campaign_data_frame, import_campaign
 
 jsonpickle_pd.register_handlers()
 
@@ -179,30 +179,6 @@ class TestCampaignDataFrameBuilderVBS(unittest.TestCase):
         self.assertEqual(INPUT, set(df_no_common_solved_no_out['input']))
 
         self.assertEqual(SET_COMMON_FAILED_INPUTS, set(sub._filter_by([CampaignDFFilter.ONLY_COMMON_TIMEOUT]).data_frame.input.unique()))
-
-
-class TestCampaignDataFrameVbew(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '../../data/xcsp18.json')
-
-        campaign = import_from_api_and_store('', filename)
-        cls.analysis = Analysis(campaign=campaign)
-
-    def test_vbew(self):
-        VBS_SOLVERS = {
-            'WDegCAxCD',
-            'CHS',
-            'Activity',
-            'DDegOnDom',
-            'Impact',
-        }
-
-        df = self.analysis.add_vbew(VBS_SOLVERS).campaign_df.data_frame
-
-        self.assertEqual(2493, len(df))
 
 
 class TestCampaignDataFrameBuilderSubWare(unittest.TestCase):
