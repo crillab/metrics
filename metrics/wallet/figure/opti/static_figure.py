@@ -83,7 +83,7 @@ def compute_wf(df, S, wf):
         if df[df.timeout == s].status.all():
             wf[i + 1:] = [0] * (len(S) - i - 1)
 
-    coeff = summ / (summ - removed)
+    coeff = summ / (summ - removed) if summ - removed != 0 else 0
 
     return df.timeout.map({s: w * coeff for s, w in zip(S, wf)})
 
@@ -125,14 +125,23 @@ def scoring_classic(df):
     return sum(df.domine) + sum(df.status) * 2
 
 
-class FullOptiStat(Table):
+class OptiStatStable(Table):
 
-    def __init__(self, campaign_df, T, S, alpha, wf, **kwargs):
+    def __init__(self, campaign_df, T, S, alpha, wf, scorings, order_by, groupby, **kwargs):
         super().__init__(campaign_df, **kwargs)
         self._T = T
         self._S = S
         self._alpha = alpha
         self._wf = wf
+        self._scorings = scorings
+        self._order_by = order_by
+        self._groupby = groupby
 
     def get_data_frame(self):
-        return cop_stats(self._campaign_df.data_frame.copy(), self._T, self._S, self._alpha, self._wf)
+        full_df = DataFrame()
+        df = cop_stats(self._campaign_df.data_frame.copy(), self._T, self._S, self._alpha, self._wf)
+
+        for scoring in self._scorings:
+            full_df[scoring.__name__] = df.groupby(self._groupby).apply(scoring)
+
+        return full_df.sort_values(by=self._order_by, ascending=False)

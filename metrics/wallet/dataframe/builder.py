@@ -38,7 +38,7 @@ from metrics.core.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_NAME,
 from metrics.scalpel import read_campaign, ScalpelConfiguration
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
-from metrics.wallet.figure.opti.static_figure import FullOptiStat
+from metrics.wallet.figure.opti.static_figure import OptiStatStable
 from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable, \
     ErrorTable, PivotTable, Description, CDFMPL
 
@@ -181,8 +181,8 @@ class Analysis:
 
 class AnalysisOpti(Analysis):
 
-    def get_full_opti_table(self, **kwargs: dict):
-        return FullOptiStat(self._campaign_df, **kwargs).get_figure()
+    def get_opti_stat_table(self, **kwargs: dict):
+        return OptiStatStable(self._campaign_df, **kwargs).get_figure()
 
 
 class CampaignDataFrameBuilder:
