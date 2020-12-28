@@ -43,9 +43,9 @@ def import_campaigns(jsons) -> Campaign:
     return campaign
 
 
-def get_cache_or_parse(input_file, obj=Analysis):
+def get_cache_or_parse(input_file, obj=Analysis, cache=True):
 
-    if os.path.isfile('.cache'):
+    if os.path.isfile('.cache') and cache:
         with open('.cache', 'rb') as file:
             return import_analysis_from_file(file)
     else:
