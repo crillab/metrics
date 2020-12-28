@@ -21,12 +21,12 @@
 #  If not, see <https://www.gnu.org/licenses/>.                                #
 # ##############################################################################
 import os
-from pathlib import Path
 
 from metrics.core.model import Campaign
-from metrics.wallet.dataframe.builder import Analysis
+from metrics.wallet.dataframe.builder import Analysis, AnalysisOpti
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.static_figure import LINE_STYLES, DEFAULT_COLORS
+from metrics.wallet.figure.opti.static_figure import scoring_christophe_gilles, scoring_classic
 
 import pickle
 
@@ -43,14 +43,14 @@ def import_campaigns(jsons) -> Campaign:
     return campaign
 
 
-def get_cache_or_parse(input_file):
+def get_cache_or_parse(input_file, obj=Analysis):
 
     if os.path.isfile('.cache'):
         with open('.cache', 'rb') as file:
             return import_analysis_from_file(file)
     else:
         with open('.cache', 'wb') as file:
-            analysis = Analysis(input_file=input_file)
+            analysis = obj(input_file=input_file)
             analysis.export(file=file)
             return analysis
 

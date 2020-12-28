@@ -38,6 +38,7 @@ from metrics.core.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_NAME,
 from metrics.scalpel import read_campaign, ScalpelConfiguration
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
+from metrics.wallet.figure.opti.static_figure import FullOptiStat
 from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable, \
     ErrorTable, PivotTable, Description, CDFMPL
 
@@ -95,7 +96,7 @@ class Analysis:
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
-        return Analysis(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
+        return AnalysisOpti(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
 
     def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> Analysis:
         """
@@ -176,6 +177,12 @@ class Analysis:
         if file is None:
             return pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
         return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+class AnalysisOpti(Analysis):
+
+    def get_full_opti_table(self, **kwargs: dict):
+        return FullOptiStat(self._campaign_df, **kwargs).get_figure()
 
 
 class CampaignDataFrameBuilder:
