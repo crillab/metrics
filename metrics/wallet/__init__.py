@@ -26,7 +26,7 @@ from metrics.core.model import Campaign
 from metrics.wallet.dataframe.builder import Analysis, AnalysisOpti
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.static_figure import LINE_STYLES, DEFAULT_COLORS
-from metrics.wallet.figure.opti.static_figure import scoring_christophe_gilles, scoring_classic
+from metrics.wallet.figure.opti.static_figure import scoring_christophe_gilles, scoring_classic, scoring_borda
 
 import pickle
 

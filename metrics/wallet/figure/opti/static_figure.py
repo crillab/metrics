@@ -28,11 +28,15 @@ pd.set_option('display.max_rows', None)
 
 from metrics.wallet.figure.abstract_figure import Table
 
-from math import isnan
+import math
 from bisect import bisect_right
 from pandas import Series, DataFrame
 from math import log
 from itertools import product
+
+
+def isnan(x):
+    return x is None or math.isnan(x)
 
 
 def minmax_obj_to_max(row):
@@ -88,6 +92,23 @@ def compute_wf(df, S, wf):
     return df.timeout.map({s: w * coeff for s, w in zip(S, wf)})
 
 
+def borda_on_pair(this, other):
+    if isnan(this['ba']):
+        return 0
+    if not isnan(this['ba']) and isnan(other['ba']):
+        return 1
+    if this['status'] and not other['status']:
+        return 1
+    if this['ba'] > other['ba']:
+        return 1
+    return this['timestamp'] / (this['timestamp'] + other['timestamp'])
+
+
+def compute_borda(row, df):
+    df = df[(df.timeout == row['timeout']) & (df.experiment_ware != row['experiment_ware'])]
+    return df.apply(lambda other: borda_on_pair(row, other), axis=1).sum()
+
+
 def agg_input(df, S, wf):
     minA = df.bound_list.apply(lambda x: x[0] if len(x) else None).min()
     maxA = df.bound_list.apply(lambda x: x[-1] if len(x) else None).max()
@@ -104,6 +125,7 @@ def agg_input(df, S, wf):
     df['er'] = df.apply(computer_er, axis=1)
     df['sr'] = df.er.apply(lambda x: min(log(x, 10), 4) / 4)
     df['wf'] = compute_wf(df, S, wf)
+    df['borda'] = df.apply(lambda row: compute_borda(row, df), axis=1)
 
     return df
 
@@ -123,6 +145,10 @@ def scoring_christophe_gilles(df):
 
 def scoring_classic(df):
     return sum(df.domine) + sum(df.status) * 2
+
+
+def scoring_borda(df):
+    return sum(df.borda)
 
 
 class OptiStatStable(Table):
