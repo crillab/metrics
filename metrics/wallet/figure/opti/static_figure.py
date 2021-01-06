@@ -139,21 +139,25 @@ def cop_stats(df, T, S, alpha, wf):
     return df
 
 
-def scoring_christophe_gilles(df):
-    return sum(df.wf * df.score)
+def scoring_christophe_gilles(df, rm_noise):
+    to_sum = df.score * df.wf if rm_noise else df.score
+    return sum(to_sum)
 
 
-def scoring_classic(df):
-    return sum(df.domine) + sum(df.status) * 2
+def scoring_classic(df, rm_noise):
+    to_sum = df.domine.astype(int) + (df.status.astype(int) * 2)
+    to_sum = to_sum * df.wf if rm_noise else to_sum
+    return sum(to_sum)
 
 
-def scoring_borda(df):
-    return sum(df.borda)
+def scoring_borda(df, rm_noise):
+    to_sum = df.borda * df.wf if rm_noise else df.borda
+    return sum(to_sum)
 
 
 class OptiStatStable(Table):
 
-    def __init__(self, campaign_df, T, S, alpha, wf, scorings, order_by, groupby, **kwargs):
+    def __init__(self, campaign_df, T, S, alpha, wf, scorings, order_by, groupby, rm_noise=False, **kwargs):
         super().__init__(campaign_df, **kwargs)
         self._T = T
         self._S = S
@@ -162,12 +166,13 @@ class OptiStatStable(Table):
         self._scorings = scorings
         self._order_by = order_by
         self._groupby = groupby
+        self._rm_noise = rm_noise
 
     def get_data_frame(self):
         full_df = DataFrame()
         df = cop_stats(self._campaign_df.data_frame.copy(), self._T, self._S, self._alpha, self._wf)
 
         for scoring in self._scorings:
-            full_df[scoring.__name__] = df.groupby(self._groupby).apply(scoring)
+            full_df[scoring.__name__] = df.groupby(self._groupby).apply(lambda ddf: scoring(ddf, self._rm_noise))
 
         return full_df.sort_values(by=self._order_by, ascending=False)

@@ -27,6 +27,7 @@ This module provides a simple class corresponding to the builder of the datafram
 from __future__ import annotations
 
 import pickle
+from collections import defaultdict
 from typing import Set, Callable, Any, List, Tuple
 
 from pandas import DataFrame
@@ -45,11 +46,13 @@ from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, C
 
 class Analysis:
 
-    def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None, campaign_df: CampaignDataFrame = None ):
+    def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None,
+                 campaign_df: CampaignDataFrame = None):
         if campaign_df is None:
             self._input_file = input_file
             self._campaign = campaign
-            self._is_success = (lambda x: x[EXPERIMENT_CPU_TIME] < self._campaign.timeout) if is_success is None else is_success
+            self._is_success = (
+                lambda x: x[EXPERIMENT_CPU_TIME] < self._campaign.timeout) if is_success is None else is_success
             if campaign is None:
                 camp, config = self._make_campaign()
                 self._campaign = camp
@@ -72,7 +75,8 @@ class Analysis:
         self._complete_missing_experiments()
 
         self._campaign_df.data_frame[SUCCESS_COL] = self._campaign_df.data_frame.apply(self._is_success, axis=1)
-        self._campaign_df.data_frame[EXPERIMENT_CPU_TIME] = self._campaign_df.data_frame.apply(lambda x: x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else self._campaign_df.campaign.timeout, axis=1)
+        self._campaign_df.data_frame[EXPERIMENT_CPU_TIME] = self._campaign_df.data_frame.apply(
+            lambda x: x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else self._campaign_df.campaign.timeout, axis=1)
 
     def _complete_missing_experiments(self):
         inputs = [i.name for i in self._campaign_df.campaign.input_set.inputs]
@@ -81,7 +85,8 @@ class Analysis:
         df = self._campaign_df._data_frame
 
         df['missing'] = False
-        df = self._campaign_df._data_frame = self._campaign_df.data_frame.join(theorical_xps.set_index(['input', 'experiment_ware']), how='right', on=['input', 'experiment_ware'])
+        df = self._campaign_df._data_frame = self._campaign_df.data_frame.join(
+            theorical_xps.set_index(['input', 'experiment_ware']), how='right', on=['input', 'experiment_ware'])
         df['missing'] = df['missing'].fillna(True)
 
     def map(self, new_col, function):
@@ -96,7 +101,7 @@ class Analysis:
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
-        return AnalysisOpti(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
+        return self.__class__(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
 
     def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> Analysis:
         """
@@ -110,7 +115,7 @@ class Analysis:
         @param vbew_name: name of the vbew.
         @return: a new instance of Analysis with the new vbew.
         """
-        return Analysis(campaign_df=self._campaign_df.add_vbew(xp_ware_set, opti_col, minimize, vbew_name, diff))
+        return self.__class__(campaign_df=self._campaign_df.add_vbew(xp_ware_set, opti_col, minimize, vbew_name, diff))
 
     def groupby(self, column) -> List[Analysis]:
         """
@@ -119,41 +124,50 @@ class Analysis:
         @return: a list of Analysis with each group.
         """
         return [
-            Analysis(campaign_df=cdf) for cdf in self._campaign_df.groupby(column)
+            self.__class__(campaign_df=cdf) for cdf in self._campaign_df.groupby(column)
+        ]
+
+    def get_all_experiment_ware_pairs(self) -> List[Analysis]:
+        xpw = self.campaign_df.xp_ware_names
+
+        return [
+            self.sub_analysis('experiment_ware', [xpw[i], j]) for i in range(len(xpw) - 1) for j in xpw[i + 1:]
         ]
 
     def normalize_by(self, xp_ware, on) -> Analysis:
-        return Analysis(campaign_df=self._campaign_df.normalize_by(xp_ware, on))
+        return self.__class__(campaign_df=self._campaign_df.normalize_by(xp_ware, on))
 
     def get_only_failed(self):
-        return Analysis(campaign_df=self._campaign_df.get_only_failed())
+        return self.__class__(campaign_df=self._campaign_df.get_only_failed())
 
     def get_only_success(self):
-        return Analysis(campaign_df=self._campaign_df.get_only_success())
+        return self.__class__(campaign_df=self._campaign_df.get_only_success())
 
     def get_only_common_failed(self):
-        return Analysis(campaign_df=self._campaign_df.get_only_common_failed())
+        return self.__class__(campaign_df=self._campaign_df.get_only_common_failed())
 
     def get_only_common_success(self):
-        return Analysis(campaign_df=self._campaign_df.get_only_common_success())
+        return self.__class__(campaign_df=self._campaign_df.get_only_common_success())
 
     def delete_common_failed(self):
-        return Analysis(campaign_df=self._campaign_df.delete_common_failed())
+        return self.__class__(campaign_df=self._campaign_df.delete_common_failed())
 
     def delete_common_success(self):
-        return Analysis(campaign_df=self._campaign_df.delete_common_success())
+        return self.__class__(campaign_df=self._campaign_df.delete_common_success())
 
     def delete_input_when(self, f):
-        return Analysis(campaign_df=self._campaign_df.delete_input_when(f))
+        return self.__class__(campaign_df=self._campaign_df.delete_input_when(f))
 
     def describe(self, **kwargs: dict):
         return Description(self._campaign_df, **kwargs).get_description()
 
     def get_cactus_plot(self, dynamic: bool = False, **kwargs: dict):
-        return (CactusPlotly(self._campaign_df, **kwargs) if dynamic else CactusMPL(self._campaign_df, **kwargs)).get_figure()
+        return (CactusPlotly(self._campaign_df, **kwargs) if dynamic else CactusMPL(self._campaign_df,
+                                                                                    **kwargs)).get_figure()
 
     def get_scatter_plot(self, dynamic: bool = False, **kwargs: dict):
-        return (ScatterPlotly(self._campaign_df, **kwargs) if dynamic else ScatterMPL(self._campaign_df, **kwargs)).get_figure()
+        return (ScatterPlotly(self._campaign_df, **kwargs) if dynamic else ScatterMPL(self._campaign_df,
+                                                                                      **kwargs)).get_figure()
 
     def get_cdf(self, dynamic: bool = False, **kwargs: dict):
         return (CDFPlotly(self._campaign_df, **kwargs) if dynamic else CDFMPL(self._campaign_df, **kwargs)).get_figure()
@@ -183,6 +197,19 @@ class AnalysisOpti(Analysis):
 
     def get_opti_stat_table(self, **kwargs: dict):
         return OptiStatStable(self._campaign_df, **kwargs).get_figure()
+
+    def get_opti_stat_matrix(self, **kwargs: dict):
+        maps = {s.__name__: defaultdict(dict) for s in kwargs['scorings']}
+
+        for anal in self.get_all_experiment_ware_pairs():
+            d = anal.get_opti_stat_table(**kwargs).to_dict(orient='index')
+            (a, b) = d.keys()
+
+            for s in maps.keys():
+                maps[s][a][b] = (d[a][s] - d[b][s]) / d[b][s]
+                maps[s][b][a] = (d[b][s] - d[a][s]) / d[a][s]
+
+        return {k: DataFrame.from_dict(v, orient='index').fillna(0) for k, v in maps.items()}
 
 
 class CampaignDataFrameBuilder:
@@ -215,14 +242,16 @@ class CampaignDataFrameBuilder:
         experiments_df = self._make_experiments_df()
 
         campaign_df = experiments_df \
-            .join(inputs_df.set_index(INPUT_NAME), on=EXPERIMENT_INPUT, lsuffix='_experiment', rsuffix='_input', how='inner') \
+            .join(inputs_df.set_index(INPUT_NAME), on=EXPERIMENT_INPUT, lsuffix='_experiment', rsuffix='_input',
+                  how='inner') \
             .join(experiment_wares_df.set_index(XP_WARE_NAME),
                   on=EXPERIMENT_XP_WARE, lsuffix='_experiment', rsuffix='_xpware', how='inner'
                   )
 
         return self.build_from_data_frame(campaign_df, self._campaign.name)
 
-    def build_from_data_frame(self, campaign_df: DataFrame, name: str = None, vbew_names: Set[str] = None) -> CampaignDataFrame:
+    def build_from_data_frame(self, campaign_df: DataFrame, name: str = None,
+                              vbew_names: Set[str] = None) -> CampaignDataFrame:
         """
         Builds a campaign dataframe directly from a pandas dataframe. It must corresponds to the original dataframe
         with some modifications but with necessary columns.

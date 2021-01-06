@@ -35,3 +35,6 @@ class TestAnalysis(unittest.TestCase):
 
     def test_normalize_by(self):
         self.analysis.normalize_by('ExplorationLuby', 'cpu_time')
+
+    def test_pairs(self):
+        self.assertEqual(3, len(self.analysis.get_all_experiment_ware_pairs()))

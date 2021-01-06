@@ -41,4 +41,25 @@ class TestCop(unittest.TestCase):
             groupby=['experiment_ware'],
         )
 
-        print(df)
+        self.assertEqual([1089, 1088, 1028], list(df.scoring_classic))
+
+    def test_matrix(self):
+        S = [1, 10, 100, 1000]
+        alpha = .5
+        T = 1200
+
+        map_df = self.analysis.get_opti_stat_matrix(
+            T=T,
+            S=S,
+            alpha=alpha,
+            wf=[1] * len(S),
+            scorings=[
+                scoring_classic,
+                scoring_christophe_gilles,
+                scoring_borda,
+            ],
+            order_by=['scoring_classic'],
+            groupby=['experiment_ware'],
+        )
+
+        self.assertEqual(3, len(map_df))
