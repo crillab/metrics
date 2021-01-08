@@ -29,6 +29,7 @@ from __future__ import annotations
 import pickle
 from collections import defaultdict
 from typing import Set, Callable, Any, List, Tuple
+from warnings import warn
 
 from pandas import DataFrame
 from itertools import product
@@ -40,7 +41,7 @@ from metrics.scalpel import read_campaign, ScalpelConfiguration
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
 from metrics.wallet.figure.opti.static_figure import OptiStatStable
-from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, CDFMPL, StatTable, ContributionTable, \
+from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, StatTable, ContributionTable, \
     ErrorTable, PivotTable, Description, CDFMPL
 
 
@@ -194,6 +195,25 @@ class Analysis:
 
 
 class AnalysisOpti(Analysis):
+
+    def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None,
+                 campaign_df: CampaignDataFrame = None):
+        super().__init__(input_file, is_success, campaign, campaign_df)
+
+        self.test_non_opti_experiments()
+
+    def test_non_opti_experiments(self):
+        df = self.campaign_df.data_frame
+
+        df2 = df[df.success].copy()
+        df2['bb'] = df2.apply(lambda x: x['bound_list'][-1], axis=1)
+
+        s = df2.groupby('input')['bb'].unique().apply(len) > 1
+        input_to_rm = set(s[s].index)
+
+        if len(input_to_rm) > 0:
+            warn('These inputs have not the same OPTIMUM for each experiment_ware and have been removed: ' + str(input_to_rm))
+            self.campaign_df._data_frame = df[~df['input'].isin(input_to_rm)]
 
     def get_opti_stat_table(self, **kwargs: dict):
         return OptiStatStable(self._campaign_df, **kwargs).get_figure()
