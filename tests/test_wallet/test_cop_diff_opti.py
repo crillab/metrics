@@ -9,8 +9,6 @@ from metrics.wallet.figure.opti.static_figure import scoring_borda
 
 jsonpickle_pd.register_handlers()
 
-
-
 class TestCop(unittest.TestCase):
 
     @classmethod
@@ -20,5 +18,7 @@ class TestCop(unittest.TestCase):
 
         cls.analysis = AnalysisOpti(campaign=cls.analysis.campaign_df.campaign)
 
+
     def test_diff_opti(self):
-        pass
+        df = self.analysis.campaign_df.data_frame
+        self.assertEqual(12, len(df[df.error]))

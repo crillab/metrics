@@ -194,6 +194,12 @@ class Analysis:
         return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
+def find_max(df):
+    obj = df.objective.iloc[0]
+    s = df.apply(lambda x: x['bound_list'][-1] if len(x['bound_list']) > 0 else None, axis=1)
+
+    return s.max() if obj == 'max' else s.min()
+
 class AnalysisOpti(Analysis):
 
     def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None,
@@ -204,16 +210,18 @@ class AnalysisOpti(Analysis):
 
     def test_non_opti_experiments(self):
         df = self.campaign_df.data_frame
+        if 'bb_campaign' in df:
+            return
 
-        df2 = df[df.success].copy()
-        df2['bb'] = df2.apply(lambda x: x['bound_list'][-1], axis=1)
+        s = df.groupby('input').apply(find_max).rename('bb_campaign')
+        df = df.join(s, on='input')
+        df['error'] = df.apply(lambda x: x['bound_list'][-1] != x['bb_campaign'] if x['success'] else False, axis=1)
 
-        s = df2.groupby('input')['bb'].unique().apply(len) > 1
-        input_to_rm = set(s[s].index)
+        if df['error'].sum() > 0:
+            df['success'] = df.apply(lambda x: x['success'] and not x['error'], axis=1)
+            warn('Some experiment-wares have a false OPTIMUM response and their status have been fixed: a column "error" set to True corresponds to them.')
 
-        if len(input_to_rm) > 0:
-            warn('These inputs have not the same OPTIMUM for each experiment_ware and have been removed: ' + str(input_to_rm))
-            self.campaign_df._data_frame = df[~df['input'].isin(input_to_rm)]
+        self.campaign_df._data_frame = df
 
     def get_opti_stat_table(self, **kwargs: dict):
         return OptiStatStable(self._campaign_df, **kwargs).get_figure()
