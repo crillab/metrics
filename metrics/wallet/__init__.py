@@ -43,13 +43,13 @@ def import_campaigns(jsons) -> Campaign:
     return campaign
 
 
-def get_cache_or_parse(input_file, obj=Analysis, cache=True):
+def get_cache_or_parse(input_file, obj=Analysis, cache=True, filename='.cache'):
 
-    if os.path.isfile('.cache') and cache:
-        with open('.cache', 'rb') as file:
+    if os.path.isfile(filename) and cache:
+        with open(filename, 'rb') as file:
             return import_analysis_from_file(file)
     else:
-        with open('.cache', 'wb') as file:
+        with open(filename, 'wb') as file:
             analysis = obj(input_file=input_file)
             analysis.export(file=file)
             return analysis

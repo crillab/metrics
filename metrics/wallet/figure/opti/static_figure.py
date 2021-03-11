@@ -145,7 +145,7 @@ def scoring_christophe_gilles(df, rm_noise):
 
 
 def scoring_classic(df, rm_noise):
-    to_sum = df.domine.astype(int) + (df.status.astype(int) * 2)
+    to_sum = df.domine.astype(int) + (df.status.astype(int) * 1)
     to_sum = to_sum * df.wf if rm_noise else to_sum
     return sum(to_sum)
 

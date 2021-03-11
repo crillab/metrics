@@ -120,6 +120,8 @@ class ContributionTable(Table):
 
         contrib['contribution'] = contrib_raw.groupby('first').unique.sum()
 
+        contrib.index.name = None
+
         return contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False])
 
 
@@ -192,6 +194,10 @@ class CactusMPL(CactusPlot):
     Creation of a static cactus plot.
     """
 
+    def __init__(self, campaign_df, ax=None, **kwargs):
+        super().__init__(campaign_df, **kwargs)
+        self._ax = ax
+
     def get_figure(self):
         """
 
@@ -200,7 +206,11 @@ class CactusMPL(CactusPlot):
         df = self.get_data_frame()
         self._set_font()
 
-        fig, ax = plt.subplots(figsize=self._figsize)
+        if self._ax is not None:
+            ax = self._ax
+        else:
+            fig, ax = plt.subplots(figsize=self._figsize)
+
         ax.set_title(self.get_title())
         ax.set_xlabel(self.get_x_axis_name())
         ax.set_ylabel(self.get_y_axis_name())
@@ -228,7 +238,7 @@ class CactusMPL(CactusPlot):
         kwargs = [
             {
                 'color': self._color_map.get(x) if self._color_map else None,
-                'linewidth': 3 if x in self._campaign_df.vbew_names else 2,
+                'linewidth': 1.5,
                 'marker': 'o' if self._show_marker else None,
             } for x in df.columns
         ]
@@ -409,4 +419,4 @@ class ScatterMPL(ScatterPlot):
 
         @return: the title of the plot.
         """
-        return f'Comparison of {self._get_final_xpware_name(self._xp_ware_i)} and {self._get_final_xpware_name(self._xp_ware_j)}'
+        return ''

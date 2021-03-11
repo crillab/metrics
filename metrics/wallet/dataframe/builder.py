@@ -206,7 +206,7 @@ class AnalysisOpti(Analysis):
                  campaign_df: CampaignDataFrame = None):
         super().__init__(input_file, is_success, campaign, campaign_df)
 
-        self.test_non_opti_experiments()
+        #self.test_non_opti_experiments()
 
     def test_non_opti_experiments(self):
         df = self.campaign_df.data_frame

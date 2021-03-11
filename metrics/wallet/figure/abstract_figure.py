@@ -251,7 +251,7 @@ class CactusPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or 'Comparison of experimentwares'
+        return self._title or ''
 
 
 class CDFPlot(Plot):
