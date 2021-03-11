@@ -365,7 +365,7 @@ class ScatterMPL(ScatterPlot):
         ax.set_title(self.get_title())
         ax.set_xscale('log' if self._logx else 'linear')
         ax.set_yscale('log' if self._logy else 'linear')
-        ax.plot(limits, limits, ls="--", c=".3")
+        ax.plot(limits, limits, ls="--", c=".3", label=None)
 
         plt.xlim(limits)
         plt.ylim(limits)
@@ -378,9 +378,12 @@ class ScatterMPL(ScatterPlot):
         if self._color_col is None:
             df.plot.scatter(x=self._xp_ware_i, y=self._xp_ware_j, ax=ax)
         else:
+            names = []
             for name, sub in df.groupby(self._color_col):
                 ax.scatter(sub[self._xp_ware_i], sub[self._xp_ware_j], label=name)
-            plt.legend(title=None)
+                names.append(name)
+            ax.legend(loc=self._legend_location,
+                      bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
 
         ax.set_xlabel(self.get_x_axis_name())
         ax.set_ylabel(self.get_y_axis_name())
