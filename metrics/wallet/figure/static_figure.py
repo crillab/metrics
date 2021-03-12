@@ -359,7 +359,9 @@ class ScatterMPL(ScatterPlot):
         """
         df = self.get_data_frame()
         self._set_font()
-        limits = [self._min, self._campaign_df.campaign.timeout]
+        lim_min = min(self._x_min, self._y_min) if self._x_min != -1 and self._y_min != -1 else self._min
+        lim_max = max(self._x_max, self._y_max) if self._x_max != -1 and self._y_max != -1 else self._campaign_df.campaign.timeout
+        limits = [lim_min, lim_max]
 
         fig, ax = plt.subplots(figsize=self._figsize)
         ax.set_title(self.get_title())
