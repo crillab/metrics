@@ -359,13 +359,15 @@ class ScatterMPL(ScatterPlot):
         """
         df = self.get_data_frame()
         self._set_font()
-        limits = [self._min, self._campaign_df.campaign.timeout]
+        lim_min = min(self._x_min, self._y_min) if self._x_min != -1 and self._y_min != -1 else self._min
+        lim_max = max(self._x_max, self._y_max) if self._x_max != -1 and self._y_max != -1 else self._campaign_df.campaign.timeout
+        limits = [lim_min, lim_max]
 
         fig, ax = plt.subplots(figsize=self._figsize)
         ax.set_title(self.get_title())
         ax.set_xscale('log' if self._logx else 'linear')
         ax.set_yscale('log' if self._logy else 'linear')
-        ax.plot(limits, limits, ls="--", c=".3")
+        ax.plot(limits, limits, ls="--", c=".3", label=None)
 
         plt.xlim(limits)
         plt.ylim(limits)
@@ -378,9 +380,12 @@ class ScatterMPL(ScatterPlot):
         if self._color_col is None:
             df.plot.scatter(x=self._xp_ware_i, y=self._xp_ware_j, ax=ax)
         else:
+            names = []
             for name, sub in df.groupby(self._color_col):
                 ax.scatter(sub[self._xp_ware_i], sub[self._xp_ware_j], label=name)
-            plt.legend(title=None)
+                names.append(name)
+            ax.legend(loc=self._legend_location,
+                      bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
 
         ax.set_xlabel(self.get_x_axis_name())
         ax.set_ylabel(self.get_y_axis_name())

@@ -25,6 +25,7 @@
 This module provides classes for dynamic plots.
 """
 
+from math import log10
 import plotly.graph_objects as go
 import plotly.express as px
 
@@ -143,26 +144,36 @@ class ScatterPlotly(ScatterPlot):
             } for name, sub in self._df_scatter.groupby(self._color_col)]
 
     def _get_layout(self):
-        timeout = self._campaign_df.campaign.timeout
+        x_min = self._x_min if self._x_min != -1 else 0
+        x_max = self._x_max if self._x_max != -1 else self._campaign_df.campaign.timeout
+        y_min = self._y_min if self._y_min != -1 else 0
+        y_max = self._y_max if self._y_max != -1 else self._campaign_df.campaign.timeout
+        x_min = min(x_min, y_min)
+        y_min = x_min
+        x_max = max(x_max, y_max)
+        y_max = x_max
+
         shapes = [{
             'x0': opt[0],
             'y0': opt[1],
-            'x1': timeout,
-            'y1': timeout,
+            'x1': x_max,
+            'y1': y_max,
             'type': 'line',
             'line': {'color': 'gray', 'width': 2, 'dash': opt[2]}
-        } for opt in [(self._min, self._min, 'dash'), (self._min, timeout, 'dot'), (timeout, self._min, 'dot')]
+        } for opt in [(x_min, y_min, 'dash'), (x_min, x_max, 'dot'), (y_max, y_min, 'dot')]
         ]
 
         return {
             'title.text': self.get_title(),
             'xaxis': {
                 'title': self.get_x_axis_name(),
-                'type': 'log'
+                'type': 'log' if self._logx else 'linear',
+                'range': [log10(x_min) if self._logx else x_min, log10(x_max) if self._logx else x_max]
             },
             'yaxis': {
                 'title': self.get_y_axis_name(),
-                'type': 'log'
+                'type': 'log' if self._logy else 'linear',
+                'range': [log10(y_min) if self._logx else y_min, log10(y_max) if self._logy else y_max]
             },
             'hovermode': 'closest',
             'shapes': shapes

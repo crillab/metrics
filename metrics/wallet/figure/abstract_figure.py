@@ -26,6 +26,8 @@ This module provides abstraction of each figures.
 """
 import matplotlib
 
+from pandas import isnull
+
 from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_XP_WARE, EXPERIMENT_INPUT
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame, CampaignDFFilter
 
@@ -321,7 +323,8 @@ class ScatterPlot(Plot):
     """
 
     def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col=EXPERIMENT_CPU_TIME,
-                 marker_alpha: float = 0.3, color_col=None, **kwargs):
+                 marker_alpha: float = 0.3, color_col=None, legend_location: str = 'best', ncol_legend: int = 1,
+                 bbox_to_anchor=None, **kwargs):
         """
         Creates a scatter plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -338,6 +341,9 @@ class ScatterPlot(Plot):
         self._min = self._df_scatter[[self._xp_ware_i, self._xp_ware_j]].min(skipna=True).min()
         self._marker_alpha = marker_alpha
         self._color_col = color_col
+        self._legend_location = legend_location
+        self._bbox_to_anchor = bbox_to_anchor
+        self._ncol_legend = ncol_legend
 
     def get_data_frame(self):
         """
@@ -376,7 +382,14 @@ class ScatterPlot(Plot):
             return
 
         ori = self._campaign_df.data_frame
-        df[col] = ori.groupby('input')[col].agg(lambda x: str(set(x) - {None}))
+
+        def aggreg(values):
+            unique_values = list({v for v in values if not isnull(v)})
+            if len(unique_values) == 1:
+                return str(unique_values[0])
+            return str(unique_values)
+
+        df[col] = ori.groupby('input')[col].agg(aggreg)
 
 
 class BoxPlot(Plot):
