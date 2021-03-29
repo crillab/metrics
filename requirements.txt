@@ -35,7 +35,7 @@ pandas>=1.0.1
 plotly==4.5.4
 prompt-toolkit==1.0.14
 pyfiglet==0.8.post1
-Pygments==2.6.1
+Pygments==2.7.4
 PyInquirer==1.0.3
 pyparsing==2.4.6
 python-dateutil==2.8.1
