@@ -375,7 +375,7 @@ class ScatterPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or f'Comparison of {self._xp_ware_i} and {self._xp_ware_j}'
+        return self._title or f'Comparison of {self.get_x_axis_name()} and {self.get_y_axis_name()}'
 
     def _extra_col(self, df, col):
         if col is None:

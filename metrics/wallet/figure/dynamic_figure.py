@@ -54,7 +54,7 @@ class CactusPlotly(CactusPlot):
         solvers = list(self.df_cactus.columns)
 
         return [{
-            'name': col,
+            'name': self._get_final_xpware_name(col),
             'mode': 'lines+markers' if self._show_marker else 'lines',
             'marker.symbol': i % 10,
             'line.width': 2,
