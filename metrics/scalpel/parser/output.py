@@ -281,7 +281,7 @@ class RawCampaignOutputParser(CampaignOutputParser):
         :param stream: The stream to read.
         """
         for line in stream:
-            self._parse_line(line)
+            self._parse_line(line.rstrip())
 
     def _parse_line(self, line: str) -> None:
         """

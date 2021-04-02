@@ -12,6 +12,6 @@ data:
   mapping:
     input: benchmark
     experiment_ware:
-    - solver
-    - configuration
+      - solver
+      - configuration
     cpu_time: solver time

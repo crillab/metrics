@@ -1046,8 +1046,8 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         """
         Reads the description of the campaign to parse.
         """
-        self._log_data(CAMPAIGN_NAME, self._get_campaign_name())
-        self._log_data(CAMPAIGN_DATE, self._get_campaign_date())
+        self._listener.log_metadata(CAMPAIGN_NAME, self._get_campaign_name())
+        self._listener.log_metadata(CAMPAIGN_DATE, self._get_campaign_date())
 
     def _get_campaign_name(self) -> Optional[str]:
         """
@@ -1069,11 +1069,11 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         """
         Reads the description of the experimental setup.
         """
-        self._log_data(CAMPAIGN_OS, self._get_os_description())
-        self._log_data(CAMPAIGN_CPU, self._get_cpu_description())
-        self._log_data(CAMPAIGN_MEMORY, self._get_total_memory())
-        self._log_data(CAMPAIGN_TIMEOUT, self._get_time_out())
-        self._log_data(CAMPAIGN_MEMOUT, self._get_memory_out())
+        self._listener.log_metadata(CAMPAIGN_OS, self._get_os_description())
+        self._listener.log_metadata(CAMPAIGN_CPU, self._get_cpu_description())
+        self._listener.log_metadata(CAMPAIGN_MEMORY, self._get_total_memory())
+        self._listener.log_metadata(CAMPAIGN_TIMEOUT, self._get_time_out())
+        self._listener.log_metadata(CAMPAIGN_MEMOUT, self._get_memory_out())
 
     def _get_os_description(self) -> Optional[str]:
         """

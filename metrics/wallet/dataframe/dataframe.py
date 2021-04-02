@@ -72,6 +72,12 @@ def _vbew_agg(df, opti_col, minimize, diff):
     i1 = df[opti_col].values[0]
     i2 = df[opti_col].values[1]
 
+    if i1 == i2:
+        return df.iloc[0] if diff == 0 else None
+
+    if i1 == 0:
+        return df.iloc[0]
+
     return df.iloc[0] if (i2 - i1) / i1 >= diff else None
 
 
@@ -184,7 +190,7 @@ class CampaignDataFrame:
         df = self._data_frame[self._data_frame[column].isin(sub_set)]
         return self.build_data_frame(df)
 
-    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> CampaignDataFrame:
+    def add_vbew(self, xp_ware_set=None, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> CampaignDataFrame:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -197,6 +203,8 @@ class CampaignDataFrame:
         @return: a new instance of CampaignDataFrame with the new vbew.
         """
         df = self._data_frame
+        if xp_ware_set is None:
+            xp_ware_set = self.xp_ware_names
 
         df_vbs = df[df[EXPERIMENT_XP_WARE].isin(xp_ware_set)]
 

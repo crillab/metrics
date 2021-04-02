@@ -120,7 +120,9 @@ class ContributionTable(Table):
 
         contrib['contribution'] = contrib_raw.groupby('first').unique.sum()
 
-        return contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False])
+        contrib = contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False])
+        contrib.index.name = None
+        return contrib
 
 
 class ErrorTable(Table):
@@ -248,7 +250,7 @@ class CactusMPL(CactusPlot):
                             bbox_to_anchor=self._bbox_to_anchor,
                             ncol=self._ncol_legend)
         else:
-            leg = ax.legend([self._xp_ware_name_map[x] for x in self.get_data_frame().columns],
+            leg = ax.legend([self._get_final_xpware_name(x) for x in self.get_data_frame().columns],
                             loc=self._legend_location,
                             bbox_to_anchor=self._bbox_to_anchor, ncol=self._ncol_legend)
 
