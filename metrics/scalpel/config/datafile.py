@@ -40,11 +40,12 @@ class DataFile:
     A DataFile object gathers all the information about a data-file to parse.
     """
 
-    def __init__(self, name: str, fmt: OutputFormat, csv_configuration, parser: str):
+    def __init__(self, name: str, name_as_prefix, fmt: OutputFormat, csv_configuration, parser: str):
         self._name = name
         self._format = fmt
         self._csv_configuration = csv_configuration
         self._parser = parser
+        self._name_as_prefix = name_as_prefix
 
     def get_name(self):
         return self._name
@@ -62,6 +63,9 @@ class DataFile:
             return None
         return locate(self._parser)
 
+    def has_name_as_prefix(self):
+        return self._name_as_prefix
 
-def create_data_file(file_name, fmt=None, csv_config=None, parser=None):
-    return DataFile(file_name, fmt, csv_config, parser)
+
+def create_data_file(file_name, name_as_prefix=False, fmt=None, csv_config=None, parser=None):
+    return DataFile(file_name, name_as_prefix, fmt, csv_config, parser)

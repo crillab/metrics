@@ -1262,7 +1262,10 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
                 self._data_files[data_file] = create_data_file(data_file)
             else:
                 name = data_file['name']
+                name_as_prefix = data_file.get('name-as-prefix')
+                name_as_prefix = False if name_as_prefix is None else name_as_prefix
                 header = data_file.get('has-header')
+                header = True if header is None else header
                 quote_char = data_file.get('quote-char')
                 separator = data_file.get('separator')
                 title_separator = data_file.get('title-separator')
@@ -1277,8 +1280,7 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
                     else:
                         separator = ','
                 csv_config = CsvConfiguration(separator, quote_char, header, title_separator)
-                self._data_files[name] = create_data_file(name, fmt, csv_config, parser)
-
+                self._data_files[name] = create_data_file(name, name_as_prefix, fmt, csv_config, parser)
 
     def _get_file_name_meta(self) -> FileNameMetaConfiguration:
         raise NotImplementedError('Method "_get_file_name_meta()" is abstract!')

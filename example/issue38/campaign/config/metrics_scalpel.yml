@@ -33,8 +33,8 @@ data:
     - log-data:
         - timestamp
         - bound
-      file: "*execution.out"
-      pattern: "o {integer} \t{real}"
-      group:
+      file: "execution.out"
+      pattern: "o {integer} {real}"
+      groups:
         - 1
         - 2
