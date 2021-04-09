@@ -226,10 +226,12 @@ class ScalpelConfiguration:
         """
         if None in self._log_datas:
             return self._log_datas[None]
+
+        all_datas = []
         for k, v in self._log_datas.items():
             if fnmatch(filename, k):
-                return v
-        return []
+                all_datas.extend(v)
+        return all_datas
 
     def get_custom_parser(self) -> Optional[str]:
         """
@@ -459,6 +461,9 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
         """
         raise NotImplementedError('Method "get_regex_group()" is abstract!')
 
+    def is_exact(self):
+        raise NotImplementedError('Method "get_exact()" is abstract!')
+
     def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
         """
         Gives the compiled pattern identifying the current raw data.
@@ -470,29 +475,43 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
         """
         # First, we look for a named pattern.
         simplified_pattern = self.get_simplified_pattern()
+        exact = self.is_exact()
         groups = self.get_regex_group()
         if simplified_pattern is not None:
-            if groups is None:
-                return compile_named_pattern(simplified_pattern)
-            else:
-                return compile_all_named_patterns(simplified_pattern, *groups)
+            try:
+                return self._compile_named_pattern(simplified_pattern, exact, groups)
+            except ValueError:
+                return self._compile_regex(simplified_pattern, exact, groups)
 
-        # There is no look pattern: trying a regular expression.
+        # There is no named pattern: trying a regular expression.
         regex = self.get_regex_pattern()
         if regex is not None:
-            if groups is None:
-                return compile_regex(regex)
-            else:
-                return compile_all_regexes(regex, *groups)
+            try:
+                return self._compile_regex(regex, exact, groups)
+            except ValueError:
+                return self._compile_named_pattern(regex, exact, groups)
 
         # The description of the data is missing!
         raise ValueError('A pattern or regex is missing!')
+
+    def _compile_named_pattern(self, pattern, exact, groups):
+        if groups is None:
+            return compile_named_pattern(pattern, exact)
+        return compile_all_named_patterns(pattern, exact, *groups)
+
+    def _compile_regex(self, regex, exact, groups):
+        if groups is None:
+            return compile_regex(regex, exact)
+        return compile_all_regexes(regex, exact, *groups)
 
 
 class EmptyRawDataConfiguration(EmptyConfigurationIterator, RawDataConfiguration):
     """
     The EmptyRawDataConfiguration is a RawDataConfiguration with no element.
     """
+
+    def is_exact(self):
+        raise ValueError('Empty raw data configuration!')
 
     def get_name(self) -> str:
         """
@@ -540,6 +559,12 @@ class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfigura
     The DictionaryRawDataConfiguration allows to extract a RawDataConfiguration from a
     list of dictionaries.
     """
+
+    def is_exact(self):
+        exact = self.current().get('exact')
+        if exact is not None:
+            return exact
+        return False
 
     def get_name(self) -> Union[str, List[str]]:
         """
@@ -606,6 +631,9 @@ class FileNameMetaConfiguration:
         """
         raise NotImplementedError('Method "get_simplified_pattern()" is abstract!')
 
+    def is_exact(self):
+        raise NotImplementedError('Method "is_exact()" is abstract!')
+
     def get_regex_pattern(self) -> Optional[str]:
         """
         Gives the regular expression identifying the current filename.
@@ -636,12 +664,12 @@ class FileNameMetaConfiguration:
         pattern = None
         simplified_pattern = self.get_simplified_pattern()
         if simplified_pattern is not None:
-            pattern = compile_all_named_patterns(simplified_pattern, *groups)
+            pattern = compile_all_named_patterns(simplified_pattern, self.is_exact(), *groups)
 
         if pattern is None:
             regex = self.get_regex_pattern()
             if regex is not None:
-                pattern = compile_all_regexes(regex, *groups)
+                pattern = compile_all_regexes(regex, self.is_exact(), *groups)
 
         # The description of the data is missing!
         if pattern is None:
@@ -663,6 +691,9 @@ class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
     """
     The EmptyFileNameMetaConfiguration is a RawDataConfiguration with no element.
     """
+
+    def is_exact(self):
+        raise ValueError('Empty raw data configuration!')
 
     def get_simplified_pattern(self) -> Optional[str]:
         """
@@ -691,6 +722,12 @@ class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
 
 
 class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryConfiguration):
+
+    def is_exact(self):
+        exact = self.get('exact')
+        if exact is not None:
+            return exact
+        return False
 
     def get_simplified_pattern(self) -> Optional[str]:
         return self.get('pattern')
@@ -1273,9 +1310,9 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
                 fmt_tmp = data_file.get('format')
                 fmt = None if fmt_tmp is None else OutputFormat.value_of(fmt_tmp)
                 if separator is None:
-                    if fmt == CampaignFormat.CSV2:
+                    if fmt == OutputFormat.CSV2:
                         separator = ';'
-                    elif fmt == CampaignFormat.TSV:
+                    elif fmt == OutputFormat.TSV:
                         separator = '\t'
                     else:
                         separator = ','
