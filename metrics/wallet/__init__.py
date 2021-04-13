@@ -22,58 +22,25 @@
 # ##############################################################################
 import os
 
-from metrics.core.model import Campaign
-from metrics.wallet.dataframe.builder import Analysis, AnalysisOpti
-from metrics.wallet.dataframe.dataframe import CampaignDataFrame
-from metrics.wallet.figure.static_figure import LINE_STYLES, DEFAULT_COLORS
-from metrics.wallet.figure.opti.static_figure import scoring_christophe_gilles, scoring_classic, scoring_borda
+from metrics.wallet.dataframe.builder import Analysis
 
 import pickle
 
 
-def import_campaigns(jsons) -> Campaign:
-    campaign = import_campaign(jsons[0])
-
-    for i in range(1, len(jsons)):
-        tmp = import_campaign(jsons[i])
-
-        campaign.experiments.extend(tmp.experiments)
-        campaign.input_set.inputs.extend(tmp.input_set.inputs)
-
-    return campaign
-
-
-def get_cache_or_parse(input_file, obj=Analysis, cache=True, filename='.cache'):
-
-    if os.path.isfile(filename) and cache:
+def get_cache_or_parse(input_file, filename='.cache') -> Analysis:
+    if os.path.isfile(filename) and filename is not None:
         with open(filename, 'rb') as file:
             return import_analysis_from_file(file)
     else:
         with open(filename, 'wb') as file:
-            analysis = obj(input_file=input_file)
+            analysis = Analysis(input_file=input_file)
             analysis.export(file=file)
             return analysis
-
-
-def import_campaign(str) -> Campaign:
-    return pickle.loads(str)
-
-
-def import_campaign_from_file(file):
-    return pickle.load(file)
-
-
-def import_campaign_data_frame(str) -> CampaignDataFrame:
-    return pickle.loads(str)
-
-
-def import_campaign_data_frame_from_file(file):
-    return pickle.load(file)
 
 
 def import_analysis(str) -> Analysis:
     return pickle.loads(str)
 
 
-def import_analysis_from_file(file):
+def import_analysis_from_file(file) -> Analysis:
     return pickle.load(file)

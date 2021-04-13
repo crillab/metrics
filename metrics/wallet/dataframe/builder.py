@@ -27,7 +27,6 @@ This module provides a simple class corresponding to the builder of the datafram
 from __future__ import annotations
 
 import pickle
-from collections import defaultdict
 from typing import Set, Callable, Any, List, Tuple
 from warnings import warn
 
@@ -36,59 +35,56 @@ from itertools import product
 
 from metrics.core.model import Campaign
 from metrics.core.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_NAME, EXPERIMENT_INPUT, XP_WARE_NAME, \
-    EXPERIMENT_XP_WARE
-from metrics.scalpel import read_campaign, ScalpelConfiguration
-from metrics.wallet.dataframe.dataframe import CampaignDataFrame
+    EXPERIMENT_XP_WARE, SUFFIX_EXPERIMENT, SUFFIX_INPUT, SUFFIX_XP_WARE, MISSING_DATA_COL, CONSISTENCY_COL
+from metrics.scalpel import read_campaign
 from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
-from metrics.wallet.figure.opti.static_figure import OptiStatStable
 from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, StatTable, ContributionTable, \
     ErrorTable, PivotTable, Description, CDFMPL
 
 
+
 class Analysis:
 
-    def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None,
-                 campaign_df: CampaignDataFrame = None):
-        if campaign_df is None:
-            self._input_file = input_file
-            self._campaign = campaign
-            self._is_success = (
-                lambda x: x[EXPERIMENT_CPU_TIME] < self._campaign.timeout) if is_success is None else is_success
-            if campaign is None:
-                camp, config = self._make_campaign()
-                self._campaign = camp
-                suc = config.get_is_success()
-                if suc is not None:
-                    self._is_success = suc
-            self._make_campaign_df()
-        else:
-            self._campaign_df = campaign_df
+    def __init__(self, input_file: str = None, data_frame: DataFrame = None,
+                 is_consistent: Callable[[Any], bool] = None,
+                 is_success: Callable[[Any], bool] = None):
+
+        if data_frame is not None:
+            self._data_frame = data_frame
+            return
+
+        campaign, config = read_campaign(input_file)
+
+        is_cons = is_consistent or config.get_is_consistent()
+        is_succ = is_success or config.get_is_success()
+
+        self._data_frame = DataFrameBuilder(campaign).build_from_campaign()
+        self.check_consistency(campaign, is_cons)
+        self.check_success(is_succ)
 
     @property
-    def campaign_df(self):
-        return self._campaign_df
+    def data_frame(self):
+        return self._data_frame
 
-    def _make_campaign(self) -> Tuple[Campaign, ScalpelConfiguration]:
-        return read_campaign(self._input_file)
+    def check_consistency(self, campaign: Campaign, is_consistent: Callable[[Any], bool]):
+        self._complete_missing_experiments(campaign)
+        self._data_frame[CONSISTENCY_COL] = self._data_frame.apply(is_consistent, axis=1)
 
-    def _make_campaign_df(self):
-        self._campaign_df = CampaignDataFrameBuilder(self._campaign).build_from_campaign()
-        self._complete_missing_experiments()
+    def _complete_missing_experiments(self, campaign: Campaign):
+        inputs = [i.name for i in campaign.input_set.inputs]
+        xp_wares = [ew.name for ew in campaign.experiment_wares]
+        theoretical_df = DataFrame(product(inputs, xp_wares), columns=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE])
 
-        self._campaign_df.data_frame[SUCCESS_COL] = self._campaign_df.data_frame.apply(self._is_success, axis=1)
-        self._campaign_df.data_frame[EXPERIMENT_CPU_TIME] = self._campaign_df.data_frame.apply(
-            lambda x: x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else self._campaign_df.campaign.timeout, axis=1)
+        self._data_frame[MISSING_DATA_COL] = False
+        self._data_frame = self._data_frame.join(
+            theoretical_df.set_index([EXPERIMENT_INPUT, EXPERIMENT_XP_WARE]), how='right', on=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE])
+        self._data_frame[MISSING_DATA_COL] = self._data_frame[MISSING_DATA_COL].fillna(True)
 
-    def _complete_missing_experiments(self):
-        inputs = [i.name for i in self._campaign_df.campaign.input_set.inputs]
-        xp_wares = [ew.name for ew in self._campaign_df.campaign.experiment_wares]
-        theorical_xps = DataFrame(product(inputs, xp_wares), columns=['input', 'experiment_ware'])
-        df = self._campaign_df._data_frame
-
-        df['missing'] = False
-        df = self._campaign_df._data_frame = self._campaign_df.data_frame.join(
-            theorical_xps.set_index(['input', 'experiment_ware']), how='right', on=['input', 'experiment_ware'])
-        df['missing'] = df['missing'].fillna(True)
+    def check_success(self, is_success: Callable[[Any], bool]):
+        if is_success is not None:
+            self._data_frame[SUCCESS_COL] = self._data_frame.apply(is_success, axis=1)
+        else:
+            self._data_frame[SUCCESS_COL] = True
 
     def map(self, new_col, function):
         df = self._campaign_df.data_frame
@@ -193,56 +189,13 @@ class Analysis:
             return pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
         return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-
-def find_max(df):
-    obj = df.objective.iloc[0]
-    s = df.apply(lambda x: x['bound_list'][-1] if len(x['bound_list']) > 0 else None, axis=1)
-
-    return s.max() if obj == 'max' else s.min()
-
-class AnalysisOpti(Analysis):
-
-    def __init__(self, input_file: str = None, is_success: Callable[[Any], bool] = None, campaign: Campaign = None,
-                 campaign_df: CampaignDataFrame = None):
-        super().__init__(input_file, is_success, campaign, campaign_df)
-
-        #self.test_non_opti_experiments()
-
-    def test_non_opti_experiments(self):
-        df = self.campaign_df.data_frame
-        if 'bb_campaign' in df:
-            return
-
-        s = df.groupby('input').apply(find_max).rename('bb_campaign')
-        df = df.join(s, on='input')
-        df['error'] = df.apply(lambda x: x['bound_list'][-1] != x['bb_campaign'] if x['success'] else False, axis=1)
-
-        if df['error'].sum() > 0:
-            df['success'] = df.apply(lambda x: x['success'] and not x['error'], axis=1)
-            warn('Some experiment-wares have a false OPTIMUM response and their status have been fixed: a column "error" set to True corresponds to them.')
-
-        self.campaign_df._data_frame = df
-
-    def get_opti_stat_table(self, **kwargs: dict):
-        return OptiStatStable(self._campaign_df, **kwargs).get_figure()
-
-    def get_opti_stat_matrix(self, **kwargs: dict):
-        maps = {s.__name__: defaultdict(dict) for s in kwargs['scorings']}
-
-        for anal in self.get_all_experiment_ware_pairs():
-            d = anal.get_opti_stat_table(**kwargs).to_dict(orient='index')
-            (a, b) = d.keys()
-
-            for s in maps.keys():
-                maps[s][a][b] = (d[a][s] - d[b][s]) / d[b][s]
-                maps[s][b][a] = (d[b][s] - d[a][s]) / d[a][s]
-
-        return {k: DataFrame.from_dict(v, orient='index').fillna(0) for k, v in maps.items()}
+    def check_success(self, is_succ):
+        pass
 
 
-class CampaignDataFrameBuilder:
+class DataFrameBuilder:
     """
-    This builder permits to make a campaign dataframe.
+    This builder permits to make a dataframe composed of the Campaign information.
     """
 
     def __init__(self, campaign: Campaign):
@@ -260,7 +213,7 @@ class CampaignDataFrameBuilder:
         """
         return self._campaign
 
-    def build_from_campaign(self) -> CampaignDataFrame:
+    def build_from_campaign(self) -> DataFrame:
         """
         Builds a campaign dataframe directly from the original campaign.
         @return: the builded campaign dataframe.
@@ -269,25 +222,12 @@ class CampaignDataFrameBuilder:
         inputs_df = self._make_inputs_df()
         experiments_df = self._make_experiments_df()
 
-        campaign_df = experiments_df \
-            .join(inputs_df.set_index(INPUT_NAME), on=EXPERIMENT_INPUT, lsuffix='_experiment', rsuffix='_input',
+        return experiments_df \
+            .join(inputs_df.set_index(INPUT_NAME), on=EXPERIMENT_INPUT, lsuffix=SUFFIX_EXPERIMENT, rsuffix=SUFFIX_INPUT,
                   how='inner') \
             .join(experiment_wares_df.set_index(XP_WARE_NAME),
-                  on=EXPERIMENT_XP_WARE, lsuffix='_experiment', rsuffix='_xpware', how='inner'
+                  on=EXPERIMENT_XP_WARE, lsuffix=SUFFIX_EXPERIMENT, rsuffix=SUFFIX_XP_WARE, how='inner'
                   )
-
-        return self.build_from_data_frame(campaign_df, self._campaign.name)
-
-    def build_from_data_frame(self, campaign_df: DataFrame, name: str = None,
-                              vbew_names: Set[str] = None) -> CampaignDataFrame:
-        """
-        Builds a campaign dataframe directly from a pandas dataframe. It must corresponds to the original dataframe
-        with some modifications but with necessary columns.
-        @param campaign_df: a pandas dataframe.
-        @param name: the name corresponding to the current dataframe.
-        @return: the builded campaign dataframe.
-        """
-        return CampaignDataFrame(self, campaign_df, name or self._campaign.name, vbew_names or set())
 
     def _make_experiment_wares_df(self) -> DataFrame:
         """

@@ -56,7 +56,13 @@ INPUT_SET_INPUTS = 'inputs'
 
 # Dataframe
 
+CONSISTENT_COL = 'consistent'
 SUCCESS_COL = 'success'
+SUFFIX_EXPERIMENT = '_experiment'
+SUFFIX_INPUT = '_input'
+SUFFIX_XP_WARE = '_xpware'
+MISSING_DATA_COL = 'missing'
+CONSISTENCY_COL = 'consistent'
 
 # Figures
 

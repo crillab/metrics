@@ -7,8 +7,11 @@ you need to use the *Wallet* module of *Metrics*.
 (*wALLET*).
 
 To manipulate data, *Wallet* uses a [*pandas Dataframe*](https://pandas.pydata.org/). 
-A dataframe is a table composed of rows corresponding to experimentations and columns (or variables) corresponding to experimentation information (cpu time, memory, all the input and experiment-ware information, etc.).
-It is not necessary to have any knowledge about this library to manipulate *Wallet* data.
+A dataframe is a table composed of rows corresponding to experimentations (denoted as observations) and columns (denoted as variables).
+
+It is not necessary to have any knowledge about this library to manipulate *Wallet* data but in order to have a better idea on how data are maniulated, an example of a classical analysis dataframe is given:
+
+**Example HERE!**
 
 ## Create/Import/Export an Analysis
 
@@ -20,6 +23,8 @@ To create a new analysis, you only need to import the `Analysis` class from *Wal
 from metrics.wallet import Analysis
 my_analysis = Analysis(input_file='path/to/YAML/file')
 ```
+
+It exists another way to build an analysis presented in the `Advanced Usage` section.
 
 ### Export and Import an Analysis
 

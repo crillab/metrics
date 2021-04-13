@@ -245,6 +245,9 @@ class ScalpelConfiguration:
     def get_is_success(self):
         return self._is_success
 
+    def get_is_consistent(self):
+        pass
+
     def get_output_format(self, file: str) -> Tuple[OutputFormat, Any]:
         fmt = OutputFormat.guess_format(file)
         if fmt == OutputFormat.CSV:
