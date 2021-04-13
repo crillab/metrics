@@ -24,8 +24,10 @@ import os
 
 from metrics.wallet.dataframe.builder import Analysis
 
-import pickle
+import jsonpickle
+import jsonpickle.ext.pandas as jsonpickle_pd
 
+jsonpickle_pd.register_handlers()
 
 def get_cache_or_parse(input_file, filename='.cache') -> Analysis:
     if os.path.isfile(filename) and filename is not None:
@@ -37,6 +39,7 @@ def get_cache_or_parse(input_file, filename='.cache') -> Analysis:
             analysis.export(file=file)
             return analysis
 
+    return import_campaign(content)
 
 def import_analysis(str) -> Analysis:
     return pickle.loads(str)

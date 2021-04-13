@@ -26,6 +26,8 @@ This module provides abstraction of each figures.
 """
 import matplotlib
 
+from pandas import isnull
+
 from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_XP_WARE, EXPERIMENT_INPUT
 from metrics.wallet.dataframe.dataframe import CampaignDataFrame, CampaignDFFilter
 
@@ -66,12 +68,18 @@ class Figure:
 class Table(Figure):
 
     def __init__(self, campaign_df: CampaignDataFrame, commas_for_number: bool = False,
-                 dollars_for_number: bool = False, **kwargs):
+                 dollars_for_number: bool = False, col_name_map={}, **kwargs):
         super().__init__(campaign_df, **kwargs)
         self._commas_for_number = commas_for_number
         self._dollars_for_number = dollars_for_number
+        self._col_name_map = col_name_map
 
     def _output_maker(self, df):
+        df.rename(columns=self._col_name_map, inplace=True)
+
+        if self._xp_ware_name_map is not None:
+            df.index = df.index.map(lambda x: self._xp_ware_name_map[x] if x in self._xp_ware_name_map else x)
+
         if self._output is None:
             return
 
@@ -80,9 +88,6 @@ class Table(Figure):
 
         if self._dollars_for_number:
             df = df.applymap(lambda x: f"${x}$")
-
-        if self._xp_ware_name_map is not None:
-            df.index = df.index.map(lambda x: self._xp_ware_name_map[x] if x in self._xp_ware_name_map else x)
 
         ext = self._output.split('.')[-1]
 
@@ -312,7 +317,9 @@ class CDFPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or 'Comparison of experimentwares'
+        if self._title is None:
+            return 'Comparison of experimentwares'
+        return self._title
 
 
 class ScatterPlot(Plot):
@@ -321,7 +328,8 @@ class ScatterPlot(Plot):
     """
 
     def __init__(self, campaign_df: CampaignDataFrame, xp_ware_x, xp_ware_y, sample=None, scatter_col=EXPERIMENT_CPU_TIME,
-                 marker_alpha: float = 0.3, color_col=None, **kwargs):
+                 marker_alpha: float = 0.3, color_col=None, legend_location: str = 'best', ncol_legend: int = 1,
+                 bbox_to_anchor=None, **kwargs):
         """
         Creates a scatter plot.
         @param campaign_df: the campaign dataframe to plot.
@@ -338,6 +346,9 @@ class ScatterPlot(Plot):
         self._min = self._df_scatter[[self._xp_ware_i, self._xp_ware_j]].min(skipna=True).min()
         self._marker_alpha = marker_alpha
         self._color_col = color_col
+        self._legend_location = legend_location
+        self._bbox_to_anchor = bbox_to_anchor
+        self._ncol_legend = ncol_legend
 
     def get_data_frame(self):
         """
@@ -369,14 +380,23 @@ class ScatterPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or f'Comparison of {self._xp_ware_i} and {self._xp_ware_j}'
+        if self._title is None:
+            return f'Comparison of {self.get_x_axis_name()} and {self.get_y_axis_name()}'
+        return self._title
 
     def _extra_col(self, df, col):
         if col is None:
             return
 
         ori = self._campaign_df.data_frame
-        df[col] = ori.groupby('input')[col].agg(lambda x: str(set(x) - {None}))
+
+        def aggreg(values):
+            unique_values = list({v for v in values if not isnull(v)})
+            if len(unique_values) == 1:
+                return str(unique_values[0])
+            return str(unique_values)
+
+        df[col] = ori.groupby('input')[col].agg(aggreg)
 
 
 class BoxPlot(Plot):
@@ -416,4 +436,6 @@ class BoxPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or 'Comparison of experimentwares'
+        if self._title is None:
+            return 'Comparison of experimentwares'
+        return self._title

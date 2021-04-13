@@ -32,6 +32,7 @@ extract the data they contain.
 
 
 from json import load as load_json
+from os import path
 from typing import Any, Optional, TextIO
 from xml.etree.ElementTree import Element, parse as load_xml
 
@@ -47,15 +48,18 @@ class CampaignOutputParser:
     read the output files produced by an experiment-ware during an experiment.
     """
 
-    def __init__(self, listener: CampaignParserListener, file: str) -> None:
+    def __init__(self, listener: CampaignParserListener, file: str, name_as_prefix: bool) -> None:
         """
         Creates a new CampaignOutputParser.
 
         :param listener: The listener to notify while parsing.
         :param file: The path of the file to parse.
+        :param name_as_prefix: Whether the name of the file must be used as prefix for the read data.
         """
         self._listener = listener
         self._file = file
+        self._file_name = path.basename(file)
+        self._name_as_prefix = name_as_prefix
 
     def parse(self) -> None:
         """
@@ -79,7 +83,10 @@ class CampaignOutputParser:
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
-        self._listener.log_data(key, value)
+        if self._name_as_prefix:
+            self._listener.log_data(f'{self._file_name}.{key}', value)
+        else:
+            self._listener.log_data(key, value)
 
 
 class CsvCampaignOutputParser(CampaignOutputParser):
@@ -88,7 +95,7 @@ class CsvCampaignOutputParser(CampaignOutputParser):
     produced by an experiment-ware during an experiment.
     """
 
-    def __init__(self, listener: CampaignParserListener, file: str,
+    def __init__(self, listener: CampaignParserListener, file: str, name_as_prefix: bool,
                  configuration: CsvConfiguration = CsvConfiguration()) -> None:
         """
         Creates a new CsvCampaignOutputParser.
@@ -97,7 +104,7 @@ class CsvCampaignOutputParser(CampaignOutputParser):
         :param file: The path of the file to parse.
         :param configuration: The configuration of the CSV file to parse.
         """
-        super().__init__(listener, file)
+        super().__init__(listener, file, name_as_prefix)
         self._configuration = configuration
 
     def _internal_parse(self, stream: TextIO) -> None:
@@ -260,7 +267,7 @@ class RawCampaignOutputParser(CampaignOutputParser):
 
     def __init__(self, configuration: ScalpelConfiguration,
                  listener: CampaignParserListener,
-                 file_path: str, file_name: str) -> None:
+                 file_path: str, name_as_prefix: bool) -> None:
         """
         Creates a new RawCampaignOutputParser.
 
@@ -268,11 +275,9 @@ class RawCampaignOutputParser(CampaignOutputParser):
                data from the output file.
         :param listener: The listener to notify while parsing.
         :param file_path: The path of the file to parse.
-        :param file_name: The name of the file to parse.
         """
-        super().__init__(listener, file_path)
+        super().__init__(listener, file_path, name_as_prefix)
         self._configuration = configuration
-        self._file_name = file_name
 
     def _internal_parse(self, stream: TextIO) -> None:
         """
@@ -281,7 +286,7 @@ class RawCampaignOutputParser(CampaignOutputParser):
         :param stream: The stream to read.
         """
         for line in stream:
-            self._parse_line(line)
+            self._parse_line(line.rstrip())
 
     def _parse_line(self, line: str) -> None:
         """

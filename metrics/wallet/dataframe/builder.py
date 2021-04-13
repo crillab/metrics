@@ -25,11 +25,10 @@
 This module provides a simple class corresponding to the builder of the dataframe linked to a campaign.
 """
 from __future__ import annotations
-
-import pickle
 from typing import Set, Callable, Any, List, Tuple
 from warnings import warn
 
+import jsonpickle
 from pandas import DataFrame
 from itertools import product
 
@@ -100,7 +99,7 @@ class Analysis:
         """
         return self.__class__(campaign_df=self._campaign_df.sub_data_frame(column, sub_set))
 
-    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> Analysis:
+    def add_vbew(self, xp_ware_set=None, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> Analysis:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -184,10 +183,8 @@ class Analysis:
     def get_pivot_table(self, **kwargs: dict):
         return PivotTable(self._campaign_df, **kwargs).get_figure()
 
-    def export(self, file=None):
-        if file is None:
-            return pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
-        return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
+    def export(self):
+        return jsonpickle.encode(self)
 
     def check_success(self, is_succ):
         pass

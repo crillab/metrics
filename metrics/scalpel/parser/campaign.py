@@ -456,7 +456,7 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
 
         # By default, a raw parser is used.
         if data_file is None:
-            return RawCampaignOutputParser(self._configuration, self._listener, file_path, file_name)
+            return RawCampaignOutputParser(self._configuration, self._listener, file_path, False)
 
         # Looking for a user-implemented parser.
         parser = data_file.get_parser()
@@ -467,15 +467,15 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
         fmt = data_file.get_format()
 
         if fmt in (OutputFormat.CSV, OutputFormat.CSV2, OutputFormat.TSV):
-            return CsvCampaignOutputParser(self._listener, file_path, data_file.get_configuration())
+            return CsvCampaignOutputParser(self._listener, file_path, data_file.has_name_as_prefix(), data_file.get_configuration())
 
         if fmt == OutputFormat.JSON:
-            return JsonCampaignOutputParser(self._listener, file_path)
+            return JsonCampaignOutputParser(self._listener, file_path, data_file.has_name_as_prefix())
 
         if fmt == OutputFormat.XML:
-            return XmlCampaignOutputParser(self._listener, file_path)
+            return XmlCampaignOutputParser(self._listener, file_path, data_file.has_name_as_prefix())
 
-        return RawCampaignOutputParser(self._configuration, self._listener, file_path, file_name)
+        return RawCampaignOutputParser(self._configuration, self._listener, file_path, data_file.has_name_as_prefix())
 
 
 class SingleFileExplorationStrategy(FileExplorationStrategy):

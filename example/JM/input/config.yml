@@ -7,7 +7,9 @@ source:
   format: csv2
 data:
   mapping:
-    input: input
+    input:
+      - name
+      - id_instance
     experiment_ware:
       - method
       - k

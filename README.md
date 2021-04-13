@@ -10,7 +10,7 @@
 ## Authors 
 
 - Thibault Falque - Exakis Nelite
-- [Romain Wallon - CRIL, Univ Artois & CNRS](https://www.cril.univ-artois.fr/~wallon/en) 
+- [Romain Wallon - LIX (Laboratoire d'Informatique de l'X), École Polytechnique, Chaire X-Uber)](https://www.lix.polytechnique.fr/~wallon/en) 
 - [Hugues Wattez - CRIL, Univ Artois & CNRS](https://www.cril.univ-artois.fr/~wattez)
 
 ## Why Metrics? 
@@ -57,121 +57,7 @@ python3 -m pip install crillab-metrics
 
 # Using mETRICS
 
-To present how to use `metrics`, let us consider an example, based on the
-results of the [SAT Race 2019](http://sat-race-2019.ciirc.cvut.cz/index.php?cat=results),
-in which 51 solvers have been run on 400 instances. 
-Each experiment (corresponding to the execution of a solver on a particular
-instance) has a timeout set to 5000 seconds and a memory limit set to 128GB.
-
-```python
-from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
-campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
-```
-
-## Extracting Data with metrics-scalpel
-
-Experimental data can be retrieved with metrics-scalpel. To do so, a YAML configuration file
-has to be given to the program to allow it to retrieve the required data. A sample configuration
-is given below.
-
-```yaml
-name: SAT Race 2019
-date: July 12th, 2019
-setup:
-    timeout: 5000
-    memout: 128000
-experiment-wares:
-    - CCAnrSim default
-    - ...
-    - smallsat default
-input-set:
-    name: sat-race-2019
-    type: hierarchy
-    path-list:
-    - /path/to/the/benchmarks/of/sat/race/2019/
-source:
-  path: /path/to/the/results/of/sat-2019.csv
-data:
-  mapping:
-    input: benchmark
-    experiment_ware:
-    - solver
-    - configuration
-    cpu_time: solver time
-```
-
-The first elements of this configuration give informations about the campaign: `name` , `date`, `timeout` and `memout`. 
-
-Observe that the different solvers are listed in this file. This is quite a strong requirement (and we plan to automatically discover the solvers
-in future version of Metrics), but this approach has been designed to allow, when needed, to
-specify more informations about the solvers (such as their compilation date, their command
-line, etc.).
-
-
-Regarding the input-set, note that it is considered as a hierarchy. Whenever this is the
-case, metrics-scalpel explore the file hierarchy rooted at the given directory to discover each
-file it contains. It is also possible to give directly the list of the file, or to give a path to a file
-that contains this list.
-
-
-The last part, concerning the `mapping`, allow to retrieve from the CSV file (in this case) which columns corresponds to 
-the data expected by Scalpel. 
-
-Now, from this configuration, we can now load the whole campaign corresponding to the
-SAT competition.
-
-```python
-from metrics.scalpel import read_yaml
-campaign = read_yaml("/path/to/configuration.yml")
-```
-
-## Exploiting Data with metrics-wallet
-
-Now that we have extracted relevant data from our campaign, we can start building figures.
-The first step consists in extracting a data-frame from the read campaign.
-
-```python
-from metrics.wallet.dataframe.builder import CampaignDataFrameBuilder
-campaign_df = CampaignDataFrameBuilder(campaign).build_from_campaign()
-```
-
-### Dynamic Plots
-
-Notebook example [here](example/sat-competition/dynamic_analysis.ipynb)
-
-
-### Static Cactus Plot
-
-Notebook example [here](example/sat-competition/static_cactus_and_output.ipynb)
-
-![Comparison of all competition solvers](example/sat-competition/output/cactus.svg)
-![Comparison of all competition solvers](example/sat-competition/output/cactus_zoom.svg)
-
-
-### Static CDF Plot
-
-Notebook example [here](example/sat-competition/static_cdf_and_output.ipynb)
-
-![Comparison of all competition solvers](example/sat-competition/output/cdf.svg)
-
-
-### Static Scatter Plot
-
-Notebook example [here](example/sat-competition/static_scatter_and_output.ipynb)
-
-![Comparison of all competition solvers](example/sat-competition/output/scatter_zoom.svg)
-
-
-### Static Box Plot
-
-Notebook example [here](example/sat-competition/static_box_and_output.ipynb)
-
-![Comparison of all competition solvers](example/sat-competition/output/box.svg)
-
-
-### Static Tables
-
-Notebook example [here](example/sat-competition/tables_and_output.ipynb)
+[Documentation](https://metrics.readthedocs.io)
 
 
 
