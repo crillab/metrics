@@ -20,10 +20,12 @@ data:
   raw-data:
     - log-data: cpu_time
       file: "*.err"
-      regex: "\\[runlim\\]\\s+real:\\s+(\\d+.\\d+)\\s+seconds"
+      pattern: "\\[runlim\\]\\s+real:\\s+(\\d+.\\d+)\\s+seconds"
     - log-data: derivation-step
       file: "*.out"
       pattern: "c number of derivation steps : {integer}"
+      exact: true
     - log-data: conflicts
       file: "*.out"
-      pattern: "c conflicts	: {integer}"
+      regex: "conflicts : {integer}"
+      exact: false
