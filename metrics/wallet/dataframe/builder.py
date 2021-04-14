@@ -204,14 +204,23 @@ class Analysis:
 
         return self.add_data_frame(data_frame=df_vbs)
 
-    def filter_analysis(self, column, sub_set) -> Analysis:
+    def filter_analysis(self, function) -> Analysis:
         """
         Filters the dataframe in function of sub set of authorized values for a given column.
         @param column: column where  to keep the sub set of values.
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
-        return self.__class__(self._data_frame[self._data_frame[column].isin(sub_set)])
+        return self.__class__(data_frame=self._data_frame[self._data_frame.apply(function, axis=1)])
+
+    def remove_experiment_wares(self, experiment_wares) -> Analysis:
+        """
+        Filters the dataframe in function of sub set of authorized values for a given column.
+        @param column: column where  to keep the sub set of values.
+        @param sub_set: the sub set of authorised values.
+        @return: the filtered dataframe in a new instance of Analysis.
+        """
+        return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] not in experiment_wares)
 
     def add_vbew(self, xp_ware_set=None, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew',
                  diff=0) -> Analysis:
