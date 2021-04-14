@@ -21,29 +21,22 @@
 #  If not, see <https://www.gnu.org/licenses/>.                                #
 # ##############################################################################
 import os
+import pickle
 
-from metrics.wallet.dataframe.builder import Analysis
+from metrics.wallet.dataframe.builder import Analysis, find_best_cpu_time_input
 
-import jsonpickle
+import pandas as pd
 import jsonpickle.ext.pandas as jsonpickle_pd
 
 jsonpickle_pd.register_handlers()
 
-def get_cache_or_parse(input_file, filename='.cache') -> Analysis:
-    if os.path.isfile(filename) and filename is not None:
-        with open(filename, 'rb') as file:
-            return import_analysis_from_file(file)
-    else:
-        with open(filename, 'wb') as file:
-            analysis = Analysis(input_file=input_file)
-            analysis.export(file=file)
-            return analysis
 
-    return import_campaign(content)
-
-def import_analysis(str) -> Analysis:
+def import_bin_analysis(str) -> Analysis:
     return pickle.loads(str)
 
 
-def import_analysis_from_file(file) -> Analysis:
-    return pickle.load(file)
+def import_analysis_from_file(filename) -> Analysis:
+    with open(filename, 'rb') as file:
+        if filename.split('.')[-1] == 'csv':
+            return Analysis(data_frame=pd.read_csv(file))
+        return pickle.load(file)

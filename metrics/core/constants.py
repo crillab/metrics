@@ -62,7 +62,10 @@ SUFFIX_EXPERIMENT = '_experiment'
 SUFFIX_INPUT = '_input'
 SUFFIX_XP_WARE = '_xpware'
 MISSING_DATA_COL = 'missing'
-CONSISTENCY_COL = 'consistent'
+ERROR_COL = 'error'
+XP_CONSISTENCY_COL = 'consistent_xp'
+INPUT_CONSISTENCY_COL = 'consistent_input'
+TIMEOUT_COL = 'timeout'
 
 # Figures
 

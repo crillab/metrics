@@ -111,6 +111,14 @@ class Campaign(Model):
         """
         return self.input_set
 
+    def get_experiment_ware_names(self):
+        """
+
+        @return:
+        """
+        return [ew.name for ew in self.experiment_wares]
+
+
 class Experiment(Model):
     """
     This model corresponds to an experiment.
@@ -161,3 +169,10 @@ class InputSet(Model):
         @return:
         """
         return self.inputs
+
+    def get_input_names(self):
+        """
+
+        @return:
+        """
+        return [inp.name for inp in self.inputs]

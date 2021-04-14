@@ -125,7 +125,7 @@ class CampaignDataFrame:
         return self._name
 
     @property
-    def xp_ware_names(self) -> List[str]:
+    def experiment_wares(self) -> List[str]:
         """
 
         @return: the experimentware names of the dataframe.
