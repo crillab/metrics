@@ -166,6 +166,35 @@ a3 = a1.add_analysis(
 )
 ```
 
+### Add a Virtual Experiment-Ware
+
+Sometimes, it may be interesting to introduce what we call a *Virtual Experiment-Ware* (VEW), which generalizes the well-known *Virtual Best Solver* (VBS).
+It allows to compare our current experiment-wares to the virtual (best) one. A VBEW (*Virtual Best Experiment-Ware*) selects the best experiment for each input from a selection of real experiment-ware thanks to the function `find_best_cpu_time_input`:
+
+```python
+from metrics.wallet import find_best_cpu_time_input
+
+analysis_plus_vbs = analysis.add_virtual_experiment_ware(
+    function=find_best_cpu_time_input, 
+    xp_ware_set=None, # None corresponds to the all available experiment-wares of the analysis
+    name='my_best_solver'
+)
+```
+
+Here, we create a VBEW named `my_best_solver` and based on the best performances of the overall set of experiment-wares. `my_best_solver` will receive the result of one of these experiment-wares minimizing the `cpu_time` column.
+
+`find_best_cpu_time_input` is a function using some basic knownledge about dataframe. As an example, its representation is shown:
+
+```python
+def find_best_cpu_time_input(df):
+    s = df['cpu_time']
+    return df[s == s.min()]
+```
+
+`find_best_cpu_time_input` receives a dataframe composed of experiments for a given input. It finds the minimal `cpu_time` value and returns the row corresponding to this best time.
+
+> TODO: You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb). Here, we create two different VBEWs.
+
 ### Subset of `Analysis` Rows
 
 Thanks to `Analysis`, we are also able to make a subset of the analysis. By default, it exists some useful subset methods in `Analysis` object:
@@ -204,24 +233,6 @@ for sub_analysis in my_analysis.groupby('family'):
 ```
 
 These previous lines will describe the analysis of each family of `my_analysis`.
-
-### Add a Virtual Best Experiment-Ware
-
-Sometimes, it may be interesting to introduce what we call a *Virtual Best Experiment-Ware (VBEW)*, which generalize the well-known *Virtual Best Solvers* (VBS).
-It allows to compare our current experiment-wares to the virtual best one. A VBEW selects the best experiment for each input from a selection of real experiment-ware:
-
-```python
-my_analysis_plus_vbs = my_analysis.add_vbew(
-	xp_ware_set={'CaDiCaL', 'Maple'}, 
-	opti_col='cpu_time',
-	minimize=True,
-	vbew_name='my_best_solver'
-)
-```
-
-Here, we create a VBEW named `my_best_solver` and based on the best performances of `CaDiCaL` and `Maple`. `my_best_solver` will receive the result of one of these two experiment-wares minimizing the `opti_col` column.
-
-> You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb). Here, we create two different VBEWs.
 
 ## Draw Figures
 
