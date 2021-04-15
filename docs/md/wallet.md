@@ -21,7 +21,7 @@ It is not necessary to have any knowledge about this library to manipulate *Wall
 
 For the next, the documentation focuses on the analysis of a CSP solver competition ([XCSP'19](http://www.cril.univ-artois.fr/XCSP19/)).
 
-## A preview of what is able to do an `Analysis`
+## A Preview of What is Able to Do an `Analysis`
 
 ![Class diagram of an Analysis](fig/analysis_uml.png)
 
@@ -126,6 +126,8 @@ The result (as a sample of 5 experiments with the only 2 interesting columns sho
 | 7106 | XCSP18/GracefulGraph/GracefulGraph-K05-P02_c18.xml           | GracefulGraph |
 | 4423 | XCSP17/QRandom/QRandom-mdd-7-25-5/mdd-7-25-5-56-09.xml       | QRandom       |
 
+Thanks to this method, the user is also able to update existing columns (e.g., renaming the experiment-wares to simplify their names).
+
 > TODO: You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb). Here, the satisfiability information from the experimentation is extracted into a `sat` column.
 
 ### Remove Variables from the Analysis
@@ -197,29 +199,33 @@ def find_best_cpu_time_input(df):
 
 ### Subset of `Analysis` Rows
 
-Thanks to `Analysis`, we are also able to make a subset of the analysis. By default, it exists some useful subset methods in `Analysis` object:
+`Analysis` is also able to make a subset of its experiments.
 
-+ `get_only_failed()`: returns a new `Analysis` with only the failed experiments.
-+ `get_only_common_failed()`: returns a new `Analysis` with only the common failed experiments. It corresponds to inputs for which no experiment-ware has succeeded.
-+ `get_only_success()`: returns a new `Analysis` with only the successful experiments.
-+ `get_only_common_success()`: returns a new `Analysis` with only the common successful experiments. It corresponds to inputs for which no experiment-ware has failed.
-+ `delete_common_failed()`: returns a new `Analysis` where commonly failed inputs are removed.
-+ `delete_common_success()`: returns a new `Analysis` where commonly succeeded inputs are removed.
+#### By Filtering Inputs
 
-Finally, we present a last and generic method to make a subset of an analysis. In the next example, we show how to keep only two experiment-wares:
+By default, it exists some useful subset methods in `Analysis` object to filter input (and linked experiments):
+
++ `keep_common_failed_inputs()`: returns a new `Analysis` with only the common failed experiments. It corresponds to inputs for which no experiment-ware has succeeded.
++ `keep_common_solved_inputs()`: returns a new `Analysis` with only the common successful experiments. It corresponds to inputs for which no experiment-ware has failed.
++ `delete_common_failed_inputs()`: returns a new `Analysis` where commonly failed inputs are removed.
++ `delete_common_solved_inputs()`: returns a new `Analysis` where commonly succeeded inputs are removed.
+
+Finally, we present a last and generic method to make a subset of inputs:
 
 ```python
-my_new_analysis = my_analysis.sub_analysis(
-	column='experiment_ware', 
-	sub_set={'CaDiCaL', 'Maple'}
+self.filter_inputs(
+    function=<lambda>,
+    how=<all|any>
 )
 ```
 
-The `sub_analysis` method takes two parameters:
-- `column` corresponds to the column we want to filter
-- `sub_set` corresponds to a set of values allowed for the filtering
+The `filter_inputs` method takes two parameters:
+- `function` corresponds to a True/False lambda that says if an experiment (from input experiments) is acceptable or not
+- `how` corresponds to the need to have at least one or all the experiments from input acceptables.
 
-In the example above, only `CaDiCaL` and `Maple` appear in the `my_new_analysis` analysis.
+As examples, we show how the four default methods are set with this generic one:
+
+
 
 > You can observe an example of this subset in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb). Here, we want to have a clearer view on these manifold exepriment-wares.
 
