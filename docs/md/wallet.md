@@ -9,9 +9,17 @@ you need to use the *Wallet* module of *Metrics*.
 To manipulate data, *Wallet* uses a [*pandas Dataframe*](https://pandas.pydata.org/). 
 A dataframe is a table composed of rows corresponding to experimentations (also denoted as observations) and columns corresponding to the variables/metrics of an experimentation.
 
-It is not necessary to have any knowledge about this library to manipulate *Wallet* data but in order to have a better idea on how data are maniulated, an example of a classical analysis dataframe is given:
+It is not necessary to have any knowledge about this library to manipulate *Wallet* data but in order to have a better idea on how data are manipulated, an example of a classical analysis dataframe is given:
 
-|    | input                                                    | experiment_ware         |   cpu_time | Checked answer   |   Wallclock time |   Memory | Solver name   | Solver version   |   timeout | error   | success   | missing   | consistent_xp   | consistent_input   | family      |\n|---:|:---------------------------------------------------------|:------------------------|-----------:|:-----------------|-----------------:|---------:|:--------------|:-----------------|----------:|:--------|:----------|:----------|:----------------|:-------------------|:------------|\n|  0 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | BTD 19.07.01            |   0.031203 | SAT              |         0.031908 |        0 | BTD           | 19.07.01         |      1200 | False   | True      | False     | True            | True               | AllInterval |\n|  1 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-09-16 |   1.51053  | SAT              |         0.682586 | 15530540 | choco-solver  | 2019-09-16       |      1200 | False   | True      | False     | True            | True               | AllInterval |\n|  2 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-09-20 |   1.52427  | SAT              |         0.711266 | 15530540 | choco-solver  | 2019-09-20       |      1200 | False   | True      | False     | True            | True               | AllInterval |\n|  3 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-06-14 |   1.60424  | SAT              |         0.709087 | 15530532 | choco-solver  | 2019-06-14       |      1200 | False   | True      | False     | True            | True               | AllInterval |\n|  4 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | AbsCon 2019-07-23       |   3.65329  | SAT              |         2.30697  | 10746276 | AbsCon        | 2019-07-23       |      1200 | False   | True      | False     | True            | True               | AllInterval |
+|    | input                                                    | experiment_ware         |   cpu_time |
+|---:|:---------------------------------------------------------|:------------------------|-----------:|
+|  0 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | BTD 19.07.01            |   0.031203 |
+|  1 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-09-16 |   1.51053  |
+|  2 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-09-20 |   1.52427  |
+|  3 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-06-14 |   1.60424  |
+|  4 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | AbsCon 2019-07-23       |   3.65329  |
+
+For the next, the documentation focuses on the analysis of a CSP solver competition ([XCSP'19](http://www.cril.univ-artois.fr/XCSP19/)).
 
 ## Create/Import/Export an Analysis
 
@@ -21,10 +29,33 @@ To create a new analysis, you only need to import the `Analysis` class from *Wal
 
 ```python
 from metrics.wallet import Analysis
-my_analysis = Analysis(input_file='path/to/YAML/file')
+my_analysis = Analysis(input_file='path/to/xcsp19/YAML/file')
 ```
 
-It exists another way to build an analysis presented in the `Advanced Usage` section.
+The analysis is composed of many variables describing the experiments: 
+* necessary ones: `input`, `experiment_ware`, `cpu_time`, `timeout`
+* optional ones: `Category`, `Checked answer`, `Objective function`, `Wallclock time`, `Memory`, `Solver name`, `Solver version`. 
+
+These variables permit to check the consistency and the validity of information. Some methods, called checkers, permit to operate some basic operations:
+
+* `<analysis>.check_success(lambda)`: given a lambda, this method permits to check if an experiment is a success or not (this method is naturally builded and checked when the user informs it during the Scalpel step; manually inform it in the `Analysis` constructor replace the one informed in the Scalpel file);
+* `<analysis>.check_missing_experiments()`: this method is automatically called by the `Analysis` constructor to replace missing experiments by unsuccessful experiments;
+* `<analysis>.check_xp_consistency(lambda)`: given a lambda, this method permits to check the consistency for each experiment;
+* `<analysis>.check_input_consistency(lambda)`: given a lambda, this method permits to check the consistency for each input (composed of many experiments); it asks some basic knowledge on DataFrame manipulation (an example is given by the next).
+
+All these methods are automatically, or could be mentionned, during the Analysis constructor call:
+
+```python
+from metrics.wallet import Analysis
+analysis = Analysis(
+    input_file='path/to/xcsp19/YAML/file',
+    is_consistent_by_xp=lambda x: not x['Checked answer'] in inconsistent_returns,
+    is_consistent_by_input=lambda df: len(set(df['Checked answer'].unique()) & successful_returns) < 2,
+    is_success=lambda x: x['Checked answer'] in successful_returns
+)
+```
+
+It exists another way to build an analysis that is presented in the `Advanced Usage` section.
 
 ### Export and Import an Analysis
 
