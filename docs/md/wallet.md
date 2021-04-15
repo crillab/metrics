@@ -29,7 +29,7 @@ To create a new analysis, you only need to import the `Analysis` class from *Wal
 
 ```python
 from metrics.wallet import Analysis
-my_analysis = Analysis(input_file='path/to/xcsp19/YAML/file')
+analysis = Analysis(input_file='path/to/xcsp19/YAML/file')
 ```
 
 The analysis is composed of many variables describing the experiments: 
@@ -55,23 +55,34 @@ analysis = Analysis(
 )
 ```
 
+The `Analysis` construction warns the user when inconsistencies are found, missing data, ...:
+
+```
+1 experiments are missing and have been added as unsuccessful.
+4 experiments are inconsistent and are declared as unsuccessful.
+1 inputs are inconsistent and linked experiments are now declared as unsuccessful.
+```
+
 It exists another way to build an analysis that is presented in the `Advanced Usage` section.
 
 ### Export and Import an Analysis
 
-Once the analysis is created, it is possible to export it (e.g., to save it to a file):
+At any moment, the analysis could be exported to save its state in a file:
 
 ```python
-json_text = my_analysis.export()
+analysis.export('analysis.csv')
 ```
 
-and to import it with the `import_analysis` function:
+An analysis could be exported as a csv (as a `DataFrame` representation) if the `.csv` extension is precised, else the analysis is exported as a binary object.
+
+To import an analysis from a file, we import the function `import_analysis_from_file` and use it:
 
 ```python
-same_analysis = import_analysis(json_text)
+from metrics.wallet import import_analysis_from_file
+imported_analysis = import_analysis(json_text)
 ```
 
-> You can observe an example of these functions in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb).
+> TODO: You can observe an example of these functions in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb).
 
 ## Manipulate the Data from Analysis
 
