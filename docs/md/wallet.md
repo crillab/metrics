@@ -23,7 +23,15 @@ For the next, the documentation focuses on the analysis of a CSP solver competit
 
 ## A preview of what is able to do an `Analysis`
 
+![Class diagram of an Analysis](fig/analysis_uml.png)
 
+Globally, the Analysis object is composed of five parts:
+
+* `getters` to get basical objects from the analysis
+* `checkers` that permits to check many important information about the analysis
+* `manipulations` that permits to manipulate the state of the analysis
+* `figures` that permits to draw some tables and plots representing the data
+* `others` that corresponds to operations like exporting.
 
 ## Create/Import/Export an Analysis
 
