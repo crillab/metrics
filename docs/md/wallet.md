@@ -21,6 +21,10 @@ It is not necessary to have any knowledge about this library to manipulate *Wall
 
 For the next, the documentation focuses on the analysis of a CSP solver competition ([XCSP'19](http://www.cril.univ-artois.fr/XCSP19/)).
 
+## A preview of what is able to do an `Analysis`
+
+
+
 ## Create/Import/Export an Analysis
 
 ### The Classical Analysis Object
@@ -86,32 +90,8 @@ imported_analysis = import_analysis(json_text)
 
 ## Manipulate the Data from Analysis
 
-Before producing the first figures, *Wallet* proposes to manipulate the different rows/experimentations composing the dataframe.
+Before producing the first figures, *Wallet* proposes to manipulate the different experimentations composing the dataframe.
 It allows to analyze more finely the campaign.
-
-### Describe the Current Analysis
-
-Before manipulating the analysis, it could be interesting to describe it:
-
-```python
-my_analysis.describe(
-	show_experiment_wares=False,
-	show_inputs=False
-)
-```
-
-which yields the following:
-
-```
-This Analysis is composed of:
-- 55 experiment-wares 
-- 400 inputs
-- 22000 experiments (0 missing -> more details: <Analysis>.get_error_table())
-```
-
-This first method allows to fastly understand how is composed the campaign. Here, simple statistics are shown, as the number of experiment-wares, inputs, or missing experiments, but one can also show exhaustively the different input and experiment-ware names (by replacing `False` by `True` for the `show_experiment_wares` and `show_experiment_wares` parameters). If it exists missing data, the *Wallet* analysis can print a table showing what are these missing experiments by calling `my_analysis.get_error_table()`.
-
-> You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb).
 
 ### Generate a New Information/Variable for Each Experiment
 
@@ -193,6 +173,30 @@ Here, we create a VBEW named `my_best_solver` and based on the best performances
 After having built the analysis and manipulated the data we want to highlight, we can start drawing figures. Thanks to *Wallet*, we are able to build two kinds of figures: static and dynamic.
 
 *Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables and PNG or vectorial graphics (such as SVG or EPS) for images. Static plots are highly configurable in order to fit in their final destination (e.g., in slides or articles).
+
+### Describe the Current Analysis
+
+Before manipulating the analysis, it could be interesting to describe it:
+
+```python
+my_analysis.describe(
+	show_experiment_wares=False,
+	show_inputs=False
+)
+```
+
+which yields the following:
+
+```
+This Analysis is composed of:
+- 55 experiment-wares 
+- 400 inputs
+- 22000 experiments (0 missing -> more details: <Analysis>.get_error_table())
+```
+
+This first method allows to fastly understand how is composed the campaign. Here, simple statistics are shown, as the number of experiment-wares, inputs, or missing experiments, but one can also show exhaustively the different input and experiment-ware names (by replacing `False` by `True` for the `show_experiment_wares` and `show_experiment_wares` parameters). If it exists missing data, the *Wallet* analysis can print a table showing what are these missing experiments by calling `my_analysis.get_error_table()`.
+
+> You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb).
 
 ### Static Tables
 
