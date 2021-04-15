@@ -38,10 +38,10 @@ The analysis is composed of many variables describing the experiments:
 
 These variables permit to check the consistency and the validity of information. Some methods, called checkers, permit to operate some basic operations:
 
-* `<analysis>.check_success(lambda)`: given a lambda, this method permits to check if an experiment is a success or not (this method is naturally builded and checked when the user informs it during the Scalpel step; manually inform it in the `Analysis` constructor replace the one informed in the Scalpel file);
+* `<analysis>.check_success(<lambda>)`: given a lambda, this method permits to check if an experiment is a success or not (this method is naturally builded and checked when the user informs it during the Scalpel step; manually inform it in the `Analysis` constructor replace the one informed in the Scalpel file);
 * `<analysis>.check_missing_experiments()`: this method is automatically called by the `Analysis` constructor to replace missing experiments by unsuccessful experiments;
-* `<analysis>.check_xp_consistency(lambda)`: given a lambda, this method permits to check the consistency for each experiment;
-* `<analysis>.check_input_consistency(lambda)`: given a lambda, this method permits to check the consistency for each input (composed of many experiments); it asks some basic knowledge on DataFrame manipulation (an example is given by the next).
+* `<analysis>.check_xp_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each experiment;
+* `<analysis>.check_input_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each input (composed of many experiments); it asks some basic knowledge on DataFrame manipulation (an example is given by the next).
 
 All these methods are automatically, or could be mentionned, during the Analysis constructor call:
 
@@ -58,9 +58,9 @@ analysis = Analysis(
 The `Analysis` construction warns the user when inconsistencies are found, missing data, ...:
 
 ```
-1 experiments are missing and have been added as unsuccessful.
+1 experiment is missing and has been added as unsuccessful.
 4 experiments are inconsistent and are declared as unsuccessful.
-1 inputs are inconsistent and linked experiments are now declared as unsuccessful.
+1 input is inconsistent and linked experiments are now declared as unsuccessful.
 ```
 
 It exists another way to build an analysis that is presented in the `Advanced Usage` section.
@@ -465,9 +465,18 @@ my_analysis.get_scatter_plot(dynamic=True)
 For a more advanced usage, it is possible to get the original *pandas Dataframe* and to manipulate it thanks to this instruction:
 
 ```python
-df = my_analysis.campaign_df.data_frame
+df = analysis.data_frame
 ```
 
 Then simply foloow [*pandas documentation*](https://pandas.pydata.org/docs/) or more concisely this [*pandas cheat sheet*](https://pandas.pydata.org/Pandas_Cheat_Sheet.pdf).
 
+If the user keeps the minimal necessary information in the modified dataframe, a new `Analysis` could be instanciated (with the optional success and consistency lambda checkers):
 
+```python
+analysis = Analysis(
+    data_frame=modified_df,
+    is_consistent_by_xp=<lambda>,
+    is_consistent_by_input=<lambda>,
+    is_success=<lambda>
+)
+```
