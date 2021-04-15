@@ -30,10 +30,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-
-import pandas as pd
-
-from metrics.wallet.dataframe.builder import *
+from metrics.wallet.analysis import *
 
 
 class CampaignDFFilter(Enum):

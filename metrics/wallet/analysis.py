@@ -28,7 +28,8 @@ from __future__ import annotations
 
 import pickle
 from typing import Callable, Any, List
-from warnings import warn
+import warnings
+warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 
 from pandas import DataFrame
 from itertools import product
@@ -178,7 +179,7 @@ class Analysis:
         n_missing = self._data_frame[MISSING_DATA_COL].sum()
 
         if n_missing > 0:
-            warn(f'{n_missing} experiments are missing and have been added as unsuccessful.')
+            warnings.warn(f'{n_missing} experiments are missing and have been added as unsuccessful.')
 
     def check_xp_consistency(self, is_consistent: Callable[[Any], bool]):
         if is_consistent is None:
@@ -193,7 +194,7 @@ class Analysis:
         n_inconsistencies = inconsistency.sum()
 
         if n_inconsistencies > 0:
-            warn(f'{n_inconsistencies} experiments are inconsistent and are declared as unsuccessful.')
+            warnings.warn(f'{n_inconsistencies} experiments are inconsistent and are declared as unsuccessful.')
 
     def check_input_consistency(self, is_consistent: Callable[[Any], bool]):
         if is_consistent is None:
@@ -207,7 +208,8 @@ class Analysis:
         self._update_error_and_success_cols(~self._data_frame[INPUT_CONSISTENCY_COL])
 
         if len(inconsistent_inputs) > 0:
-            warn(f'{len(inconsistent_inputs)} inputs are inconsistent and linked experiments are now declared as unsuccessful.')
+            warnings.warn(
+                f'{len(inconsistent_inputs)} inputs are inconsistent and linked experiments are now declared as unsuccessful.')
 
     def add_variable(self, new_var, function, inplace=False):
         df = self._data_frame if inplace else self._data_frame.copy()
@@ -399,7 +401,8 @@ class Analysis:
         df = _make_cdf_plot_df(self, cumulated, cdf_col)
         return df
 
-    def scatter_plot(self, xp_ware_x, xp_ware_y, scatter_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, **kwargs: dict):
+    def scatter_plot(self, xp_ware_x, xp_ware_y, scatter_col=EXPERIMENT_CPU_TIME, dynamic: bool = False,
+                     **kwargs: dict):
         df = _make_scatter_plot_df(self, xp_ware_x, xp_ware_y, scatter_col)
         return df
 

@@ -1,17 +1,17 @@
 # Analyze a Campaign in *Metrics*
 
-Once the YAML file is correctly configured ([Reading a Campaign into *Metrics*](scalpel-config.html)), we can start the analysis of data.
+Once the YAML file is correctly configured ([Reading a Campaign into *Metrics*](scalpel-config.html)), the analysis of data can started.
 To analyze the campaign of experiments thanks to *Metrics*, 
 you need to use the *Wallet* module of *Metrics*.
 *Wallet* stands for *"Automated tooL for expLoiting Experimental resulTs"*
 (*wALLET*).
 
 To manipulate data, *Wallet* uses a [*pandas Dataframe*](https://pandas.pydata.org/). 
-A dataframe is a table composed of rows corresponding to experimentations (denoted as observations) and columns (denoted as variables).
+A dataframe is a table composed of rows corresponding to experimentations (also denoted as observations) and columns corresponding to the variables/metrics of an experimentation.
 
 It is not necessary to have any knowledge about this library to manipulate *Wallet* data but in order to have a better idea on how data are maniulated, an example of a classical analysis dataframe is given:
 
-**Example HERE!**
+|    | input                                                    | experiment_ware         |   cpu_time | Checked answer   |   Wallclock time |   Memory | Solver name   | Solver version   |   timeout | error   | success   | missing   | consistent_xp   | consistent_input   | family      |\n|---:|:---------------------------------------------------------|:------------------------|-----------:|:-----------------|-----------------:|---------:|:--------------|:-----------------|----------:|:--------|:----------|:----------|:----------------|:-------------------|:------------|\n|  0 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | BTD 19.07.01            |   0.031203 | SAT              |         0.031908 |        0 | BTD           | 19.07.01         |      1200 | False   | True      | False     | True            | True               | AllInterval |\n|  1 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-09-16 |   1.51053  | SAT              |         0.682586 | 15530540 | choco-solver  | 2019-09-16       |      1200 | False   | True      | False     | True            | True               | AllInterval |\n|  2 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-09-20 |   1.52427  | SAT              |         0.711266 | 15530540 | choco-solver  | 2019-09-20       |      1200 | False   | True      | False     | True            | True               | AllInterval |\n|  3 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | choco-solver 2019-06-14 |   1.60424  | SAT              |         0.709087 | 15530532 | choco-solver  | 2019-06-14       |      1200 | False   | True      | False     | True            | True               | AllInterval |\n|  4 | XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml | AbsCon 2019-07-23       |   3.65329  | SAT              |         2.30697  | 10746276 | AbsCon        | 2019-07-23       |      1200 | False   | True      | False     | True            | True               | AllInterval |
 
 ## Create/Import/Export an Analysis
 

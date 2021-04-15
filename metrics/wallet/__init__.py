@@ -20,10 +20,10 @@
 #  along with this program.                                                    #
 #  If not, see <https://www.gnu.org/licenses/>.                                #
 # ##############################################################################
-import os
 import pickle
 
-from metrics.wallet.dataframe.builder import Analysis, find_best_cpu_time_input
+from metrics.wallet.analysis import Analysis, find_best_cpu_time_input
+from metrics.core.constants import *
 
 import pandas as pd
 import jsonpickle.ext.pandas as jsonpickle_pd
