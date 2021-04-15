@@ -27,26 +27,83 @@ This module provides a simple class corresponding to the builder of the datafram
 from __future__ import annotations
 
 import pickle
-from typing import Set, Callable, Any, List, Tuple
+from typing import Callable, Any, List
 from warnings import warn
 
 from pandas import DataFrame
 from itertools import product
+import pandas as pd
 
 from metrics.core.model import Campaign
-from metrics.core.constants import EXPERIMENT_CPU_TIME, SUCCESS_COL, INPUT_NAME, EXPERIMENT_INPUT, XP_WARE_NAME, \
-    EXPERIMENT_XP_WARE, SUFFIX_EXPERIMENT, SUFFIX_INPUT, SUFFIX_XP_WARE, MISSING_DATA_COL, XP_CONSISTENCY_COL, \
-    ERROR_COL, \
-    TIMEOUT_COL, INPUT_CONSISTENCY_COL
+from metrics.core.constants import *
 from metrics.scalpel import read_campaign
-from metrics.wallet.figure.dynamic_figure import CactusPlotly, ScatterPlotly, BoxPlotly, CDFPlotly
-from metrics.wallet.figure.static_figure import CactusMPL, ScatterMPL, BoxMPL, StatTable, ContributionTable, \
-    ErrorTable, PivotTable, Description, CDFMPL
 
 
 def find_best_cpu_time_input(df):
     s = df[EXPERIMENT_CPU_TIME]
     return df[s == s.min()]
+
+
+def _cpu_time_stat(x, i):
+    return x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else x[TIMEOUT_COL] * i
+
+
+def _compute_cpu_time_stats(df, par):
+    return pd.Series({**{
+        STAT_TABLE_COUNT: df[SUCCESS_COL].sum(),
+        STAT_TABLE_SUM: df.apply(lambda x: _cpu_time_stat(x, 1), axis=1).sum(),
+    }, **{
+        STAT_TABLE_PAR + str(i): df.apply(lambda x: _cpu_time_stat(x, i), axis=1).sum() for i in par
+    }})
+
+
+def _contribution_agg(sli: pd.DataFrame):
+    sli = sli.sort_values(by=EXPERIMENT_CPU_TIME)
+    first = sli.iloc[0]
+    second = sli.iloc[1]
+    index = [EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, 'unique']
+
+    if first[EXPERIMENT_CPU_TIME] < first[TIMEOUT_COL]:
+        return pd.Series(
+            [first[EXPERIMENT_XP_WARE], first[EXPERIMENT_CPU_TIME], second[EXPERIMENT_CPU_TIME] >= second[TIMEOUT_COL]],
+            index=index)
+
+    return pd.Series([None, None, False], index=index)
+
+
+def _make_cactus_plot_df(analysis, cumulated, cactus_col):
+    df_solved = analysis.data_frame[analysis.data_frame[SUCCESS_COL]]
+    df_cactus = df_solved.pivot(columns=EXPERIMENT_XP_WARE, values=cactus_col)
+    for col in df_cactus.columns:
+        df_cactus[col] = df_cactus[col].sort_values().values
+    df_cactus = df_cactus.dropna(how='all').reset_index(drop=True)
+    df_cactus.index += 1
+    # df_cactus = df_cactus[df_cactus.index > self._x_min]
+
+    order = (df_cactus.count() - (df_cactus.sum() / 10 ** 10)).sort_values(ascending=False).index
+    df_cactus = df_cactus[order]
+
+    return df_cactus.cumsum() if cumulated else df_cactus
+
+
+def _make_cdf_plot_df(analysis, cumulated, cdf_col):
+    df = _make_cactus_plot_df(analysis, cumulated, cdf_col)
+    return df.T
+
+
+def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col):
+    df = analysis.keep_experiment_wares({xp_ware_x, xp_ware_y}).data_frame
+
+    return df[df[SUCCESS_COL]].pivot_table(
+        index=[EXPERIMENT_INPUT],
+        columns=EXPERIMENT_XP_WARE,
+        values=scatter_col,
+        fill_value=analysis.data_frame[TIMEOUT_COL].max()
+    )
+
+
+def _make_box_plot_df(analysis, box_col):
+    return analysis.data_frame.pivot(columns=EXPERIMENT_XP_WARE, values=box_col)
 
 
 class Analysis:
@@ -58,11 +115,10 @@ class Analysis:
 
         if data_frame is not None:
             self._data_frame = data_frame
-            self.check_success(is_success)
-            self.check_missing_experiments(
-                inputs=self.inputs,
-                experiment_wares=self.experiment_wares
-            )
+            is_succ = is_success
+            inputs = self.inputs
+            experiment_wares = self.experiment_wares
+
         else:
             campaign, config = read_campaign(input_file)
 
@@ -70,13 +126,12 @@ class Analysis:
             self._data_frame[TIMEOUT_COL] = campaign.timeout
             self._data_frame[ERROR_COL] = False
 
-            self.check_success(config.get_is_success() if is_success is None else is_success)
+            is_succ = config.get_is_success() if is_success is None else is_success
+            inputs = campaign.get_input_set().get_input_names()
+            experiment_wares = campaign.get_experiment_ware_names()
 
-            self.check_missing_experiments(
-                inputs=campaign.get_input_set().get_input_names(),
-                experiment_wares=campaign.get_experiment_ware_names()
-            )
-
+        self.check_success(is_succ)
+        self.check_missing_experiments(inputs, experiment_wares)
         self.check_xp_consistency(is_consistent_by_xp)
         self.check_input_consistency(is_consistent_by_input)
 
@@ -148,12 +203,11 @@ class Analysis:
 
         inconsistent_inputs = set(s[~s].index)
 
-        if len(inconsistent_inputs) > 0:
-            warn(
-                f'{len(inconsistent_inputs)} inputs are inconsistent and linked experiments are now declared as unsuccessful.')
+        self._data_frame[INPUT_CONSISTENCY_COL] = ~self._data_frame[EXPERIMENT_INPUT].isin(inconsistent_inputs)
+        self._update_error_and_success_cols(~self._data_frame[INPUT_CONSISTENCY_COL])
 
-            self._data_frame[INPUT_CONSISTENCY_COL] = ~self._data_frame[EXPERIMENT_INPUT].isin(inconsistent_inputs)
-            self._update_error_and_success_cols(~self._data_frame[INPUT_CONSISTENCY_COL])
+        if len(inconsistent_inputs) > 0:
+            warn(f'{len(inconsistent_inputs)} inputs are inconsistent and linked experiments are now declared as unsuccessful.')
 
     def add_variable(self, new_var, function, inplace=False):
         df = self._data_frame if inplace else self._data_frame.copy()
@@ -175,7 +229,7 @@ class Analysis:
                        is_consistent_by_input: Callable[[Any], bool] = None,
                        is_success: Callable[[Any], bool] = None):
         return self.__class__(
-            data_frame=self._data_frame.append(data_frame, ignore_index=True),
+            data_frame=self._data_frame.append(data_frame, ignore_index=True).copy(),
             is_consistent_by_xp=is_consistent_by_xp,
             is_consistent_by_input=is_consistent_by_input,
             is_success=is_success
@@ -202,7 +256,7 @@ class Analysis:
         df_vbs = df_vbs.groupby(EXPERIMENT_INPUT).apply(function).dropna(how='all') \
             .assign(experiment_ware=lambda x: name)
 
-        return self.add_data_frame(data_frame=df_vbs)
+        return self.add_data_frame(data_frame=df_vbs.copy())
 
     def filter_analysis(self, function) -> Analysis:
         """
@@ -211,7 +265,7 @@ class Analysis:
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
-        return self.__class__(data_frame=self._data_frame[self._data_frame.apply(function, axis=1)])
+        return self.__class__(data_frame=self._data_frame[self._data_frame.apply(function, axis=1)].copy())
 
     def remove_experiment_wares(self, experiment_wares) -> Analysis:
         """
@@ -222,35 +276,61 @@ class Analysis:
         """
         return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] not in experiment_wares)
 
-    def add_vbew(self, xp_ware_set=None, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew',
-                 diff=0) -> Analysis:
+    def keep_experiment_wares(self, experiment_wares) -> Analysis:
         """
-        Make a Virtual Best ExperimentWare.
-        We get the best results of a sub set of experiment wares.
-        For example, we can create the vbew of all current experimentwares based on the column cpu_time. A new
-        experiment_ware "vbew" is created with best experiments (in term of cpu_time) of the xp_ware_set.
-        @param xp_ware_set: we based this vbew on this subset of experimentwares.
-        @param opti_col: the col we want to optimize.
-        @param minimize: True if the min value is the optimal, False if it is the max value.
-        @param vbew_name: name of the vbew.
-        @return: a new instance of Analysis with the new vbew.
+        Filters the dataframe in function of sub set of authorized values for a given column.
+        @param column: column where  to keep the sub set of values.
+        @param sub_set: the sub set of authorised values.
+        @return: the filtered dataframe in a new instance of Analysis.
         """
-        df = self._data_frame
-        if xp_ware_set is None:
-            xp_ware_set = self.experiment_wares
+        return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] in experiment_wares)
 
-        df_vbs = df[df[EXPERIMENT_XP_WARE].isin(xp_ware_set)]
+    def filter_inputs(self, function, how='all') -> Analysis:
+        """
+        Filters the dataframe in function of sub set of authorized values for a given column.
+        @param column: column where  to keep the sub set of values.
+        @param sub_set: the sub set of authorised values.
+        @return: the filtered dataframe in a new instance of Analysis.
+        """
+        if how == 'all':
+            s = self._data_frame.groupby(EXPERIMENT_INPUT).apply(lambda df: df.apply(function, axis=1).all())
+        elif how == 'any':
+            s = self._data_frame.groupby(EXPERIMENT_INPUT).apply(lambda df: df.apply(function, axis=1).any())
+        else:
+            raise AttributeError('"how" parameter could only takes these next values: "all" or "any".')
 
-        df_vbs = df_vbs.groupby(EXPERIMENT_INPUT).apply(lambda x: _vbew_agg(x, opti_col, minimize, diff)).dropna(
-            how='all') \
-            .assign(experiment_ware=lambda x: vbew_name)
+        return self.__class__(data_frame=self._data_frame[self._data_frame[EXPERIMENT_INPUT].isin(s[s].index)].copy())
 
-        df = df[df[EXPERIMENT_INPUT].isin(df_vbs[EXPERIMENT_INPUT])]
-        df = pd.concat([df, df_vbs], ignore_index=True)
+    def delete_common_failed_inputs(self):
+        return self.filter_inputs(
+            function=lambda x: x[SUCCESS_COL],
+            how='any'
+        )
 
-        self._vbew_names.add(vbew_name)
+    def delete_common_solved_inputs(self):
+        return self.filter_inputs(
+            function=lambda x: not x[SUCCESS_COL],
+            how='any'
+        )
 
-        return self.build_data_frame(df)
+    def keep_common_failed_inputs(self):
+        return self.filter_inputs(
+            function=lambda x: not x[SUCCESS_COL],
+            how='all'
+        )
+
+    def keep_common_solved_inputs(self):
+        return self.filter_inputs(
+            function=lambda x: x[SUCCESS_COL],
+            how='all'
+        )
+
+    def all_experiment_ware_pair_analysis(self) -> List[Analysis]:
+        xpw = self.experiment_wares
+
+        return [
+            self.keep_experiment_wares([xpw[i], j]) for i in range(len(xpw) - 1) for j in xpw[i + 1:]
+        ]
 
     def groupby(self, column) -> List[Analysis]:
         """
@@ -259,68 +339,73 @@ class Analysis:
         @return: a list of Analysis with each group.
         """
         return [
-            self.__class__(campaign_df=cdf) for cdf in self._campaign_df.groupby(column)
+            self.__class__(data_frame=group.copy()) for _, group in self._data_frame.groupby(column)
         ]
 
-    def get_all_experiment_ware_pairs(self) -> List[Analysis]:
-        xpw = self.campaign_df.xp_ware_names
+    def error_table(self):
+        return self._data_frame[self._data_frame.error].copy()
 
-        return [
-            self.sub_analysis('experiment_ware', [xpw[i], j]) for i in range(len(xpw) - 1) for j in xpw[i + 1:]
-        ]
+    def description_table(self):
+        df = self._data_frame
 
-    def normalize_by(self, xp_ware, on) -> Analysis:
-        return self.__class__(campaign_df=self._campaign_df.normalize_by(xp_ware, on))
+        return pd.Series({
+            'n_experiment_wares': len(self.experiment_wares),
+            'n_inputs': len(self.inputs),
+            'n_experiments': len(df),
+            'n_missing_xp': (df['missing']).sum(),
+            'n_inconsistent_xp': (~df['consistent_xp']).sum(),
+            'n_inconsistent_xp_due_to_input': (~df['consistent_input']).sum(),
+            'more_info_about_variables': "<analysis>.data_frame.describe(include='all')"
+        }, name='analysis').to_frame()
 
-    def get_only_failed(self):
-        return self.__class__(campaign_df=self._campaign_df.get_only_failed())
+    def pivot_table(self, index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=EXPERIMENT_CPU_TIME):
+        return self._data_frame.pivot(
+            index=index,
+            columns=columns,
+            values=values
+        )
 
-    def get_only_success(self):
-        return self.__class__(campaign_df=self._campaign_df.get_only_success())
+    def stat_table(self, par=[1, 2, 10]):
+        stats = self._data_frame.groupby(EXPERIMENT_XP_WARE).apply(lambda df: _compute_cpu_time_stats(df, par))
+        common = self.keep_common_solved_inputs().data_frame
+        stats[STAT_TABLE_COMMON_COUNT] = common.groupby(EXPERIMENT_XP_WARE).apply(lambda df: df[SUCCESS_COL].sum())
+        stats[STAT_TABLE_COMMON_SUM] = common.groupby(EXPERIMENT_XP_WARE).apply(
+            lambda df: df.apply(lambda x: _cpu_time_stat(x, 1), axis=1).sum())
+        stats[STAT_TABLE_UNCOMMON_COUNT] = stats[STAT_TABLE_COUNT] - stats[STAT_TABLE_COMMON_COUNT]
+        stats[STAT_TABLE_TOTAL] = len(self.inputs)
 
-    def get_only_common_failed(self):
-        return self.__class__(campaign_df=self._campaign_df.get_only_common_failed())
+        return stats.sort_values([STAT_TABLE_COUNT, STAT_TABLE_SUM], ascending=[False, True]).astype(int)
 
-    def get_only_common_success(self):
-        return self.__class__(campaign_df=self._campaign_df.get_only_common_success())
+    def contribution_table(self, deltas=[1, 10, 100]):
+        contrib_raw = self._data_frame.groupby(EXPERIMENT_INPUT).apply(
+            lambda x: _contribution_agg(x))
+        contrib = pd.DataFrame()
 
-    def delete_common_failed(self):
-        return self.__class__(campaign_df=self._campaign_df.delete_common_failed())
+        contrib['vbew simple'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).cpu_time.count()
 
-    def delete_common_success(self):
-        return self.__class__(campaign_df=self._campaign_df.delete_common_success())
+        for delta in deltas:
+            sub = contrib_raw[contrib_raw.cpu_time > delta]
+            contrib[f'vbew {delta}s'] = sub.groupby(EXPERIMENT_XP_WARE).cpu_time.count()
 
-    def delete_input_when(self, f):
-        return self.__class__(campaign_df=self._campaign_df.delete_input_when(f))
+        contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
 
-    def describe(self, **kwargs: dict):
-        return Description(self._campaign_df, **kwargs).get_description()
+        return contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False])
 
-    def get_cactus_plot(self, dynamic: bool = False, **kwargs: dict):
-        return (CactusPlotly(self._campaign_df, **kwargs) if dynamic else CactusMPL(self._campaign_df,
-                                                                                    **kwargs)).get_figure()
+    def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, **kwargs: dict):
+        df = _make_cactus_plot_df(self, cumulated, cactus_col)
+        return df
 
-    def get_scatter_plot(self, dynamic: bool = False, **kwargs: dict):
-        return (ScatterPlotly(self._campaign_df, **kwargs) if dynamic else ScatterMPL(self._campaign_df,
-                                                                                      **kwargs)).get_figure()
+    def cdf_plot(self, cumulated=False, cdf_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, **kwargs: dict):
+        df = _make_cdf_plot_df(self, cumulated, cdf_col)
+        return df
 
-    def get_cdf(self, dynamic: bool = False, **kwargs: dict):
-        return (CDFPlotly(self._campaign_df, **kwargs) if dynamic else CDFMPL(self._campaign_df, **kwargs)).get_figure()
+    def scatter_plot(self, xp_ware_x, xp_ware_y, scatter_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, **kwargs: dict):
+        df = _make_scatter_plot_df(self, xp_ware_x, xp_ware_y, scatter_col)
+        return df
 
-    def get_box_plot(self, dynamic: bool = False, **kwargs: dict):
-        return (BoxPlotly(self._campaign_df, **kwargs) if dynamic else BoxMPL(self._campaign_df, **kwargs)).get_figure()
-
-    def get_stat_table(self, **kwargs: dict):
-        return StatTable(self._campaign_df, **kwargs).get_figure()
-
-    def get_contribution_table(self, **kwargs: dict):
-        return ContributionTable(self._campaign_df, **kwargs).get_figure()
-
-    def get_error_table(self, **kwargs: dict):
-        return ErrorTable(self._campaign_df, **kwargs).get_figure()
-
-    def get_pivot_table(self, **kwargs: dict):
-        return PivotTable(self._campaign_df, **kwargs).get_figure()
+    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, **kwargs: dict):
+        df = _make_box_plot_df(self, box_col)
+        return df
 
     def export(self, filename=None):
         if filename is None:
@@ -345,14 +430,6 @@ class DataFrameBuilder:
         @param campaign: the campaign to build as a campaign
         """
         self._campaign = campaign
-
-    @property
-    def campaign(self):
-        """
-
-        @return: the campaign associated to this builder.
-        """
-        return self._campaign
 
     def build_from_campaign(self) -> DataFrame:
         """
