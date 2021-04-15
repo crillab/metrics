@@ -46,7 +46,7 @@ analysis = Analysis(input_file='path/to/xcsp19/YAML/file')
 
 The analysis is composed of many variables describing the experiments: 
 * necessary ones: `input`, `experiment_ware`, `cpu_time`, `timeout`
-* optional ones: `Category`, `Checked answer`, `Objective function`, `Wallclock time`, `Memory`, `Solver name`, `Solver version`. 
+* optional ones: `Category`, `Checked answer`, `Objective function`, `Wallclock time`, `Memory`, `Solver name`, `Solver version`.
 
 These variables permit to check the consistency and the validity of information. Some methods, called checkers, permit to operate some basic operations:
 
@@ -55,7 +55,7 @@ These variables permit to check the consistency and the validity of information.
 * `<analysis>.check_xp_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each experiment;
 * `<analysis>.check_input_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each input (composed of many experiments); it asks some basic knowledge on DataFrame manipulation (an example is given by the next).
 
-All these methods are automatically, or could be mentionned, during the Analysis constructor call:
+A part of these methods are automatically called, or could be mentionned, during the Analysis constructor call:
 
 ```python
 from metrics.wallet import Analysis
@@ -74,6 +74,8 @@ The `Analysis` construction warns the user when inconsistencies are found, missi
 4 experiments are inconsistent and are declared as unsuccessful.
 1 input is inconsistent and linked experiments are now declared as unsuccessful.
 ```
+
+The analysis creates also its own variables corresponding to the previous checkings: `error`, `success`, `missing	consistent_xp` and `consistent_input`.
 
 It exists another way to build an analysis that is presented in the `Advanced Usage` section.
 
@@ -213,7 +215,7 @@ By default, it exists some useful subset methods in `Analysis` object to filter 
 Finally, we present a last and generic method to make a subset of inputs:
 
 ```python
-self.filter_inputs(
+analysis.filter_inputs(
     function=<lambda>,
     how=<all|any>
 )
@@ -225,9 +227,33 @@ The `filter_inputs` method takes two parameters:
 
 As examples, we show how the four default methods are set with this generic one:
 
+|Default method|Implementation|
+|---|---|
+|`delete_common_failed_inputs`|`analysis.filter_inputs(function=lambda x: x['success'], how='any')`|
+|`delete_common_solved_inputs`|`analysis.filter_inputs(function=lambda x: not x['success'], how='any')`|
+|`keep_common_failed_inputs`|`analysis.filter_inputs(function=lambda x: not x['success'], how='all')`|
+|`keep_common_solved_inputs`|`analysis.filter_inputs(function=lambda x: x['success'], how='all')`|
 
+> TODO: You can observe an example of this subset in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb). Here, we want to have a clearer view on these manifold exepriment-wares.
 
-> You can observe an example of this subset in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb). Here, we want to have a clearer view on these manifold exepriment-wares.
+#### By Filtering Experiments
+
+Analysis permits also to precise what are the experiments that the user wants to filter:
+
+```python
+analysis_no_para = analysis.filter_analysis(
+    function=lambda x: 'parallel' not in x['experiment_ware']
+)
+```
+
+The previous example permits to remove all the solver containing the term *parallel* in its title.
+
+Derived from this previous generic method, some default actions are also existing:
+
+|Default method|Implementation|
+|---|---|
+|`remove_experiment_wares(<set>)`|`analysis.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] not in experiment_wares)`|
+|`keep_experiment_wares(<set>)`|`analysis.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] in experiment_wares)`|
 
 ### `groupby` Operator
 
