@@ -255,16 +255,29 @@ Derived from this previous generic method, some default actions are also existin
 |`remove_experiment_wares(<set>)`|`analysis.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] not in experiment_wares)`|
 |`keep_experiment_wares(<set>)`|`analysis.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] in experiment_wares)`|
 
-### `groupby` Operator
+### Grouping the Analysis
+
+To group the analysis into specific analysis, two more methods are presented: the classical `groupby` method and another one to group experiment-wares by pairs.
+
+#### `groupby` Operator
 
 The `groupby` operator allows to create a list of new `Analysis` instances grouped by a column value. For example, if we have the family name `family` of inputs in the dataframe, it could be interesting to make separated analysis of each of them:
 
 ```python
-for sub_analysis in my_analysis.groupby('family'):
-	print(sub_analysis.describe())
+for sub_analysis in analysis.groupby('family'):
+	print(sub_analysis.description_table())
 ```
 
 These previous lines will describe the analysis of each family of `my_analysis`.
+
+#### Pairs of Experiment-wares
+
+To compare more precisely the overall pairs of experiment-wares, a method is implemented to return the corresponding analysis:
+
+```python
+for sub_analysis in analysis.all_experiment_ware_pair_analysis():
+	print(sub_analysis.description_table())
+```
 
 ## Draw Figures
 
