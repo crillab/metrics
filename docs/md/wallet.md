@@ -128,6 +128,44 @@ The result (as a sample of 5 experiments with the only 2 interesting columns sho
 
 > TODO: You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb). Here, the satisfiability information from the experimentation is extracted into a `sat` column.
 
+### Remove Variables from the Analysis
+
+Sometimes, some analysis information are not useful: it could be interesting to simplify and lighten the dataframe (e.g., when we need export the analysis in its lightest format). To do this:
+
+```python
+analysis.remove_variables(
+    vars=['Category', 'Objective function']
+)
+```
+
+where `vars` parameter take the list of variables to remove.
+
+### Add an Analysis or a DataFrame to the current Analysis
+
+When many campaigns needs to be compared and two analysis `a1` and `a2` have been created, it is possible de merge them:
+
+```python
+a3 = a1.add_analysis(
+    analysis=a2,
+    is_consistent_by_xp=<lambda>,
+    is_consistent_by_input=<lambda>,
+    is_success=<lambda>
+)
+``` 
+
+The user has to be careful to merge consistent data: the new analysis needs to contain the Cartesian product of available inputs in its dataframe with the experiment-wares. To ensure this and the consistency of its analysis, the user can also provide the lambda as described for the Analysis construction.
+
+In the same way, it is possible to append the analysis with a consistent dataframe:
+
+```python
+a3 = a1.add_analysis(
+    analysis=a2.data_frame,
+    is_consistent_by_xp=<lambda>,
+    is_consistent_by_input=<lambda>,
+    is_success=<lambda>
+)
+```
+
 ### Subset of `Analysis` Rows
 
 Thanks to `Analysis`, we are also able to make a subset of the analysis. By default, it exists some useful subset methods in `Analysis` object:
