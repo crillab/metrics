@@ -98,26 +98,35 @@ imported_analysis = import_analysis(json_text)
 
 ## Manipulate the Data from Analysis
 
-Before producing the first figures, *Wallet* proposes to manipulate the different experimentations composing the dataframe.
+Before producing the first figures, *Wallet* proposes to manipulate the different experiments composing the dataframe.
 It allows to analyze more finely the campaign.
 
 ### Generate a New Information/Variable for Each Experiment
 
-*Wallet* can add new information to the underlying dataframe by giving a function/lambda to a mapping method of `Analysis`. For the next example, the input name corresponds to the path of the input (e.g., `/somewhere/family/input-parameters.cnf`). It could be interesting to extract the family name to use it in the rest of the analysis. For this, we use the method `map()` from `Analysis`:
+*Wallet* can add new information to the underlying dataframe by giving a function/lambda to a mapping method of `Analysis`. For the next example, the input name corresponds to the path of the input (e.g., `/somewhere/family/input-parameters.cnf`). It could be interesting to extract the family name to use it in the rest of the analysis. For this, the method `add_variable()` from `Analysis`:
 
 ```python
 import re
+family_re = re.compile(r'^XCSP\d\d/(.*?)/')
 
-rx = re.compile('^/somewhere/(.*?)/')
-my_analysis.map(
-	new_col='family', 
-	function=lambda x: rx.findall(x['input'])[1]
+new_analysis = analysis.add_variable(
+    new_var='family', 
+    function=lambda x: family_re.match(x['input']).group(1)
 )
 ```
 
-`map()` takes as first parameter the name of the future created column, and as second parameter the lambda that applies the regular expression `rx` to the variable `input` of the row `x` (the regular expression returns a list in which the second element is the family name we need).
+`add_variable()` takes as first parameter the name of the future created column, and as second parameter the lambda that applies the regular expression `family_re` to the variable `input` of the row `x` (the regular expression returns an object corresponding to the matching strings: `.group(1)` permits to retrieve the family name of the input).
 
-> You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb). Here, the satisfiability information from the experimentation is extracted into a `sat` column.
+The result (as a sample of 5 experiments with the only 2 interesting columns shown) is:
+|      | input                                                        | family        |
+|-----:|:-------------------------------------------------------------|:--------------|
+| 3641 | XCSP17/Primes/Primes-m1-p25/Primes-25-80-2-7.xml             | Primes        |
+| 2992 | XCSP17/MaxCSP/MaxCSP-maxclique-s1/MaxCSP-brock-800-2.xml     | MaxCSP        |
+| 2956 | XCSP17/MagicSquare/MagicSquare-sum-s1/MagicSquare-13-sum.xml | MagicSquare   |
+| 7106 | XCSP18/GracefulGraph/GracefulGraph-K05-P02_c18.xml           | GracefulGraph |
+| 4423 | XCSP17/QRandom/QRandom-mdd-7-25-5/mdd-7-25-5-56-09.xml       | QRandom       |
+
+> TODO: You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb). Here, the satisfiability information from the experimentation is extracted into a `sat` column.
 
 ### Subset of `Analysis` Rows
 
