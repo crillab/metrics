@@ -29,11 +29,16 @@ from __future__ import annotations
 import pickle
 from typing import Callable, Any, List
 import warnings
+
+from autograph.core.enumstyle import Position
+from autograph.core.style import LegendStyle
+
 warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 
 from pandas import DataFrame
 from itertools import product
 import pandas as pd
+from autograph import *
 
 from metrics.core.model import Campaign
 from metrics.core.constants import *
@@ -41,9 +46,43 @@ from metrics.scalpel import read_campaign
 
 
 def find_best_cpu_time_input(df):
+    df2 = df[df[SUCCESS_COL]]
+
+    if len(df2) > 0:
+        s = df2[EXPERIMENT_CPU_TIME]
+        return df2[s == s.min()]
+
     s = df[EXPERIMENT_CPU_TIME]
     return df[s == s.min()]
 
+
+def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False, **kwargs):
+    if output is None:
+        return data_frame
+
+    df = data_frame
+
+    if commas_for_number:
+        df = df.applymap(lambda x: f"{x:,}")
+
+    if dollars_for_number:
+        df = df.applymap(lambda x: f"${x}$")
+
+    ext = output.split('.')[-1]
+
+    if ext == 'tex':
+        with open(output, 'w') as file:
+            df.to_latex(
+                buf=file,
+                escape=False,
+                index_names=False,
+                bold_rows=True,
+                **kwargs
+            )
+    else:
+        raise ValueError('Only .tex extension is accepted.')
+
+    return data_frame
 
 def _cpu_time_stat(x, i):
     return x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else x[TIMEOUT_COL] * i
@@ -344,30 +383,39 @@ class Analysis:
             self.__class__(data_frame=group.copy()) for _, group in self._data_frame.groupby(column)
         ]
 
-    def error_table(self):
-        return self._data_frame[self._data_frame.error].copy()
-
-    def description_table(self):
-        df = self._data_frame
-
-        return pd.Series({
-            'n_experiment_wares': len(self.experiment_wares),
-            'n_inputs': len(self.inputs),
-            'n_experiments': len(df),
-            'n_missing_xp': (df['missing']).sum(),
-            'n_inconsistent_xp': (~df['consistent_xp']).sum(),
-            'n_inconsistent_xp_due_to_input': (~df['consistent_input']).sum(),
-            'more_info_about_variables': "<analysis>.data_frame.describe(include='all')"
-        }, name='analysis').to_frame()
-
-    def pivot_table(self, index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=EXPERIMENT_CPU_TIME):
-        return self._data_frame.pivot(
-            index=index,
-            columns=columns,
-            values=values
+    def error_table(self, **kwargs):
+        return export_data_frame(
+            data_frame=self._data_frame[self._data_frame.error].copy(),
+            **kwargs
         )
 
-    def stat_table(self, par=[1, 2, 10]):
+    def description_table(self, **kwargs):
+        df = self._data_frame
+
+        return export_data_frame(
+            data_frame=pd.Series({
+                'n_experiment_wares': len(self.experiment_wares),
+                'n_inputs': len(self.inputs),
+                'n_experiments': len(df),
+                'n_missing_xp': (df['missing']).sum(),
+                'n_inconsistent_xp': (~df['consistent_xp']).sum(),
+                'n_inconsistent_xp_due_to_input': (~df['consistent_input']).sum(),
+                'more_info_about_variables': "<analysis>.data_frame.describe(include='all')"
+            }, name='analysis').to_frame(),
+            **kwargs
+        )
+
+    def pivot_table(self, index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=EXPERIMENT_CPU_TIME, **kwargs):
+        return export_data_frame(
+            data_frame=self._data_frame.pivot(
+                index=index,
+                columns=columns,
+                values=values
+            ),
+            **kwargs
+        )
+
+    def stat_table(self, par=[1, 2, 10], **kwargs):
         stats = self._data_frame.groupby(EXPERIMENT_XP_WARE).apply(lambda df: _compute_cpu_time_stats(df, par))
         common = self.keep_common_solved_inputs().data_frame
         stats[STAT_TABLE_COMMON_COUNT] = common.groupby(EXPERIMENT_XP_WARE).apply(lambda df: df[SUCCESS_COL].sum())
@@ -376,9 +424,12 @@ class Analysis:
         stats[STAT_TABLE_UNCOMMON_COUNT] = stats[STAT_TABLE_COUNT] - stats[STAT_TABLE_COMMON_COUNT]
         stats[STAT_TABLE_TOTAL] = len(self.inputs)
 
-        return stats.sort_values([STAT_TABLE_COUNT, STAT_TABLE_SUM], ascending=[False, True]).astype(int)
+        return export_data_frame(
+            data_frame=stats.sort_values([STAT_TABLE_COUNT, STAT_TABLE_SUM], ascending=[False, True]).astype(int),
+            **kwargs
+        )
 
-    def contribution_table(self, deltas=[1, 10, 100]):
+    def contribution_table(self, deltas=[1, 10, 100], **kwargs):
         contrib_raw = self._data_frame.groupby(EXPERIMENT_INPUT).apply(
             lambda x: _contribution_agg(x))
         contrib = pd.DataFrame()
@@ -391,18 +442,111 @@ class Analysis:
 
         contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
 
-        return contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False])
+        return export_data_frame(
+            data_frame=contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False]),
+            **kwargs
+        )
 
-    def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, **kwargs: dict):
+    def cactus_plot(
+            self,
+            cumulated=False,
+            cactus_col=EXPERIMENT_CPU_TIME,
+            title='Cactus-plot',
+            figsize=(7, 5),
+            show_marker=True,
+            color_map=None,
+            style_map=None,
+            logx: bool = False,
+            logy: bool = False,
+            x_axis_name='Number of solved inputs',
+            y_axis_name='Time',
+            x_min: float = None,
+            y_min: float = None,
+            x_max: float = None,
+            y_max: float = None,
+            font_name='DejaVu Sans',
+            font_size=12,
+            font_color='#000000',
+            latex_writing: bool = False,
+            output=None,
+            legend_location=Position.BOTTOM,
+            ncol_legend=1,
+            dynamic: bool = False,
+            **kwargs: dict
+    ):
         df = _make_cactus_plot_df(self, cumulated, cactus_col)
-        return df
 
-    def cdf_plot(self, cumulated=False, cdf_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, **kwargs: dict):
+        plot = create_plot('plotly' if dynamic else 'matplotlib')
+
+        for name, series in df.iteritems():
+            plot.plot(x=series.index, y=series, label=name)
+
+        plot.title = title
+        plot.log_x = logx
+        plot.log_y = logy
+        plot.x_label = x_axis_name
+        plot.y_label = y_axis_name
+        plot.x_lim = (x_min, x_max)
+        plot.y_lim = (y_min, y_max)
+
+        l_style = LegendStyle()
+        l_style.position = legend_location
+        l_style.n_col = ncol_legend
+        plot.legend = l_style
+
+        plot.show()
+
+    def cdf_plot(
+            self,
+            cumulated=False,
+            cdf_col=EXPERIMENT_CPU_TIME,
+            title='Cactus-plot',
+            figsize=(7, 5),
+            show_marker=True,
+            color_map=None,
+            style_map=None,
+            logx: bool = False,
+            logy: bool = False,
+            x_axis_name='Number of solved inputs',
+            y_axis_name='Time',
+            x_min: float = None,
+            y_min: float = None,
+            x_max: float = None,
+            y_max: float = None,
+            font_name='DejaVu Sans',
+            font_size=12,
+            font_color='#000000',
+            latex_writing: bool = False,
+            output=None,
+            dynamic: bool = False,
+            **kwargs: dict
+    ):
         df = _make_cdf_plot_df(self, cumulated, cdf_col)
         return df
 
-    def scatter_plot(self, xp_ware_x, xp_ware_y, scatter_col=EXPERIMENT_CPU_TIME, dynamic: bool = False,
-                     **kwargs: dict):
+    def scatter_plot(
+            self,
+            xp_ware_x,
+            xp_ware_y,
+            scatter_col=EXPERIMENT_CPU_TIME,
+            title='Cactus-plot',
+            figsize=(7, 5),
+            color_col=None,
+            logx: bool = False,
+            logy: bool = False,
+            x_axis_name='Number of solved inputs',
+            y_axis_name='Time',
+            x_min: float = None,
+            y_min: float = None,
+            x_max: float = None,
+            y_max: float = None,
+            font_name='DejaVu Sans',
+            font_size=12,
+            font_color='#000000',
+            latex_writing: bool = False,
+            dynamic: bool = False,
+            **kwargs: dict
+    ):
         df = _make_scatter_plot_df(self, xp_ware_x, xp_ware_y, scatter_col)
         return df
 
