@@ -30,15 +30,15 @@ import pickle
 from typing import Callable, Any, List
 import warnings
 
+from autograph import create_plot
 from autograph.core.enumstyle import Position
-from autograph.core.style import LegendStyle
+from autograph.core.style import LegendStyle, TextStyle
 
 warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 
 from pandas import DataFrame
 from itertools import product
 import pandas as pd
-from autograph import *
 
 from metrics.core.model import Campaign
 from metrics.core.constants import *
@@ -56,7 +56,8 @@ def find_best_cpu_time_input(df):
     return df[s == s.min()]
 
 
-def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False, **kwargs):
+def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False,
+                      **kwargs):
     if output is None:
         return data_frame
 
@@ -84,6 +85,7 @@ def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_
 
     return data_frame
 
+
 def _cpu_time_stat(x, i):
     return x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else x[TIMEOUT_COL] * i
 
@@ -105,7 +107,8 @@ def _contribution_agg(sli: pd.DataFrame):
 
     if first[EXPERIMENT_CPU_TIME] < first[TIMEOUT_COL]:
         return pd.Series(
-            [first[EXPERIMENT_XP_WARE], first[EXPERIMENT_CPU_TIME], second[EXPERIMENT_CPU_TIME] >= second[TIMEOUT_COL]],
+            [first[EXPERIMENT_XP_WARE], first[EXPERIMENT_CPU_TIME],
+             second[EXPERIMENT_CPU_TIME] >= second[TIMEOUT_COL]],
             index=index)
 
     return pd.Series([None, None, False], index=index)
@@ -197,7 +200,8 @@ class Analysis:
 
     def _update_error_and_success_cols(self, new_error_series):
         self._data_frame[ERROR_COL] = (self._data_frame[ERROR_COL]) | new_error_series
-        self._data_frame[SUCCESS_COL] = (self._data_frame[SUCCESS_COL]) & (~self._data_frame[ERROR_COL])
+        self._data_frame[SUCCESS_COL] = (self._data_frame[SUCCESS_COL]) & (
+            ~self._data_frame[ERROR_COL])
 
     def check_success(self, is_success: Callable[[Any], bool]):
         if is_success is None:
@@ -205,7 +209,8 @@ class Analysis:
         self._data_frame[SUCCESS_COL] = self._data_frame.apply(is_success, axis=1)
 
     def check_missing_experiments(self, inputs: List[str], experiment_wares: List[str]):
-        theoretical_df = DataFrame(product(inputs, experiment_wares), columns=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE])
+        theoretical_df = DataFrame(product(inputs, experiment_wares),
+                                   columns=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE])
 
         self._data_frame[MISSING_DATA_COL] = False
         self._data_frame = self._data_frame.join(
@@ -218,7 +223,8 @@ class Analysis:
         n_missing = self._data_frame[MISSING_DATA_COL].sum()
 
         if n_missing > 0:
-            warnings.warn(f'{n_missing} experiments are missing and have been added as unsuccessful.')
+            warnings.warn(
+                f'{n_missing} experiments are missing and have been added as unsuccessful.')
 
     def check_xp_consistency(self, is_consistent: Callable[[Any], bool]):
         if is_consistent is None:
@@ -233,7 +239,8 @@ class Analysis:
         n_inconsistencies = inconsistency.sum()
 
         if n_inconsistencies > 0:
-            warnings.warn(f'{n_inconsistencies} experiments are inconsistent and are declared as unsuccessful.')
+            warnings.warn(
+                f'{n_inconsistencies} experiments are inconsistent and are declared as unsuccessful.')
 
     def check_input_consistency(self, is_consistent: Callable[[Any], bool]):
         if is_consistent is None:
@@ -243,7 +250,8 @@ class Analysis:
 
         inconsistent_inputs = set(s[~s].index)
 
-        self._data_frame[INPUT_CONSISTENCY_COL] = ~self._data_frame[EXPERIMENT_INPUT].isin(inconsistent_inputs)
+        self._data_frame[INPUT_CONSISTENCY_COL] = ~self._data_frame[EXPERIMENT_INPUT].isin(
+            inconsistent_inputs)
         self._update_error_and_success_cols(~self._data_frame[INPUT_CONSISTENCY_COL])
 
         if len(inconsistent_inputs) > 0:
@@ -263,7 +271,8 @@ class Analysis:
                      is_consistent_by_xp: Callable[[Any], bool] = None,
                      is_consistent_by_input: Callable[[Any], bool] = None,
                      is_success: Callable[[Any], bool] = None):
-        return self.add_data_frame(analysis.data_frame, is_consistent_by_xp, is_consistent_by_input, is_success)
+        return self.add_data_frame(analysis.data_frame, is_consistent_by_xp, is_consistent_by_input,
+                                   is_success)
 
     def add_data_frame(self, data_frame,
                        is_consistent_by_xp: Callable[[Any], bool] = None,
@@ -276,7 +285,8 @@ class Analysis:
             is_success=is_success
         )
 
-    def add_virtual_experiment_ware(self, function=find_best_cpu_time_input, xp_ware_set=None, name='vbew') -> Analysis:
+    def add_virtual_experiment_ware(self, function=find_best_cpu_time_input, xp_ware_set=None,
+                                    name='vbew') -> Analysis:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -306,7 +316,8 @@ class Analysis:
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
-        return self.__class__(data_frame=self._data_frame[self._data_frame.apply(function, axis=1)].copy())
+        return self.__class__(
+            data_frame=self._data_frame[self._data_frame.apply(function, axis=1)].copy())
 
     def remove_experiment_wares(self, experiment_wares) -> Analysis:
         """
@@ -334,13 +345,17 @@ class Analysis:
         @return: the filtered dataframe in a new instance of Analysis.
         """
         if how == 'all':
-            s = self._data_frame.groupby(EXPERIMENT_INPUT).apply(lambda df: df.apply(function, axis=1).all())
+            s = self._data_frame.groupby(EXPERIMENT_INPUT).apply(
+                lambda df: df.apply(function, axis=1).all())
         elif how == 'any':
-            s = self._data_frame.groupby(EXPERIMENT_INPUT).apply(lambda df: df.apply(function, axis=1).any())
+            s = self._data_frame.groupby(EXPERIMENT_INPUT).apply(
+                lambda df: df.apply(function, axis=1).any())
         else:
-            raise AttributeError('"how" parameter could only takes these next values: "all" or "any".')
+            raise AttributeError(
+                '"how" parameter could only takes these next values: "all" or "any".')
 
-        return self.__class__(data_frame=self._data_frame[self._data_frame[EXPERIMENT_INPUT].isin(s[s].index)].copy())
+        return self.__class__(
+            data_frame=self._data_frame[self._data_frame[EXPERIMENT_INPUT].isin(s[s].index)].copy())
 
     def delete_common_failed_inputs(self):
         return self.filter_inputs(
@@ -370,7 +385,8 @@ class Analysis:
         xpw = self.experiment_wares
 
         return [
-            self.keep_experiment_wares([xpw[i], j]) for i in range(len(xpw) - 1) for j in xpw[i + 1:]
+            self.keep_experiment_wares([xpw[i], j]) for i in range(len(xpw) - 1) for j in
+            xpw[i + 1:]
         ]
 
     def groupby(self, column) -> List[Analysis]:
@@ -405,7 +421,8 @@ class Analysis:
             **kwargs
         )
 
-    def pivot_table(self, index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE, values=EXPERIMENT_CPU_TIME, **kwargs):
+    def pivot_table(self, index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE,
+                    values=EXPERIMENT_CPU_TIME, **kwargs):
         return export_data_frame(
             data_frame=self._data_frame.pivot(
                 index=index,
@@ -416,16 +433,19 @@ class Analysis:
         )
 
     def stat_table(self, par=[1, 2, 10], **kwargs):
-        stats = self._data_frame.groupby(EXPERIMENT_XP_WARE).apply(lambda df: _compute_cpu_time_stats(df, par))
+        stats = self._data_frame.groupby(EXPERIMENT_XP_WARE).apply(
+            lambda df: _compute_cpu_time_stats(df, par))
         common = self.keep_common_solved_inputs().data_frame
-        stats[STAT_TABLE_COMMON_COUNT] = common.groupby(EXPERIMENT_XP_WARE).apply(lambda df: df[SUCCESS_COL].sum())
+        stats[STAT_TABLE_COMMON_COUNT] = common.groupby(EXPERIMENT_XP_WARE).apply(
+            lambda df: df[SUCCESS_COL].sum())
         stats[STAT_TABLE_COMMON_SUM] = common.groupby(EXPERIMENT_XP_WARE).apply(
             lambda df: df.apply(lambda x: _cpu_time_stat(x, 1), axis=1).sum())
         stats[STAT_TABLE_UNCOMMON_COUNT] = stats[STAT_TABLE_COUNT] - stats[STAT_TABLE_COMMON_COUNT]
         stats[STAT_TABLE_TOTAL] = len(self.inputs)
 
         return export_data_frame(
-            data_frame=stats.sort_values([STAT_TABLE_COUNT, STAT_TABLE_SUM], ascending=[False, True]).astype(int),
+            data_frame=stats.sort_values([STAT_TABLE_COUNT, STAT_TABLE_SUM],
+                                         ascending=[False, True]).astype(int),
             **kwargs
         )
 
@@ -443,7 +463,8 @@ class Analysis:
         contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
 
         return export_data_frame(
-            data_frame=contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'], ascending=[False, False]),
+            data_frame=contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'],
+                                                                 ascending=[False, False]),
             **kwargs
         )
 
@@ -464,37 +485,68 @@ class Analysis:
             y_min: float = None,
             x_max: float = None,
             y_max: float = None,
-            font_name='DejaVu Sans',
-            font_size=12,
-            font_color='#000000',
+            title_font_name='DejaVu Sans',
+            title_font_size=12,
+            title_font_color='#000000',
+            title_font_weight='bold',
+            label_font_name='DejaVu Sans',
+            label_font_size=12,
+            label_font_color='#000000',
+            label_font_weight='normal',
             latex_writing: bool = False,
             output=None,
-            legend_location=Position.BOTTOM,
+            legend_location=Position.RIGHT,
             ncol_legend=1,
             dynamic: bool = False,
             **kwargs: dict
     ):
         df = _make_cactus_plot_df(self, cumulated, cactus_col)
 
-        plot = create_plot('plotly' if dynamic else 'matplotlib')
-
+        plot = self.__create_plot(dynamic, label_font_color, label_font_name, label_font_size,
+                                  label_font_weight,  logx, logy,
+                                  title, title_font_color, title_font_name, title_font_size,
+                                  title_font_weight, x_axis_name,   y_axis_name,
+                                  )
         for name, series in df.iteritems():
             plot.plot(x=series.index, y=series, label=name)
+        if output is not None:
+            plot.save(output)
+
+        plot.legend = LegendStyle()
+        plot.legend.position = legend_location
+        plot.legend.n_col = ncol_legend
+
+        plot.x_lim = (x_min, x_max)
+        plot.y_lim = (y_min, y_max)
+
+        return plot.show()
+
+    def __create_plot(self, dynamic, label_font_color, label_font_name, label_font_size,
+                      label_font_weight, logx, logy,  title,
+                      title_font_color, title_font_name, title_font_size, title_font_weight,
+                      x_axis_name, y_axis_name, ):
+        plot = create_plot('plotly' if dynamic else 'matplotlib')
 
         plot.title = title
+        plot.title_style = TextStyle()
+        plot.title_style.font_name = title_font_name
+        plot.title_style.size = title_font_size
+        plot.title_style.weight = title_font_weight
+        plot.title_style.color = title_font_color
+        plot.y_label_style = TextStyle()
+        plot.y_label_style.font_name = label_font_name
+        plot.y_label_style.size = label_font_size
+        plot.y_label_style.weight = label_font_weight
+        plot.y_label_style.color = label_font_color
+        plot.y_label_style = plot.y_label_style
         plot.log_x = logx
         plot.log_y = logy
         plot.x_label = x_axis_name
         plot.y_label = y_axis_name
-        plot.x_lim = (x_min, x_max)
-        plot.y_lim = (y_min, y_max)
 
-        l_style = LegendStyle()
-        l_style.position = legend_location
-        l_style.n_col = ncol_legend
-        plot.legend = l_style
 
-        plot.show()
+
+        return plot
 
     def cdf_plot(
             self,
@@ -513,15 +565,41 @@ class Analysis:
             y_min: float = None,
             x_max: float = None,
             y_max: float = None,
-            font_name='DejaVu Sans',
-            font_size=12,
-            font_color='#000000',
+            title_font_name='DejaVu Sans',
+            title_font_size=12,
+            title_font_color='#000000',
+            title_font_weight='bold',
+            label_font_name='DejaVu Sans',
+            label_font_size=12,
+            label_font_color='#000000',
+            label_font_weight='normal',
             latex_writing: bool = False,
+            legend_location=Position.RIGHT,
+            ncol_legend=1,
             output=None,
             dynamic: bool = False,
             **kwargs: dict
     ):
-        df = _make_cdf_plot_df(self, cumulated, cdf_col)
+        df = _make_cactus_plot_df(self, cumulated, cdf_col)
+
+        plot = self.__create_plot(dynamic, label_font_color, label_font_name, label_font_size,
+                                  label_font_weight,  logx, logy,
+                                  title, title_font_color, title_font_name, title_font_size,
+                                  title_font_weight, x_axis_name,   y_axis_name,
+                                  )
+        for name, series in df.iteritems():
+            plot.plot(x=series, y=series.index, label=name)
+
+        if output is not None:
+            plot.save(output)
+
+        plot.legend = LegendStyle()
+        plot.legend.position = legend_location
+        plot.legend.n_col = ncol_legend
+
+        plot.x_lim = (x_min, x_max)
+        plot.y_lim = (y_min, y_max)
+
         return df
 
     def scatter_plot(
@@ -540,14 +618,39 @@ class Analysis:
             y_min: float = None,
             x_max: float = None,
             y_max: float = None,
-            font_name='DejaVu Sans',
-            font_size=12,
-            font_color='#000000',
+            title_font_name='DejaVu Sans',
+            title_font_size=12,
+            title_font_color='#000000',
+            title_font_weight='bold',
+            label_font_name='DejaVu Sans',
+            label_font_size=12,
+            label_font_color='#000000',
+            label_font_weight='normal',
+            output=None,
+            legend_location=Position.RIGHT,
+            ncol_legend=1,
             latex_writing: bool = False,
             dynamic: bool = False,
             **kwargs: dict
     ):
         df = _make_scatter_plot_df(self, xp_ware_x, xp_ware_y, scatter_col)
+
+        plot = self.__create_plot(dynamic, label_font_color, label_font_name, label_font_size,
+                                  label_font_weight,  logx, logy,
+                                  title, title_font_color, title_font_name, title_font_size,
+                                  title_font_weight, x_axis_name,   y_axis_name)
+        plot.scatter(df[xp_ware_x],df[xp_ware_y])
+
+        if output is not None:
+            plot.save(output)
+
+        plot.legend = LegendStyle()
+        plot.legend.position = legend_location
+        plot.legend.n_col = ncol_legend
+
+        plot.x_lim = (x_min, x_max)
+        plot.y_lim = (y_min, y_max)
+
         return df
 
     def box_plot(self, box_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, **kwargs: dict):
@@ -588,10 +691,12 @@ class DataFrameBuilder:
         experiments_df = self._make_experiments_df()
 
         return experiments_df \
-            .join(inputs_df.set_index(INPUT_NAME), on=EXPERIMENT_INPUT, lsuffix=SUFFIX_EXPERIMENT, rsuffix=SUFFIX_INPUT,
+            .join(inputs_df.set_index(INPUT_NAME), on=EXPERIMENT_INPUT, lsuffix=SUFFIX_EXPERIMENT,
+                  rsuffix=SUFFIX_INPUT,
                   how='inner') \
             .join(experiment_wares_df.set_index(XP_WARE_NAME),
-                  on=EXPERIMENT_XP_WARE, lsuffix=SUFFIX_EXPERIMENT, rsuffix=SUFFIX_XP_WARE, how='inner'
+                  on=EXPERIMENT_XP_WARE, lsuffix=SUFFIX_EXPERIMENT, rsuffix=SUFFIX_XP_WARE,
+                  how='inner'
                   )
 
     def _make_experiment_wares_df(self) -> DataFrame:
