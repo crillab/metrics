@@ -589,7 +589,7 @@ class Analysis:
                                   )
 
         for name, series in df.iteritems():
-            plot.plot(x=series, y=series.index, label=name)
+            plot.plot(x=series, y=series.index / len(self.inputs), label=name)
 
         plot.legend = LegendStyle()
         plot.legend.position = legend_location
@@ -662,9 +662,20 @@ class Analysis:
         if output is not None:
             plot.save(output, bbox_inches='tight', transparent=True)
 
-    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, output=None):
+    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, output=None, log=False,
+                 title=None,title_font_size=12,
+            title_font_color='#000000',
+            title_font_weight=FontWeight.BOLD,):
         df = _make_box_plot_df(self, box_col)
         plot = create_plot("plotly") if dynamic else create_plot("matplotlib")
+        plot.log_x = log
+        plot.title = title
+
+        plot.title_style = TextStyle()
+        plot.title_style.size = title_font_size
+        plot.title_style.weight = title_font_weight
+        plot.title_style.color = title_font_color
+
         l = []
         for col in df.columns:
             l.append(df[col].dropna())
