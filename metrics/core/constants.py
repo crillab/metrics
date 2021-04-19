@@ -56,7 +56,16 @@ INPUT_SET_INPUTS = 'inputs'
 
 # Dataframe
 
+CONSISTENT_COL = 'consistent'
 SUCCESS_COL = 'success'
+SUFFIX_EXPERIMENT = '_experiment'
+SUFFIX_INPUT = '_input'
+SUFFIX_XP_WARE = '_xpware'
+MISSING_DATA_COL = 'missing'
+ERROR_COL = 'error'
+XP_CONSISTENCY_COL = 'consistent_xp'
+INPUT_CONSISTENCY_COL = 'consistent_input'
+TIMEOUT_COL = 'timeout'
 
 # Figures
 
@@ -67,3 +76,4 @@ STAT_TABLE_COMMON_COUNT = 'common count'
 STAT_TABLE_COMMON_SUM = 'common sum'
 STAT_TABLE_UNCOMMON_COUNT = 'uncommon count'
 STAT_TABLE_TOTAL = 'total'
+STAT_TABLE_PAR = 'PAR'

@@ -76,7 +76,7 @@ class CsvReader:
         """
         self._line_iterator = iter(self._configuration.create_loader(self._stream))
         if self._configuration.has_header():
-            self._keys = next(self._line_iterator)
+            self._keys = [k.strip() for k in next(self._line_iterator)]
         else:
             self._cache = next(self._line_iterator)
             self._keys = [str(i) for i in range(len(self._cache))]

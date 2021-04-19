@@ -20,60 +20,23 @@
 #  along with this program.                                                    #
 #  If not, see <https://www.gnu.org/licenses/>.                                #
 # ##############################################################################
-import os
-from pathlib import Path
-
-from metrics.core.model import Campaign
-from metrics.wallet.dataframe.builder import Analysis
-from metrics.wallet.dataframe.dataframe import CampaignDataFrame
-from metrics.wallet.figure.static_figure import LINE_STYLES, DEFAULT_COLORS
-
 import pickle
 
+from metrics.wallet.analysis import Analysis, find_best_cpu_time_input
+from metrics.core.constants import *
 
-def import_campaigns(jsons) -> Campaign:
-    campaign = import_campaign(jsons[0])
+import pandas as pd
+import jsonpickle.ext.pandas as jsonpickle_pd
 
-    for i in range(1, len(jsons)):
-        tmp = import_campaign(jsons[i])
-
-        campaign.experiments.extend(tmp.experiments)
-        campaign.input_set.inputs.extend(tmp.input_set.inputs)
-
-    return campaign
+jsonpickle_pd.register_handlers()
 
 
-def get_cache_or_parse(input_file):
-
-    if os.path.isfile('.cache'):
-        with open('.cache', 'rb') as file:
-            return import_analysis_from_file(file)
-    else:
-        with open('.cache', 'wb') as file:
-            analysis = Analysis(input_file=input_file)
-            analysis.export(file=file)
-            return analysis
-
-
-def import_campaign(str) -> Campaign:
+def import_bin_analysis(str) -> Analysis:
     return pickle.loads(str)
 
 
-def import_campaign_from_file(file):
-    return pickle.load(file)
-
-
-def import_campaign_data_frame(str) -> CampaignDataFrame:
-    return pickle.loads(str)
-
-
-def import_campaign_data_frame_from_file(file):
-    return pickle.load(file)
-
-
-def import_analysis(str) -> Analysis:
-    return pickle.loads(str)
-
-
-def import_analysis_from_file(file):
-    return pickle.load(file)
+def import_analysis_from_file(filename) -> Analysis:
+    with open(filename, 'rb') as file:
+        if filename.split('.')[-1] == 'csv':
+            return Analysis(data_frame=pd.read_csv(file))
+        return pickle.load(file)

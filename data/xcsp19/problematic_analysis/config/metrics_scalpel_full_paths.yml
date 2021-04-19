@@ -1,0 +1,23 @@
+name: Campagne XCSP 2019
+date: 9 avril 2021
+
+setup:
+  os: Linux CentOS 7 (x86_64)
+  cpu: Intel XEON X5550
+  ram: 32GB
+  timeout: 1200
+  memout: 16384
+
+source:
+  path: data/xcsp19/problematic_analysis/input/XCSP19.txt
+  format: evaluation
+  is-success:
+    - ${Checked answer} in ["SAT", "UNSAT"]
+
+data:
+  mapping:
+    experiment_ware:
+      - Solver name
+      - Solver version
+    cpu_time: CPU time
+    input: Instance name

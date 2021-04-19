@@ -68,12 +68,18 @@ class Figure:
 class Table(Figure):
 
     def __init__(self, campaign_df: CampaignDataFrame, commas_for_number: bool = False,
-                 dollars_for_number: bool = False, **kwargs):
+                 dollars_for_number: bool = False, col_name_map={}, **kwargs):
         super().__init__(campaign_df, **kwargs)
         self._commas_for_number = commas_for_number
         self._dollars_for_number = dollars_for_number
+        self._col_name_map = col_name_map
 
     def _output_maker(self, df):
+        df.rename(columns=self._col_name_map, inplace=True)
+
+        if self._xp_ware_name_map is not None:
+            df.index = df.index.map(lambda x: self._xp_ware_name_map[x] if x in self._xp_ware_name_map else x)
+
         if self._output is None:
             return
 
@@ -82,9 +88,6 @@ class Table(Figure):
 
         if self._dollars_for_number:
             df = df.applymap(lambda x: f"${x}$")
-
-        if self._xp_ware_name_map is not None:
-            df.index = df.index.map(lambda x: self._xp_ware_name_map[x] if x in self._xp_ware_name_map else x)
 
         ext = self._output.split('.')[-1]
 
@@ -253,7 +256,7 @@ class CactusPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or 'Comparison of experimentwares'
+        return self._title or ''
 
 
 class CDFPlot(Plot):
@@ -314,7 +317,9 @@ class CDFPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or 'Comparison of experimentwares'
+        if self._title is None:
+            return 'Comparison of experimentwares'
+        return self._title
 
 
 class ScatterPlot(Plot):
@@ -375,7 +380,9 @@ class ScatterPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or f'Comparison of {self._xp_ware_i} and {self._xp_ware_j}'
+        if self._title is None:
+            return f'Comparison of {self.get_x_axis_name()} and {self.get_y_axis_name()}'
+        return self._title
 
     def _extra_col(self, df, col):
         if col is None:
@@ -429,4 +436,6 @@ class BoxPlot(Plot):
 
         @return: the title of the plot.
         """
-        return self._title or 'Comparison of experimentwares'
+        if self._title is None:
+            return 'Comparison of experimentwares'
+        return self._title

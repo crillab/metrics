@@ -411,6 +411,16 @@ class CampaignParserListener:
             self._commit_key(scalpel_key, read_values)
             del self._pending_keys[scalpel_key]
 
+    def log_metadata(self, key: str, value: Any) -> None:
+        """
+        Notifies this listener about data that has been read.
+        This data is set to the campaign.
+
+        :param key: The key identifying the read data.
+        :param value: The value that has been read.
+        """
+        self._campaign_builder[key] = str(value)
+
     def _commit_key(self, scalpel_key: str, read_values: Dict[str]) -> None:
         """
         Commits the values read for the given key.

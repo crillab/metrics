@@ -226,10 +226,12 @@ class ScalpelConfiguration:
         """
         if None in self._log_datas:
             return self._log_datas[None]
+
+        all_datas = []
         for k, v in self._log_datas.items():
             if fnmatch(filename, k):
-                return v
-        return []
+                all_datas.extend(v)
+        return all_datas
 
     def get_custom_parser(self) -> Optional[str]:
         """
@@ -244,6 +246,9 @@ class ScalpelConfiguration:
 
     def get_is_success(self):
         return self._is_success
+
+    def get_is_consistent(self):
+        pass
 
     def get_output_format(self, file: str) -> Tuple[OutputFormat, Any]:
         fmt = OutputFormat.guess_format(file)
@@ -459,6 +464,9 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
         """
         raise NotImplementedError('Method "get_regex_group()" is abstract!')
 
+    def is_exact(self):
+        raise NotImplementedError('Method "get_exact()" is abstract!')
+
     def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
         """
         Gives the compiled pattern identifying the current raw data.
@@ -470,29 +478,43 @@ class RawDataConfiguration(ConfigurationIterator, ABC):
         """
         # First, we look for a named pattern.
         simplified_pattern = self.get_simplified_pattern()
+        exact = self.is_exact()
         groups = self.get_regex_group()
         if simplified_pattern is not None:
-            if groups is None:
-                return compile_named_pattern(simplified_pattern)
-            else:
-                return compile_all_named_patterns(simplified_pattern, *groups)
+            try:
+                return self._compile_named_pattern(simplified_pattern, exact, groups)
+            except ValueError:
+                return self._compile_regex(simplified_pattern, exact, groups)
 
-        # There is no look pattern: trying a regular expression.
+        # There is no named pattern: trying a regular expression.
         regex = self.get_regex_pattern()
         if regex is not None:
-            if groups is None:
-                return compile_regex(regex)
-            else:
-                return compile_all_regexes(regex, *groups)
+            try:
+                return self._compile_regex(regex, exact, groups)
+            except ValueError:
+                return self._compile_named_pattern(regex, exact, groups)
 
         # The description of the data is missing!
         raise ValueError('A pattern or regex is missing!')
+
+    def _compile_named_pattern(self, pattern, exact, groups):
+        if groups is None:
+            return compile_named_pattern(pattern, exact)
+        return compile_all_named_patterns(pattern, exact, *groups)
+
+    def _compile_regex(self, regex, exact, groups):
+        if groups is None:
+            return compile_regex(regex, exact)
+        return compile_all_regexes(regex, exact, *groups)
 
 
 class EmptyRawDataConfiguration(EmptyConfigurationIterator, RawDataConfiguration):
     """
     The EmptyRawDataConfiguration is a RawDataConfiguration with no element.
     """
+
+    def is_exact(self):
+        raise ValueError('Empty raw data configuration!')
 
     def get_name(self) -> str:
         """
@@ -540,6 +562,12 @@ class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfigura
     The DictionaryRawDataConfiguration allows to extract a RawDataConfiguration from a
     list of dictionaries.
     """
+
+    def is_exact(self):
+        exact = self.current().get('exact')
+        if exact is not None:
+            return exact
+        return False
 
     def get_name(self) -> Union[str, List[str]]:
         """
@@ -606,6 +634,9 @@ class FileNameMetaConfiguration:
         """
         raise NotImplementedError('Method "get_simplified_pattern()" is abstract!')
 
+    def is_exact(self):
+        raise NotImplementedError('Method "is_exact()" is abstract!')
+
     def get_regex_pattern(self) -> Optional[str]:
         """
         Gives the regular expression identifying the current filename.
@@ -636,12 +667,12 @@ class FileNameMetaConfiguration:
         pattern = None
         simplified_pattern = self.get_simplified_pattern()
         if simplified_pattern is not None:
-            pattern = compile_all_named_patterns(simplified_pattern, *groups)
+            pattern = compile_all_named_patterns(simplified_pattern, self.is_exact(), *groups)
 
         if pattern is None:
             regex = self.get_regex_pattern()
             if regex is not None:
-                pattern = compile_all_regexes(regex, *groups)
+                pattern = compile_all_regexes(regex, self.is_exact(), *groups)
 
         # The description of the data is missing!
         if pattern is None:
@@ -663,6 +694,9 @@ class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
     """
     The EmptyFileNameMetaConfiguration is a RawDataConfiguration with no element.
     """
+
+    def is_exact(self):
+        raise ValueError('Empty raw data configuration!')
 
     def get_simplified_pattern(self) -> Optional[str]:
         """
@@ -691,6 +725,12 @@ class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
 
 
 class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryConfiguration):
+
+    def is_exact(self):
+        exact = self.get('exact')
+        if exact is not None:
+            return exact
+        return False
 
     def get_simplified_pattern(self) -> Optional[str]:
         return self.get('pattern')
@@ -1046,8 +1086,8 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         """
         Reads the description of the campaign to parse.
         """
-        self._log_data(CAMPAIGN_NAME, self._get_campaign_name())
-        self._log_data(CAMPAIGN_DATE, self._get_campaign_date())
+        self._listener.log_metadata(CAMPAIGN_NAME, self._get_campaign_name())
+        self._listener.log_metadata(CAMPAIGN_DATE, self._get_campaign_date())
 
     def _get_campaign_name(self) -> Optional[str]:
         """
@@ -1069,11 +1109,11 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         """
         Reads the description of the experimental setup.
         """
-        self._log_data(CAMPAIGN_OS, self._get_os_description())
-        self._log_data(CAMPAIGN_CPU, self._get_cpu_description())
-        self._log_data(CAMPAIGN_MEMORY, self._get_total_memory())
-        self._log_data(CAMPAIGN_TIMEOUT, self._get_time_out())
-        self._log_data(CAMPAIGN_MEMOUT, self._get_memory_out())
+        self._listener.log_metadata(CAMPAIGN_OS, self._get_os_description())
+        self._listener.log_metadata(CAMPAIGN_CPU, self._get_cpu_description())
+        self._listener.log_metadata(CAMPAIGN_MEMORY, self._get_total_memory())
+        self._listener.log_metadata(CAMPAIGN_TIMEOUT, self._get_time_out())
+        self._listener.log_metadata(CAMPAIGN_MEMOUT, self._get_memory_out())
 
     def _get_os_description(self) -> Optional[str]:
         """
@@ -1262,7 +1302,10 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
                 self._data_files[data_file] = create_data_file(data_file)
             else:
                 name = data_file['name']
+                name_as_prefix = data_file.get('name-as-prefix')
+                name_as_prefix = False if name_as_prefix is None else name_as_prefix
                 header = data_file.get('has-header')
+                header = True if header is None else header
                 quote_char = data_file.get('quote-char')
                 separator = data_file.get('separator')
                 title_separator = data_file.get('title-separator')
@@ -1270,15 +1313,14 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
                 fmt_tmp = data_file.get('format')
                 fmt = None if fmt_tmp is None else OutputFormat.value_of(fmt_tmp)
                 if separator is None:
-                    if fmt == CampaignFormat.CSV2:
+                    if fmt == OutputFormat.CSV2:
                         separator = ';'
-                    elif fmt == CampaignFormat.TSV:
+                    elif fmt == OutputFormat.TSV:
                         separator = '\t'
                     else:
                         separator = ','
                 csv_config = CsvConfiguration(separator, quote_char, header, title_separator)
-                self._data_files[name] = create_data_file(name, fmt, csv_config, parser)
-
+                self._data_files[name] = create_data_file(name, name_as_prefix, fmt, csv_config, parser)
 
     def _get_file_name_meta(self) -> FileNameMetaConfiguration:
         raise NotImplementedError('Method "_get_file_name_meta()" is abstract!')

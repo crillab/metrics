@@ -28,13 +28,9 @@ This module uses the DataFrame object pandas library.
 
 from __future__ import annotations
 
-import pickle
 from enum import Enum
 
-
-import pandas as pd
-
-from metrics.wallet.dataframe.builder import *
+from metrics.wallet.analysis import *
 
 
 class CampaignDFFilter(Enum):
@@ -72,6 +68,12 @@ def _vbew_agg(df, opti_col, minimize, diff):
 
     i1 = df[opti_col].values[0]
     i2 = df[opti_col].values[1]
+
+    if i1 == i2:
+        return df.iloc[0] if diff == 0 else None
+
+    if i1 == 0:
+        return df.iloc[0]
 
     return df.iloc[0] if (i2 - i1) / i1 >= diff else None
 
@@ -120,7 +122,7 @@ class CampaignDataFrame:
         return self._name
 
     @property
-    def xp_ware_names(self) -> List[str]:
+    def experiment_wares(self) -> List[str]:
         """
 
         @return: the experimentware names of the dataframe.
@@ -185,7 +187,7 @@ class CampaignDataFrame:
         df = self._data_frame[self._data_frame[column].isin(sub_set)]
         return self.build_data_frame(df)
 
-    def add_vbew(self, xp_ware_set, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> CampaignDataFrame:
+    def add_vbew(self, xp_ware_set=None, opti_col=EXPERIMENT_CPU_TIME, minimize=True, vbew_name='vbew', diff=0) -> CampaignDataFrame:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -198,6 +200,8 @@ class CampaignDataFrame:
         @return: a new instance of CampaignDataFrame with the new vbew.
         """
         df = self._data_frame
+        if xp_ware_set is None:
+            xp_ware_set = self.xp_ware_names
 
         df_vbs = df[df[EXPERIMENT_XP_WARE].isin(xp_ware_set)]
 
@@ -223,12 +227,6 @@ class CampaignDataFrame:
             self.build_data_frame(group, name=name) for name, group in gb
         ]
 
-    def normalize_by(self, xp_ware, on):
-        df = self.data_frame.copy()
-        map = df[df.experiment_ware == xp_ware].set_index('input')[on].to_dict() #.replace([np.nan, 0], 1000000000000).to_dict()
-        df[on] = df.apply(lambda x: (map[x['input']] - x[on]) / map[x['input']], axis=1)
-        return self.build_data_frame(df, self._name)
-
     def delete_input_when(self, f):
         df = self._data_frame.copy()
         df['f_res'] = df.apply(f, axis=1)
@@ -248,7 +246,5 @@ class CampaignDataFrame:
         """
         return self._campaign_df_builder.build_from_data_frame(df, name=name, vbew_names=self._vbew_names)
 
-    def export(self, file=None):
-        if file is None:
-            return pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
-        return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
+    def export(self):
+        return jsonpickle.encode(self)

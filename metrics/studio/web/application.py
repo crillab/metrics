@@ -2,7 +2,6 @@ import base64
 import glob
 import hashlib
 import io
-import json
 import os
 import uuid
 from pathlib import Path
@@ -31,8 +30,8 @@ from metrics.studio.web.component.footer import get_footer as footer
 from metrics.studio.web.config import external_stylesheets, LIMIT
 from metrics.studio.web.util import util
 from metrics.studio.web.util.util import create_listener, decode
-from metrics.wallet.dataframe.builder import Analysis
-from metrics.wallet.figure.dynamic_figure import BoxPlotly, CactusPlotly, ScatterPlotly, CDFPlotly
+from metrics.wallet.analysis import Analysis
+from metrics.wallet.figure.dynamic_figure import BoxPlotly
 from metrics.wallet.figure.static_figure import StatTable, ContributionTable
 from datetime import datetime
 

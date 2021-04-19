@@ -28,8 +28,9 @@ This module provides all the models needed by the metrics project.
 """
 from __future__ import annotations
 
-import pickle
 from typing import Any
+
+import jsonpickle
 
 from metrics.core.constants import XP_WARE_NAME, CAMPAIGN_NAME, CAMPAIGN_TIMEOUT, CAMPAIGN_MEMOUT, CAMPAIGN_XP_WARES, \
     CAMPAIGN_INPUT_SET, CAMPAIGN_EXPERIMENTS, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, INPUT_NAME, \
@@ -100,10 +101,8 @@ class Campaign(Model):
         self.experiments = attributes.pop(CAMPAIGN_EXPERIMENTS)
         super().__init__(attributes)
 
-    def export(self, file=None):
-        if file is None:
-            return pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
-        return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
+    def export(self):
+        return jsonpickle.encode(self)
 
     def get_input_set(self):
         """
@@ -111,6 +110,14 @@ class Campaign(Model):
         @return:
         """
         return self.input_set
+
+    def get_experiment_ware_names(self):
+        """
+
+        @return:
+        """
+        return [ew.name for ew in self.experiment_wares]
+
 
 class Experiment(Model):
     """
@@ -162,3 +169,10 @@ class InputSet(Model):
         @return:
         """
         return self.inputs
+
+    def get_input_names(self):
+        """
+
+        @return:
+        """
+        return [inp.name for inp in self.inputs]
