@@ -47,14 +47,7 @@ from metrics.scalpel import read_campaign
 
 
 def find_best_cpu_time_input(df):
-    df2 = df[df[SUCCESS_COL]]
-
-    if len(df2) > 0:
-        s = df2[EXPERIMENT_CPU_TIME]
-        return df2[s == s.min()]
-
-    s = df[EXPERIMENT_CPU_TIME]
-    return df[s == s.min()]
+    return df.sort_values(by=[SUCCESS_COL, EXPERIMENT_CPU_TIME], ascending=[False, True]).iloc[0]
 
 
 def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False,
@@ -154,32 +147,27 @@ def _make_box_plot_df(analysis, box_col):
 
 class Analysis:
 
-    def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 is_consistent_by_xp: Callable[[Any], bool] = None,
-                 is_consistent_by_input: Callable[[Any], bool] = None,
-                 is_success: Callable[[Any], bool] = None):
-
+    def __init__(self, input_file: str = None, data_frame: DataFrame = None):
         if data_frame is not None:
             self._data_frame = data_frame
-            is_succ = is_success
-            inputs = self.inputs
-            experiment_wares = self.experiment_wares
+            self.check()
+            return
 
-        else:
-            campaign, config = read_campaign(input_file)
+        campaign, config = read_campaign(input_file)
 
-            self._data_frame = DataFrameBuilder(campaign).build_from_campaign()
-            self._data_frame[TIMEOUT_COL] = campaign.timeout
-            self._data_frame[ERROR_COL] = False
+        self._data_frame = DataFrameBuilder(campaign).build_from_campaign()
+        self._data_frame[TIMEOUT_COL] = campaign.timeout
+        self._data_frame[SUCCESS_COL] = True
+        self._data_frame[USER_SUCCESS_COL] = True
+        self._data_frame[MISSING_DATA_COL] = False
+        self._data_frame[XP_CONSISTENCY_COL] = True
+        self._data_frame[INPUT_CONSISTENCY_COL] = True
 
-            is_succ = config.get_is_success() if is_success is None else is_success
-            inputs = campaign.get_input_set().get_input_names()
-            experiment_wares = campaign.get_experiment_ware_names()
-
-        self.check_success(is_succ)
-        self.check_missing_experiments(inputs, experiment_wares)
-        self.check_xp_consistency(is_consistent_by_xp)
-        self.check_input_consistency(is_consistent_by_input)
+        self.check(
+            is_success=config.get_is_success(),
+            inputs=campaign.get_input_set().get_input_names(),
+            experiment_wares=campaign.get_experiment_ware_names()
+        )
 
     @property
     def data_frame(self):
@@ -191,7 +179,7 @@ class Analysis:
 
         @return: the input names of the dataframe.
         """
-        return self._data_frame[EXPERIMENT_INPUT].unique()
+        return list(self._data_frame[EXPERIMENT_INPUT].unique())
 
     @property
     def experiment_wares(self) -> List[str]:
@@ -199,21 +187,39 @@ class Analysis:
 
         @return: the experimentware names of the dataframe.
         """
-        return self._data_frame[EXPERIMENT_XP_WARE].unique()
+        return list(self._data_frame[EXPERIMENT_XP_WARE].unique())
 
-    def _update_error_and_success_cols(self, new_error_series):
-        self._data_frame[ERROR_COL] = (self._data_frame[ERROR_COL]) | new_error_series
-        self._data_frame[SUCCESS_COL] = (self._data_frame[SUCCESS_COL]) & (
-            ~self._data_frame[ERROR_COL])
+    def copy(self):
+        return self.__class__(data_frame=self._data_frame.copy())
 
-    def check_success(self, is_success: Callable[[Any], bool]):
+    def check(self, is_success=None, is_consistent_by_xp=None, is_consistent_by_input=None, inputs=None, experiment_wares=None):
+        self.check_success(is_success)
+        self.check_missing_experiments(inputs, experiment_wares)
+        self.check_xp_consistency(is_consistent_by_xp)
+        self.check_input_consistency(is_consistent_by_input)
+
+    def _check_global_success(self):
+        self._data_frame[SUCCESS_COL] = self._data_frame.apply(
+            lambda x: x[USER_SUCCESS_COL] and not(x[MISSING_DATA_COL]) and x[XP_CONSISTENCY_COL] and x[INPUT_CONSISTENCY_COL],
+            axis=1
+        )
+
+        self._data_frame[ERROR_COL] = self._data_frame.apply(
+            lambda x: x[MISSING_DATA_COL] or not(x[XP_CONSISTENCY_COL]) or not(x[INPUT_CONSISTENCY_COL]),
+            axis=1
+        )
+
+    def check_success(self, is_success):
         if is_success is None:
             return
-        self._data_frame[SUCCESS_COL] = self._data_frame.apply(is_success, axis=1)
+        self._data_frame[USER_SUCCESS_COL] = self._data_frame.apply(is_success, axis=1)
+        self._check_global_success()
 
-    def check_missing_experiments(self, inputs: List[str], experiment_wares: List[str]):
-        theoretical_df = DataFrame(product(inputs, experiment_wares),
-                                   columns=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE])
+    def check_missing_experiments(self, inputs: List[str]=None, experiment_wares: List[str]=None):
+        inputs = self.inputs if inputs is None else inputs
+        experiment_wares = self.experiment_wares if experiment_wares is None else experiment_wares
+
+        theoretical_df = DataFrame(product(inputs, experiment_wares), columns=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE])
 
         self._data_frame[MISSING_DATA_COL] = False
         self._data_frame = self._data_frame.join(
@@ -221,15 +227,14 @@ class Analysis:
             on=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE])
         self._data_frame[MISSING_DATA_COL] = self._data_frame[MISSING_DATA_COL].fillna(True)
 
-        self._update_error_and_success_cols(self._data_frame[MISSING_DATA_COL])
-
         n_missing = self._data_frame[MISSING_DATA_COL].sum()
 
         if n_missing > 0:
+            self._check_global_success()
             warnings.warn(
                 f'{n_missing} experiments are missing and have been added as unsuccessful.')
 
-    def check_xp_consistency(self, is_consistent: Callable[[Any], bool]):
+    def check_xp_consistency(self, is_consistent):
         if is_consistent is None:
             return
 
@@ -237,15 +242,14 @@ class Analysis:
 
         inconsistency = ~self._data_frame[XP_CONSISTENCY_COL]
 
-        self._update_error_and_success_cols(inconsistency)
-
         n_inconsistencies = inconsistency.sum()
 
         if n_inconsistencies > 0:
+            self._check_global_success()
             warnings.warn(
                 f'{n_inconsistencies} experiments are inconsistent and are declared as unsuccessful.')
 
-    def check_input_consistency(self, is_consistent: Callable[[Any], bool]):
+    def check_input_consistency(self, is_consistent):
         if is_consistent is None:
             return
 
@@ -255,41 +259,32 @@ class Analysis:
 
         self._data_frame[INPUT_CONSISTENCY_COL] = ~self._data_frame[EXPERIMENT_INPUT].isin(
             inconsistent_inputs)
-        self._update_error_and_success_cols(~self._data_frame[INPUT_CONSISTENCY_COL])
 
         if len(inconsistent_inputs) > 0:
+            self._check_global_success()
             warnings.warn(
                 f'{len(inconsistent_inputs)} inputs are inconsistent and linked experiments are now declared as unsuccessful.')
 
     def add_variable(self, new_var, function, inplace=False):
-        df = self._data_frame if inplace else self._data_frame.copy()
+        if not inplace:
+            return self.copy().add_variable(new_var, function, inplace=True)
+        df = self._data_frame
         df[new_var] = df.apply(function, axis=1)
-        return self if inplace else self.__class__(data_frame=df)
+        return self
 
     def remove_variables(self, vars: List[str], inplace=False):
-        df = self._data_frame.drop(columns=vars, inplace=inplace)
-        return self if inplace else self.__class__(data_frame=df)
+        if not inplace:
+            return self.copy().remove_variables(vars, inplace=True)
+        self._data_frame.drop(columns=vars, inplace=True)
+        return self
 
-    def add_analysis(self, analysis,
-                     is_consistent_by_xp: Callable[[Any], bool] = None,
-                     is_consistent_by_input: Callable[[Any], bool] = None,
-                     is_success: Callable[[Any], bool] = None):
-        return self.add_data_frame(analysis.data_frame, is_consistent_by_xp, is_consistent_by_input,
-                                   is_success)
+    def add_analysis(self, analysis):
+        return self.add_data_frame(analysis.data_frame)
 
-    def add_data_frame(self, data_frame,
-                       is_consistent_by_xp: Callable[[Any], bool] = None,
-                       is_consistent_by_input: Callable[[Any], bool] = None,
-                       is_success: Callable[[Any], bool] = None):
-        return self.__class__(
-            data_frame=self._data_frame.append(data_frame, ignore_index=True).copy(),
-            is_consistent_by_xp=is_consistent_by_xp,
-            is_consistent_by_input=is_consistent_by_input,
-            is_success=is_success
-        )
+    def add_data_frame(self, data_frame):
+        return self.__class__(data_frame=self._data_frame.append(data_frame, ignore_index=True))
 
-    def add_virtual_experiment_ware(self, function=find_best_cpu_time_input, xp_ware_set=None,
-                                    name='vbew') -> Analysis:
+    def add_virtual_experiment_ware(self, function=find_best_cpu_time_input, xp_ware_set=None, name='vbew') -> Analysis:
         """
         Make a Virtual Best ExperimentWare.
         We get the best results of a sub set of experiment wares.
@@ -310,43 +305,53 @@ class Analysis:
         df_vbs = df_vbs.groupby(EXPERIMENT_INPUT).apply(function).dropna(how='all') \
             .assign(experiment_ware=lambda x: name)
 
-        return self.add_data_frame(data_frame=df_vbs.copy())
+        return self.add_data_frame(data_frame=df_vbs)
 
-    def filter_analysis(self, function) -> Analysis:
+    def filter_analysis(self, function, inplace=False) -> Analysis:
         """
         Filters the dataframe in function of sub set of authorized values for a given column.
         @param column: column where  to keep the sub set of values.
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
-        return self.__class__(
-            data_frame=self._data_frame[self._data_frame.apply(function, axis=1)].copy())
+        if not inplace:
+            return self.copy().filter_analysis(function, inplace=True)
 
-    def remove_experiment_wares(self, experiment_wares) -> Analysis:
+        self._data_frame = self._data_frame[self._data_frame.apply(function, axis=1)]
+
+        return self
+
+    def remove_experiment_wares(self, experiment_wares, inplace=False) -> Analysis:
         """
         Filters the dataframe in function of sub set of authorized values for a given column.
         @param column: column where  to keep the sub set of values.
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
-        return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] not in experiment_wares)
+        if not inplace:
+            return self.copy().remove_experiment_wares(experiment_wares, inplace=True)
 
-    def keep_experiment_wares(self, experiment_wares) -> Analysis:
+        return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] not in experiment_wares, inplace)
+
+    def keep_experiment_wares(self, experiment_wares, inplace=False) -> Analysis:
         """
         Filters the dataframe in function of sub set of authorized values for a given column.
         @param column: column where  to keep the sub set of values.
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
-        return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] in experiment_wares)
+        return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] in experiment_wares, inplace)
 
-    def filter_inputs(self, function, how='all') -> Analysis:
+    def filter_inputs(self, function, how='all', inplace=False) -> Analysis:
         """
         Filters the dataframe in function of sub set of authorized values for a given column.
         @param column: column where  to keep the sub set of values.
         @param sub_set: the sub set of authorised values.
         @return: the filtered dataframe in a new instance of Analysis.
         """
+        if not inplace:
+            return self.copy().filter_inputs(function, how, inplace=True)
+
         if how == 'all':
             s = self._data_frame.groupby(EXPERIMENT_INPUT).apply(
                 lambda df: df.apply(function, axis=1).all())
@@ -357,31 +362,36 @@ class Analysis:
             raise AttributeError(
                 '"how" parameter could only takes these next values: "all" or "any".')
 
-        return self.__class__(
-            data_frame=self._data_frame[self._data_frame[EXPERIMENT_INPUT].isin(s[s].index)].copy())
+        self._data_frame = self._data_frame[self._data_frame[EXPERIMENT_INPUT].isin(s[s].index)]
 
-    def delete_common_failed_inputs(self):
+        return self
+
+    def delete_common_failed_inputs(self, inplace=False):
         return self.filter_inputs(
             function=lambda x: x[SUCCESS_COL],
-            how='any'
+            how='any',
+            inplace=inplace
         )
 
-    def delete_common_solved_inputs(self):
+    def delete_common_solved_inputs(self, inplace=False):
         return self.filter_inputs(
             function=lambda x: not x[SUCCESS_COL],
-            how='any'
+            how='any',
+            inplace=inplace
         )
 
-    def keep_common_failed_inputs(self):
+    def keep_common_failed_inputs(self, inplace=False):
         return self.filter_inputs(
             function=lambda x: not x[SUCCESS_COL],
-            how='all'
+            how='all',
+            inplace=inplace
         )
 
-    def keep_common_solved_inputs(self):
+    def keep_common_solved_inputs(self, inplace=False):
         return self.filter_inputs(
             function=lambda x: x[SUCCESS_COL],
-            how='all'
+            how='all',
+            inplace=inplace
         )
 
     def all_experiment_ware_pair_analysis(self) -> List[Analysis]:

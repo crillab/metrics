@@ -56,16 +56,17 @@ INPUT_SET_INPUTS = 'inputs'
 
 # Dataframe
 
-CONSISTENT_COL = 'consistent'
-SUCCESS_COL = 'success'
 SUFFIX_EXPERIMENT = '_experiment'
 SUFFIX_INPUT = '_input'
 SUFFIX_XP_WARE = '_xpware'
+
+SUCCESS_COL = 'success'
+USER_SUCCESS_COL = 'user_success'
 MISSING_DATA_COL = 'missing'
-ERROR_COL = 'error'
 XP_CONSISTENCY_COL = 'consistent_xp'
 INPUT_CONSISTENCY_COL = 'consistent_input'
 TIMEOUT_COL = 'timeout'
+ERROR_COL = 'error'
 
 # Figures
 
