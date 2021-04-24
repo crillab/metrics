@@ -78,3 +78,31 @@ STAT_TABLE_COMMON_SUM = 'common sum'
 STAT_TABLE_UNCOMMON_COUNT = 'uncommon count'
 STAT_TABLE_TOTAL = 'total'
 STAT_TABLE_PAR = 'PAR'
+
+## Plots
+DYNAMIC_PLOT = 'plotly'
+STATIC_PLOT = 'matplotlib'
+FONT_COLOR = 'black'
+FONT_NAME = 'Helvetica'
+FONT_SIZE = 11
+FIGURE_SIZE = (7, 5)
+
+### Cactus-Plots
+
+CACTUS_TITLE = 'Cactus-plot'
+CACTUS_X_LABEL = 'Number of solved inputs'
+CACTUS_Y_LABEL = 'Time'
+
+### CDF-Plots
+
+CDF_TITLE = 'CDF-plot'
+CDF_X_LABEL = 'Time'
+CDF_Y_LABEL = 'Solved inputs'
+
+### Scatter-Plots
+
+SCATTER_TITLE = 'Scatter-plot'
+
+### Box-Plots
+
+BOX_TITLE = 'Box-plot'

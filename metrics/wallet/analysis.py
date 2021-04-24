@@ -35,6 +35,8 @@ from autograph import create_plot
 from autograph.core.enumstyle import Position, FontWeight, LineType
 from autograph.core.style import LegendStyle, TextStyle, PlotStyle
 
+from metrics.wallet.plot import CactusPlot, CDFPlot, ScatterPlot, BoxPlot
+
 warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 
 from pandas import DataFrame
@@ -123,26 +125,30 @@ def _make_cactus_plot_df(analysis, cumulated, cactus_col):
     return df_cactus.cumsum() if cumulated else df_cactus
 
 
-def _make_cdf_plot_df(analysis, cumulated, cdf_col):
-    df = _make_cactus_plot_df(analysis, cumulated, cdf_col)
-    return df.T
-
-
 def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col=None):
     df = analysis.keep_experiment_wares({xp_ware_x, xp_ware_y}).data_frame
-    index = [EXPERIMENT_INPUT]
-    if color_col is not None:
-        index.append(color_col)
-    return df[df[SUCCESS_COL]].pivot_table(
-        index=index,
+    df = df[df[SUCCESS_COL]]
+
+    df1 = df.pivot_table(
+        index=EXPERIMENT_INPUT,
         columns=EXPERIMENT_XP_WARE,
         values=scatter_col,
         fill_value=analysis.data_frame[TIMEOUT_COL].max()
     )
 
+    if color_col is not None:
+        df2 = df.groupby(EXPERIMENT_INPUT).apply(lambda dff: set(dff[color_col]))
+        df1[color_col] = df2.apply(lambda x: list(x)[0] if len(x) == 1 else x)
+
+    return df1
+
 
 def _make_box_plot_df(analysis, box_col):
-    return analysis.data_frame.pivot(columns=EXPERIMENT_XP_WARE, values=box_col)
+    return analysis.data_frame.pivot(
+        columns=EXPERIMENT_XP_WARE,
+        index=EXPERIMENT_INPUT,
+        values=box_col
+    )
 
 
 class Analysis:
@@ -481,216 +487,41 @@ class Analysis:
             **kwargs
         )
 
-    def cactus_plot(
-            self,
-            cumulated=False,
-            cactus_col=EXPERIMENT_CPU_TIME,
-            title='Cactus-plot',
-            figsize=(7, 5),
-            show_marker=True,
-            color_map=None,
-            style_map=None,
-            logx: bool = False,
-            logy: bool = False,
-            x_axis_name='Number of solved inputs',
-            y_axis_name='Time',
-            x_min: float = None,
-            y_min: float = None,
-            x_max: float = None,
-            y_max: float = None,
-            title_font_name='DejaVu Sans',
-            title_font_size=12,
-            title_font_color='#000000',
-            title_font_weight=FontWeight.BOLD,
-            label_font_name='DejaVu Sans',
-            label_font_size=12,
-            label_font_color='#000000',
-            label_font_weight=FontWeight.NORMAL,
-            latex_writing: bool = False,
-            output=None,
-            legend_location=Position.RIGHT,
-            ncol_legend=1,
-            dynamic: bool = False,
-            **kwargs: dict
-    ):
+    def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         df = _make_cactus_plot_df(self, cumulated, cactus_col)
 
-        plot = self.__create_plot(dynamic, label_font_color, label_font_name, label_font_size,
-                                  label_font_weight, logx, logy,
-                                  title, title_font_color, title_font_name, title_font_size,
-                                  title_font_weight, x_axis_name, y_axis_name, figsize
-                                  )
-        for name, series in df.iteritems():
-            plot.plot(x=series.index, y=series, label=name)
-
-        plot.legend = LegendStyle()
-        plot.legend.position = legend_location
-        plot.legend.n_col = ncol_legend
-
-        plot.x_lim = (x_min, x_max)
-        plot.y_lim = (y_min, y_max)
-        self.__save_plot(output, plot)
+        plot = CactusPlot(df, **kwargs)
+        plot.save()
 
         return plot.show()
 
-    def __create_plot(self, dynamic, label_font_color, label_font_name, label_font_size,
-                      label_font_weight, logx, logy, title,
-                      title_font_color, title_font_name, title_font_size, title_font_weight,
-                      x_axis_name, y_axis_name, figure_size):
-        plot = create_plot('plotly' if dynamic else 'matplotlib')
-
-        plot.title = title
-        plot.title_style = TextStyle()
-        plot.title_style.font_name = title_font_name
-        plot.title_style.size = title_font_size
-        plot.title_style.weight = title_font_weight
-        plot.title_style.color = title_font_color
-        plot.y_label_style = TextStyle()
-        plot.y_label_style.font_name = label_font_name
-        plot.y_label_style.size = label_font_size
-        plot.y_label_style.weight = label_font_weight
-        plot.y_label_style.color = label_font_color
-        plot.y_label_style = plot.y_label_style
-        plot.log_x = logx
-        plot.log_y = logy
-        plot.x_label = x_axis_name
-        plot.y_label = y_axis_name
-        plot.figure_size = figure_size
-        return plot
-
-    def cdf_plot(
-            self,
-            cumulated=False,
-            cdf_col=EXPERIMENT_CPU_TIME,
-            title='Cactus-plot',
-            figsize=(7, 5),
-            show_marker=True,
-            color_map=None,
-            style_map=None,
-            logx: bool = False,
-            logy: bool = False,
-            x_axis_name='Number of solved inputs',
-            y_axis_name='Time',
-            x_min: float = None,
-            y_min: float = None,
-            x_max: float = None,
-            y_max: float = None,
-            title_font_name='DejaVu Sans',
-            title_font_size=12,
-            title_font_color='#000000',
-            title_font_weight=FontWeight.BOLD,
-            label_font_name='DejaVu Sans',
-            label_font_size=12,
-            label_font_color='#000000',
-            label_font_weight=FontWeight.NORMAL,
-            latex_writing: bool = False,
-            legend_location=Position.RIGHT,
-            ncol_legend=1,
-            output=None,
-            dynamic: bool = False,
-            **kwargs: dict
-    ):
+    def cdf_plot(self, cumulated=False, cdf_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         df = _make_cactus_plot_df(self, cumulated, cdf_col)
 
-        plot = self.__create_plot(dynamic, label_font_color, label_font_name, label_font_size,
-                                  label_font_weight, logx, logy,
-                                  title, title_font_color, title_font_name, title_font_size,
-                                  title_font_weight, x_axis_name, y_axis_name, figsize
-                                  )
+        plot = CDFPlot(df, len(self.inputs), **kwargs)
+        plot.save()
 
-        for name, series in df.iteritems():
-            plot.plot(x=series, y=series.index / len(self.inputs), label=name)
-
-        plot.legend = LegendStyle()
-        plot.legend.position = legend_location
-        plot.legend.n_col = ncol_legend
-
-        plot.x_lim = (x_min, x_max)
-        plot.y_lim = (y_min, y_max)
-        self.__save_plot(output, plot)
         return plot.show()
 
-    def scatter_plot(
-            self,
-            xp_ware_x,
-            xp_ware_y,
-            scatter_col=EXPERIMENT_CPU_TIME,
-            title='Cactus-plot',
-            figsize=(7, 5),
-            color_col=None,
-            logx: bool = False,
-            logy: bool = False,
-            x_min: float = None,
-            y_min: float = None,
-            x_max: float = None,
-            y_max: float = None,
-            title_font_name='DejaVu Sans',
-            title_font_size=12,
-            title_font_color='#000000',
-            title_font_weight=FontWeight.BOLD,
-            label_font_name='DejaVu Sans',
-            label_font_size=12,
-            label_font_color='#000000',
-            label_font_weight=FontWeight.NORMAL,
-            output=None,
-            legend_location=Position.RIGHT,
-            ncol_legend=1,
-            latex_writing: bool = False,
-            dynamic: bool = False,
-    ):
+    def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME, **kwargs):
+        if xp_ware_x not in self.experiment_wares:
+            raise ValueError(f'Experiment-ware xp_ware_x={xp_ware_x} does not exist.')
+        if xp_ware_y not in self.experiment_wares:
+            raise ValueError(f'Experiment-ware xp_ware_y={xp_ware_y} does not exist.')
+
         df = _make_scatter_plot_df(self, xp_ware_x, xp_ware_y, scatter_col, color_col)
-        plot = self.__create_plot(dynamic, label_font_color, label_font_name, label_font_size,
-                                  label_font_weight, logx, logy,
-                                  title, title_font_color, title_font_name, title_font_size,
-                                  title_font_weight, xp_ware_x, xp_ware_y, figsize)
 
-        lim_min = min(x_min,
-                      y_min) if x_min is not None and y_min is not None else 0
-        lim_max = max(x_max,
-                      y_max) if x_max is not None and y_max is not None else self.data_frame[
-            TIMEOUT_COL].max()
-        limits = [lim_min, lim_max]
-        plt_style = PlotStyle()
-        plt_style.line_type = LineType.DASH
-        plot.plot(limits, limits, label=None, style=plt_style)
-        if color_col is None:
-            plot.scatter(df[xp_ware_x], df[xp_ware_y])
-        else:
-            for name, sub in df.groupby(color_col):
-                plot.scatter(sub[xp_ware_x], sub[xp_ware_y], label=name.replace("'", ''))
+        plot = ScatterPlot(df, color_col=color_col, **kwargs)
+        plot.save()
 
-        plot.legend = LegendStyle()
-        plot.legend.position = legend_location
-        plot.legend.n_col = ncol_legend
-
-        plot.x_lim = (x_min, x_max)
-        plot.y_lim = (y_min, y_max)
-        self.__save_plot(output, plot)
         return plot.show()
 
-    def __save_plot(self, output, plot):
-        if output is not None:
-            plot.save(output, bbox_inches='tight', transparent=True)
-
-    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, dynamic: bool = False, output=None, log=False,
-                 title=None,title_font_size=12,
-            title_font_color='#000000',
-            title_font_weight=FontWeight.BOLD,):
+    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         df = _make_box_plot_df(self, box_col)
-        plot = create_plot("plotly") if dynamic else create_plot("matplotlib")
-        plot.log_x = log
-        plot.title = title
 
-        plot.title_style = TextStyle()
-        plot.title_style.size = title_font_size
-        plot.title_style.weight = title_font_weight
-        plot.title_style.color = title_font_color
+        plot = BoxPlot(df, **kwargs)
+        plot.save()
 
-        l = []
-        for col in df.columns:
-            l.append(df[col].dropna())
-        plot.boxplot(l, labels=df.columns)
-        self.__save_plot(output, plot)
         return plot.show()
 
     def export(self, filename=None):
@@ -698,8 +529,7 @@ class Analysis:
             return pickle.dumps(self, protocol=pickle.HIGHEST_PROTOCOL)
 
         if filename.split('.')[-1] == 'csv':
-            with open(filename, 'w') as file:
-                return self._data_frame.to_csv(filename, index=False)
+            return self._data_frame.to_csv(filename, index=False)
         else:
             with open(filename, 'wb') as file:
                 return pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
