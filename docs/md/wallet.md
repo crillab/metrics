@@ -9,7 +9,7 @@ you need to use the *Wallet* module of *Metrics*.
 To manipulate data, *Wallet* uses a [*pandas Dataframe*](https://pandas.pydata.org/). 
 A dataframe is a table composed of rows corresponding to experimentations (also denoted as observations) and columns corresponding to the variables/metrics of an experimentation.
 
-It is not necessary to have any knowledge about this library to manipulate *Wallet* data but in order to have a better idea on how data are manipulated, an example of a classical analysis dataframe is given:
+It is not necessary to have wide knowledges about this library to manipulate *Wallet* data but in order to have a better idea on how data are manipulated, an example of a classical analysis dataframe is given:
 
 |    | input                                                    | experiment_ware         |   cpu_time |
 |---:|:---------------------------------------------------------|:------------------------|-----------:|
@@ -28,10 +28,10 @@ For the next, the documentation focuses on the analysis of a CSP solver competit
 Globally, the Analysis object is composed of five parts:
 
 * `getters` to get basical objects from the analysis
-* `checkers` that permits to check many important information about the analysis
-* `manipulations` that permits to manipulate the state of the analysis
-* `figures` that permits to draw some tables and plots representing the data
-* `others` that corresponds to operations like exporting.
+* `checkers` that permit to check many important information about the analysis
+* `manipulations` that permit to manipulate the state of the analysis
+* `figures` that permit to draw some tables and plots representing the data
+* `others` that correspond to operations like exporting.
 
 ## Create/Import/Export an Analysis
 
@@ -46,11 +46,11 @@ analysis = Analysis(input_file='path/to/xcsp19/YAML/file')
 
 The analysis is composed of many variables describing the experiments: 
 * necessary ones: `input`, `experiment_ware`, `cpu_time`, `timeout`
-* optional ones: `Category`, `Checked answer`, `Objective function`, `Wallclock time`, `Memory`, `Solver name`, `Solver version`.
+* optional ones (given by the current competition file): `Category`, `Checked answer`, `Objective function`, `Wallclock time`, `Memory`, `Solver name`, `Solver version`.
 
 These variables permit to check the consistency and the validity of information. Some methods, called checkers, permit to operate some basic operations:
 
-* `<analysis>.check_success(<lambda>)`: given a lambda, this method permits to check if an experiment is a success or not (this method is naturally builded and checked when the user informs it during the Scalpel step; manually inform it in the `Analysis` constructor replace the one informed in the Scalpel file);
+* `<analysis>.check_success(<lambda>)`: given a lambda, this method permits to check if an experiment is a success or not (this method is automatically executed when the user has informed it in the Scalpel file);
 * `<analysis>.check_missing_experiments()`: this method is automatically called by the `Analysis` constructor to replace missing experiments by unsuccessful experiments;
 * `<analysis>.check_xp_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each experiment;
 * `<analysis>.check_input_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each input (composed of many experiments); it asks some basic knowledge on DataFrame manipulation (an example is given by the next).
