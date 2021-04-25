@@ -518,7 +518,7 @@ analysis.cactus_plot(
 
     # Others
     latex_writing=True,
-    output="output/cactus.pdf",
+    output="output/cactus.svg",
     dynamic=False
 )
 ```
@@ -536,41 +536,65 @@ the normalized number of solved inputs.
 A point on the line of the CDF may be interpreted as the probability to solve an input given a time limit.
 
 ```python
-my_analysis.get_cdf( # CDF = Cumulative distributive Function
-    cdf_col='cpu_time', 
-    
-    output='output/cdf.pdf', # output path or None
-    figsize=(15,10),         # size of the figure to output (inch)
-    
-    color_map=None, 
-    style_map=None,
-    xp_ware_name_map=None, # a map to rename experiment-wares
-    
-    # font properties
-    font_name='Times New Roman',
-    font_size=11,
-    font_color='#000000',
-    latex_writing=False, # if True, permits to write in latex mode (make attention to some characters)
-    
-    logx=False, # log scale to x-axis
-    logy=False, # log scale to y-axis
-    
-    # set the limit of axis, or -1 to take the default value of matplotlib
-    x_min=-1,
-    y_min=-1,
-    x_max=-1,
-    y_max=.65,
-    
-    # matplotlib legend location
-    legend_location="upper center",
-    bbox_to_anchor=(0.5, -0.06),
-    ncol_legend=3,
+analysis.cdf_plot(
+    # Cactus plot specificities
+    cumulated=False,
+    cdf_col='cpu_time',
+    show_marker=False,
+
+    # Figure size
+    figure_size=(7, 3.5),
+
+    # Titles
+    title='CDF-plot',
+    x_axis_name='Time',
+    y_axis_name='Number of solved inputs',
+
+    # Axis limits
+    x_min=None,
+    x_max=None,
+    y_min=None,
+    y_max=None,
+
+    # Axis scaling
+    logx=False,
+    logy=False,
+
+    # Legend parameters
+    legend_location=Position.RIGHT,
+    legend_offset=(0, 0),
+    ncol_legend=1,
+
+    # Style mapping
+    color_map={
+        'VBS': '#000000'
+    },
+    style_map={
+        'VBS': LineType.DASH_DOT,
+    },
+
+    # Title font styles
+    title_font_name='Helvetica',
+    title_font_color='#000000',
+    title_font_size=11,
+    title_font_weight=FontWeight.BOLD,
+
+    # Label font styles
+    label_font_name='Helvetica',
+    label_font_color='#000000',
+    label_font_size=11,
+    label_font_weight=FontWeight.BOLD,
+
+    # Others
+    latex_writing=True,
+    output="output/cdf.svg",
+    dynamic=False
 )
 ```
 
-By default, the CDF plot draws its graphic by using the `cpu_time` of results: you are free to change this behaviour by replacing the `cdf_col` parameter.
+![](fig/cdf.svg)
 
-> A full example of a static CDF-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cdf_and_output.ipynb).
+By default, the CDF plot draws its graphic by using the `cpu_time` of results: you are free to change this behaviour by replacing the `cdf_col` parameter.
 
 #### Static Box-Plot
 
@@ -584,27 +608,47 @@ it permits to visualize the variance and to simply compare the effect of changin
 the random function seed for a given fixed solver configuration using it.
 
 ```python
-my_analysis.get_box_plot( 
+analysis.box_plot(
+    # Box plot specificities
     box_col='cpu_time',
-    
-    output='output/box.pdf', # output path or None
-    figsize=(15,10),         # size of the figure to output (inch)
-    
-    xp_ware_name_map=xpware_map, # a map to rename experiment-wares
-    
-    # font properties
-    font_name='DejaVu Sans',
-    font_size=11,
-    font_color='#000000',
-    latex_writing=True, # if True, permits to write in latex mode (make attention to some characters)
-    
-    logy=True, # log scale to y-axis
+
+    # Figure size
+    figure_size=(7, 7),
+
+    # Titles
+    title='Box-plots',
+    x_axis_name=None,
+    y_axis_name=None,
+
+    # Axis limits
+    x_min=None,
+    x_max=None,
+
+    # Axis scaling
+    logx=True,
+
+    # Title font styles
+    title_font_name='Helvetica',
+    title_font_color='#000000',
+    title_font_size=11,
+    title_font_weight=FontWeight.BOLD,
+
+    # Label font styles
+    label_font_name='Helvetica',
+    label_font_color='#000000',
+    label_font_size=11,
+    label_font_weight=FontWeight.BOLD,
+
+    # Others
+    latex_writing=True,
+    output="output/box.svg",
+    dynamic=False
 )
 ```
 
-By default, the box plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `cdf_col` parameter.
+By default, the box plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `box_col` parameter.
 
-> A full example of a static box-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_box_and_output.ipynb).
+![](fig/box.svg)
 
 #### Static Scatter-Plot
 
@@ -617,37 +661,47 @@ can quickly observe if there exists a trend for one experiment-ware or the other
 terms of efficiency.
 
 ```python
-my_analysis.get_scatter_plot(
-    xp_ware_x='CaDiCaL default', 
-    xp_ware_y='MapleLCMDistChronoBT-DL-v2.2 default',
-    scatter_col='cpu_time',
-    
-    # We precise here the new created column to take into account
-    color_col='sat',
-    
-    output='output/scatter.pdf',
-    figsize=(7,6),
-    
-    xp_ware_name_map=xpware_map,
-    
-    font_name='DejaVu Sans',
-    font_size=11,
-    font_color='#000000',
-    latex_writing=True,
-    
-    logx=True,
-    logy=True,
-    
-    x_min=-1,
-    y_min=-1,
-    x_max=-1,
-    y_max=-1,
+rename = {
+    "PicatSAT 2019-09-12": '$PicatSAT^{2019-09-12}$',
+    "Fun-sCOP+CryptoMiniSat": '$^{Fun-sCOP}/_{CryptoMiniSat}$'
+}
+
+a2 = analysis.add_variable(
+    'experiment_ware',
+    lambda x: x['experiment_ware'] if x['experiment_ware'] not in rename else rename[x['experiment_ware']]
 )
+
+a2.scatter_plot(
+            "$PicatSAT^{2019-09-12}$",
+            "$^{Fun-sCOP}/_{CryptoMiniSat}$",
+            scatter_col="cpu_time",
+            title=None,
+    
+            color_col="Checked answer",
+            x_min=1,
+            x_max=None,
+            y_min=1,
+            y_max=None,
+            logx=True,
+            logy=True,
+
+            figure_size=(7, 3.5),
+            
+            legend_location=Position.TOP,
+            legend_offset=(0, -.1),
+            ncol_legend=2,
+
+            title_font_name='Helvetica',
+            title_font_color='#000000',
+            latex_writing=True,
+            output="output/scatter.svg",
+            dynamic=False
+    )
 ```
 
-To draw a scatter-plot, we need to specify the experiment-wares on the x-axis and tge y-axis: `xp_ware_x` and `xp_ware_y`. By default, the scatter plot draw its graphic by using the `cpu_time` of results: you are free to change this behaviour by replacing the `cdf_col` parameter.
+To draw a scatter-plot, we need to specify the experiment-wares on the x-axis and tge y-axis: `xp_ware_x` and `xp_ware_y`. By default, the scatter plot draw its graphic by using the `cpu_time` of results: you are free to change this behaviour by replacing the `scatter_col` parameter.
 
-> A full example of a static scatter-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb).
+![](fig/scatter.svg)
 
 ### Dynamic Plots
 
