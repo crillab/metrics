@@ -705,15 +705,13 @@ To draw a scatter-plot, we need to specify the experiment-wares on the x-axis an
 
 ### Dynamic Plots
 
-Dynamic plots can be called by simply giving a new parameter of these previous static figures `dynamic`.
+Dynamic plots can be called by simply setting the `dynamic` parameter to `True`.
 
 For example:
 
 ```python
 my_analysis.get_scatter_plot(dynamic=True)
 ```
-
-> A global view of the dynamic plots is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/dynamic_analysis.ipynb).
 
 ## Advanced Usage
 
@@ -723,18 +721,12 @@ For a more advanced usage, it is possible to get the original *pandas Dataframe*
 df = analysis.data_frame
 ```
 
-Then simply foloow [*pandas documentation*](https://pandas.pydata.org/docs/) or more concisely this [*pandas cheat sheet*](https://pandas.pydata.org/Pandas_Cheat_Sheet.pdf).
+Then simply follow [*pandas documentation*](https://pandas.pydata.org/docs/) or more concisely this [*pandas cheat sheet*](https://pandas.pydata.org/Pandas_Cheat_Sheet.pdf).
 
 If the user keeps the minimal necessary information in the modified dataframe, a new `Analysis` could be instanciated (with the optional success and consistency lambda checkers):
 
 ```python
-analysis = Analysis(
-    data_frame=modified_df,
-    is_consistent_by_xp=<lambda>,
-    is_consistent_by_input=<lambda>,
-    is_success=<lambda>
-)
+analysis = Analysis(data_frame=modified_df)
 ```
 
-
-- each table could be personnalized as a df
+Every previous static tables correspond to pandas DataFrame and are thus manipulable.
