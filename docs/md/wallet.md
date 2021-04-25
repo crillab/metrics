@@ -437,20 +437,24 @@ NB: the previously created virtual experiment-ware *VBS* is removed to avoid err
 
 *Wallet* proposed many plots to show data. Static plots have some common parameters:
 
-- `output`: output path to save the figure or `None`.
-- `figsize`: size of the figure to output (inches).
-- `color_map`: a map to force the color of each experiment-ware line.
-- `style_map`: a map to force the line style of each experiment-ware line.
-- `xp_ware_name_map`: a map to rename the experiment-wares.
-- `font_name`: the font name to set.
-- `font_size`: the size name to set.
-- `font_color`: the font color to set.
-- `latex_writing`: if `True`, allows to write in LaTeX mode.
-- `logx`: log scale for the x-axis.
-- `logy`: log scale for the y-axis.
-- `[x|y]_[min|max]`: set the limit of an axis, or `-1` to take the default value of `matplotlib`.
-- `legend_location` and `bbox_to_anchor`: see the [`matplotlib` documentation for legend placement](https://matplotlib.org/3.1.1/tutorials/intermediate/legend_guide.html#legend-location).
+- `figure_size`: size of the figure to output (inches);
+- `title`: the figure title;
+- `x_axis_name`: the x-label title;
+- `y_axis_name`: the y-label title;
+- `output`: output path to save the figure or `None`;
+- `color_map`: a map to force the color of each experiment-ware line;
+- `style_map`: a map to force the line style of each experiment-ware line;
+- `title_font_*`: the title font properties;
+- `label_font_*`: the label font properties;
+- `latex_writing`: if `True`, allows to write in LaTeX mode;
+- `logx`: log scale for the x-axis;
+- `logy`: log scale for the y-axis;
+- `[x|y]_[min|max]`: set the limit of an axis, or `-1` to take the default value of `matplotlib`;
+- `legend_location`: the four legend positions (Position.RIGHT, Position.LEFT, Position.TOP, Position.BOTTOM);
+- `legend_offset`: a couple `x` and `y` as offsets for the current legend location;
 - `ncol_legend`: number of columns for the legend (default: `1`).
+
+> A full example of a static plots is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/example/xcsp-19/figures_from_analysis.ipynb).
 
 #### Static Cactus-Plot
 
@@ -463,43 +467,65 @@ solve the input, so that the righter the line, the better the solver. Note that
 we can also cumulate the runtime of each solved inputs to get a smoother plot.
 
 ```python
-sub_analysis.get_cactus_plot(
-    cactus_col='cpu_time', # column permitting to draw lines of the cactus
-    cumulated=False,       # cumulate or not the cactus_col value
-    show_marker=False,     # show a marker for each experiment
-    
-    output='output/cactus_zoom.pdf', # output path or None
-    figsize=(10,7),                  # size of the figure to output (inch)
-    
-    color_map=xpware_color,        # a map to force the color of each experiment-ware line
-    style_map=xpware_type,         # a map to force forces the line style of each experiment-ware line
-    xp_ware_name_map=xpware_map,   # a map to rename experiment-wares
-    
-    # font properties
-    font_name='Times New Roman',
-    font_size=12,
-    font_color='#000000',
-    latex_writing=True, # if True, permits to write in latex mode (make attention to some characters)
-    
-    logx=False, # log scale to x-axis
-    logy=False, # log scale to y-axis
-    
-    # set the limit of axis, or -1 to take the default value of matplotlib
-    x_min=200,
-    x_max=-1,
-    y_min=-1,
-    y_max=-1,
-    
-    # matplotlib legend location
-    legend_location='best',
-    bbox_to_anchor=None,
+analysis.cactus_plot(
+    # Cactus plot specificities
+    cumulated=False,
+    cactus_col='cpu_time',
+    show_marker=False,
+
+    # Figure size
+    figure_size=(7, 3.5),
+
+    # Titles
+    title='Cactus-plot',
+    x_axis_name='Number of solved inputs',
+    y_axis_name='Time',
+
+    # Axis limits
+    x_min=50,
+    x_max=None,
+    y_min=None,
+    y_max=None,
+
+    # Axis scaling
+    logx=False,
+    logy=False,
+
+    # Legend parameters
+    legend_location=Position.RIGHT,
+    legend_offset=(0, 0),
     ncol_legend=1,
+
+    # Style mapping
+    color_map={
+        'VBS': '#000000'
+    },
+    style_map={
+        'VBS': LineType.DASH_DOT,
+    },
+
+    # Title font styles
+    title_font_name='Helvetica',
+    title_font_color='#000000',
+    title_font_size=11,
+    title_font_weight=FontWeight.BOLD,
+
+    # Label font styles
+    label_font_name='Helvetica',
+    label_font_color='#000000',
+    label_font_size=11,
+    label_font_weight=FontWeight.BOLD,
+
+    # Others
+    latex_writing=True,
+    output="output/cactus.pdf",
+    dynamic=False
 )
 ```
 
-By default, the cactus plot draws its graphic by using the `cpu_time` of the results: you are free to change this behaviour by replacing the `cactus_col` parameter. You can ask this plot to cumulate the runtime by giving `cumulated=True`. We can show and hide markers thanks to `show_marker` parameter.
+![](fig/cactus.svg)
 
-> A full example of a static cactus-plot is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb).
+By default, the cactus plot draws its graphic by using the `cpu_time` of the results: you are free to change this behaviour by replacing the `cactus_col` parameter. You can ask this plot to cumulate the runtime by giving `cumulated=True`. We can show and hide markers thanks to `show_marker` parameter. The legend ordering corresponds to the decreasing order of the number of solved inputs for each experiment-ware.
 
 #### Static CDF-Plot
 
