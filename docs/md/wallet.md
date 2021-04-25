@@ -9,7 +9,7 @@ you need to use the *Wallet* module of *Metrics*.
 To manipulate data, *Wallet* uses a [*pandas Dataframe*](https://pandas.pydata.org/). 
 A dataframe is a table composed of rows corresponding to experimentations (also denoted as observations) and columns corresponding to the variables/metrics of an experimentation.
 
-It is not necessary to have wide knowledges about this library to manipulate *Wallet* data but in order to have a better idea on how data are manipulated, an example of a classical analysis dataframe is given:
+It is not necessary to have wide knowledge about this library to manipulate *Wallet* data but in order to have a better idea on how data are manipulated, an example of a classical analysis dataframe is given:
 
 |    | input                                                    | experiment_ware         |   cpu_time |
 |---:|:---------------------------------------------------------|:------------------------|-----------:|
@@ -55,16 +55,22 @@ These variables permit to check the consistency and the validity of information.
 * `<analysis>.check_xp_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each experiment;
 * `<analysis>.check_input_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each input (composed of many experiments); it asks some basic knowledge on DataFrame manipulation (an example is given by the next).
 
-A part of these methods are automatically called, or could be mentionned, during the Analysis constructor call:
+`check_success` and `check_missing_experiments` are automatically called during the Analysis constructor call. After, the user could (re-)check these success and consistency methods as follow:
 
 ```python
-from metrics.wallet import Analysis
-analysis = Analysis(
-    input_file='path/to/xcsp19/YAML/file',
-    is_consistent_by_xp=lambda x: not x['Checked answer'] in inconsistent_returns,
-    is_consistent_by_input=lambda df: len(set(df['Checked answer'].unique()) & successful_returns) < 2,
-    is_success=lambda x: x['Checked answer'] in successful_returns
-)
+inconsistent_returns = {
+    'ERR WRONGCERT', 'ERR UNSAT'
+}
+
+successful_returns = {'SAT', 'UNSAT'}
+
+is_consistent_by_xp = (lambda x: not x['Checked answer'] in inconsistent_returns)
+is_consistent_by_input = (lambda df: len(set(df['Checked answer'].unique()) & successful_returns) < 2)
+is_success = (lambda x: x['Checked answer'] in successful_returns)
+
+analysis.check_success(is_success)
+analysis.check_input_consistency(is_consistent_by_input)
+analysis.check_xp_consistency(is_consistent_by_xp)
 ```
 
 The `Analysis` construction warns the user when inconsistencies are found, missing data, ...:
@@ -75,7 +81,7 @@ The `Analysis` construction warns the user when inconsistencies are found, missi
 1 input is inconsistent and linked experiments are now declared as unsuccessful.
 ```
 
-The analysis creates also its own variables corresponding to the previous checkings: `error`, `success`, `missing	consistent_xp` and `consistent_input`.
+The analysis creates also its own variables corresponding to the previous checkings: `error`, `success`, `missing`	`consistent_xp` and `consistent_input`.
 
 It exists another way to build an analysis that is presented in the `Advanced Usage` section.
 
@@ -89,14 +95,14 @@ analysis.export('analysis.csv')
 
 An analysis could be exported as a csv (as a `DataFrame` representation) if the `.csv` extension is precised, else the analysis is exported as a binary object.
 
-To import an analysis from a file, we import the function `import_analysis_from_file` and use it:
+To import an analysis from a file, the function `import_analysis_from_file` is imported:
 
 ```python
 from metrics.wallet import import_analysis_from_file
 imported_analysis = import_analysis(json_text)
 ```
 
-> TODO: You can observe an example of these functions in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb).
+> You can observe an example of these functions in [this notebook](https://github.com/crillab/metrics/blob/master/example/example/xcsp-19/create_analysis.ipynb).
 
 ## Manipulate the Data from Analysis
 
@@ -105,7 +111,7 @@ It allows to analyze more finely the campaign.
 
 ### Generate a New Information/Variable for Each Experiment
 
-*Wallet* can add new information to the underlying dataframe by giving a function/lambda to a mapping method of `Analysis`. For the next example, the input name corresponds to the path of the input (e.g., `/somewhere/family/input-parameters.cnf`). It could be interesting to extract the family name to use it in the rest of the analysis. For this, the method `add_variable()` from `Analysis`:
+*Wallet* can add new information to the underlying dataframe by giving a function/lambda to a mapping method of `Analysis`. For the next example, the input name corresponds to the path of the input (e.g., `/XCSPxx/family/.../input-parameters.xcsp`). It could be interesting to extract the family name to use it in the rest of the analysis. For this, the method `add_variable()` from `Analysis`:
 
 ```python
 import re
@@ -130,11 +136,11 @@ The result (as a sample of 5 experiments with the only 2 interesting columns sho
 
 Thanks to this method, the user is also able to update existing columns (e.g., renaming the experiment-wares to simplify their names).
 
-> TODO: You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_scatter_and_output.ipynb). Here, the satisfiability information from the experimentation is extracted into a `sat` column.
+> You can observe an example of this command in [this notebook](https://github.com/crillab/metrics/blob/master/example/xcsp-19/create_analysis.ipynb).
 
 ### Remove Variables from the Analysis
 
-Sometimes, some analysis information are not useful: it could be interesting to simplify and lighten the dataframe (e.g., when we need export the analysis in its lightest format). To do this:
+Sometimes, some analysis information are not useful: it could be interesting to simplify and lighten the dataframe (e.g., when we need to export the analysis in a lighter format). To do this:
 
 ```python
 analysis.remove_variables(
@@ -149,25 +155,15 @@ where `vars` parameter take the list of variables to remove.
 When many campaigns needs to be compared and two analysis `a1` and `a2` have been created, it is possible de merge them:
 
 ```python
-a3 = a1.add_analysis(
-    analysis=a2,
-    is_consistent_by_xp=<lambda>,
-    is_consistent_by_input=<lambda>,
-    is_success=<lambda>
-)
+a3 = a1.add_analysis(a2)
 ``` 
 
-The user has to be careful to merge consistent data: the new analysis needs to contain the Cartesian product of available inputs in its dataframe with the experiment-wares. To ensure this and the consistency of its analysis, the user can also provide the lambda as described for the Analysis construction.
+The user has to be careful to merge consistent data: the new analysis needs to contain the Cartesian product of the available inputs in its dataframe with the experiment-wares. To ensure this and the consistency of its analysis, the user can also apply the lambda as described for the Analysis construction.
 
 In the same way, it is possible to append the analysis with a consistent dataframe:
 
 ```python
-a3 = a1.add_analysis(
-    analysis=a2.data_frame,
-    is_consistent_by_xp=<lambda>,
-    is_consistent_by_input=<lambda>,
-    is_success=<lambda>
-)
+a3 = a1.add_data_frame(a2.data_frame)
 ```
 
 ### Add a Virtual Experiment-Ware
@@ -187,7 +183,7 @@ analysis_plus_vbs = analysis.add_virtual_experiment_ware(
 
 Here, we create a VBEW named `my_best_solver` and based on the best performances of the overall set of experiment-wares. `my_best_solver` will receive the result of one of these experiment-wares minimizing the `cpu_time` column.
 
-`find_best_cpu_time_input` is a function using some basic knownledge about dataframe. As an example, its representation is shown:
+`find_best_cpu_time_input` is a function using some basic knownledge about dataframe. As an example, `find_best_cpu_time_input` representation is shown:
 
 ```python
 def find_best_cpu_time_input(df):
@@ -195,9 +191,9 @@ def find_best_cpu_time_input(df):
     return df[s == s.min()]
 ```
 
-`find_best_cpu_time_input` receives a dataframe composed of experiments for a given input. It finds the minimal `cpu_time` value and returns the row corresponding to this best time.
+`find_best_cpu_time_input` receives a dataframe composed of the experiments composing a given input. It finds the minimal `cpu_time` value and returns the row corresponding to this best time.
 
-> TODO: You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb). Here, we create two different VBEWs.
+> You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/example/xcsp-19/create_analysis.ipynb).
 
 ### Subset of `Analysis` Rows
 
@@ -207,9 +203,9 @@ def find_best_cpu_time_input(df):
 
 By default, it exists some useful subset methods in `Analysis` object to filter input (and linked experiments):
 
-+ `keep_common_failed_inputs()`: returns a new `Analysis` with only the common failed experiments. It corresponds to inputs for which no experiment-ware has succeeded.
-+ `keep_common_solved_inputs()`: returns a new `Analysis` with only the common successful experiments. It corresponds to inputs for which no experiment-ware has failed.
-+ `delete_common_failed_inputs()`: returns a new `Analysis` where commonly failed inputs are removed.
++ `keep_common_failed_inputs()`: returns a new `Analysis` with only the common failed experiments. It corresponds to inputs for which no experiment-ware has succeeded;
++ `keep_common_solved_inputs()`: returns a new `Analysis` with only the common successful experiments. It corresponds to inputs for which no experiment-ware has failed;
++ `delete_common_failed_inputs()`: returns a new `Analysis` where commonly failed inputs are removed;
 + `delete_common_solved_inputs()`: returns a new `Analysis` where commonly succeeded inputs are removed.
 
 Finally, we present a last and generic method to make a subset of inputs:
@@ -234,7 +230,7 @@ As examples, we show how the four default methods are set with this generic one:
 |`keep_common_failed_inputs`|`analysis.filter_inputs(function=lambda x: not x['success'], how='all')`|
 |`keep_common_solved_inputs`|`analysis.filter_inputs(function=lambda x: x['success'], how='all')`|
 
-> TODO: You can observe an example of this subset in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/static_cactus_and_output.ipynb). Here, we want to have a clearer view on these manifold exepriment-wares.
+> You can observe an example of this subset in [this notebook](https://github.com/crillab/metrics/blob/master/example/example/xcsp-19/create_analysis.ipynb).
 
 #### By Filtering Experiments
 
@@ -246,7 +242,7 @@ analysis_no_para = analysis.filter_analysis(
 )
 ```
 
-The previous example permits to remove all the solver containing the term *parallel* in its title.
+The previous example permits to remove all the solvers containing the term *parallel* in its title.
 
 Derived from this previous generic method, some default actions are also existing:
 
@@ -281,97 +277,161 @@ for sub_analysis in analysis.all_experiment_ware_pair_analysis():
 
 ## Draw Figures
 
-After having built the analysis and manipulated the data we want to highlight, we can start drawing figures. Thanks to *Wallet*, we are able to build two kinds of figures: static and dynamic.
+After having built the analysis and manipulated the data we want to highlight, we can start drawing figures. Thanks to *Wallet*, we are able to build two kinds of plots: static and dynamic.
 
-*Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables and PNG or vectorial graphics (such as SVG or EPS) for images. Static plots are highly configurable in order to fit in their final destination (e.g., in slides or articles).
+*Wallet* permits to draw static plots and computing tables showing different statistic measures. These figures can easily be exported in a format specified by the user, such as LaTeX for tables and PNG or vectorial graphics (such as SVG or EPS) for plots. Static plots are highly configurable in order to fit in their final destination (e.g., in slides or articles).
 
-### Describe the Current Analysis
+### Static Tables
+
+Each table that will be described hereafter are exportable into the LaTeX format. In addition to this transformation, it is possible to personnalize the the number pattern:
+
+- `dollars_for_number` puts numbers in math mode (for LaTeX outputs);
+- `commas_for_number` splits numbers with commas in math mode (for LaTeX outputs).
+
+> Each table generated are observable in [this notebook](https://github.com/crillab/metrics/blob/master/example/example/xcsp-19/tables_from_analysis.ipynb).
+
+#### Describe the Current Analysis
 
 Before manipulating the analysis, it could be interesting to describe it:
 
 ```python
-my_analysis.describe(
-	show_experiment_wares=False,
-	show_inputs=False
-)
+analysis.description_table()
 ```
 
 which yields the following:
 
+|                                | analysis                                      |
+|:-------------------------------|:----------------------------------------------|
+| n_experiment_wares             | 13                                            |
+| n_inputs                       | 300                                           |
+| n_experiments                  | 3900                                          |
+| n_missing_xp                   | 0                                             |
+| n_inconsistent_xp              | 2                                             |
+| n_inconsistent_xp_due_to_input | 0                                             |
+| more_info_about_variables      | <analysis>.data_frame.describe(include='all') |
+
+This first method allows to fastly understand how is composed the campaign. Here, simple statistics are shown, as the number of experiment-wares, inputs, experiments or missing ones, but one can also show exhaustively the different variable descriptions by applying `<analysis>.data_frame.describe(include='all')`. 
+
+#### Describe the Errors
+
+If it exists missing data, the *Wallet* analysis can print a table showing what are these missing experiments by calling:
+
+```python
+analysis.error_table()
 ```
-This Analysis is composed of:
-- 55 experiment-wares 
-- 400 inputs
-- 22000 experiments (0 missing -> more details: <Analysis>.get_error_table())
-```
 
-This first method allows to fastly understand how is composed the campaign. Here, simple statistics are shown, as the number of experiment-wares, inputs, or missing experiments, but one can also show exhaustively the different input and experiment-ware names (by replacing `False` by `True` for the `show_experiment_wares` and `show_experiment_wares` parameters). If it exists missing data, the *Wallet* analysis can print a table showing what are these missing experiments by calling `my_analysis.get_error_table()`.
+which yields the following:
 
-> You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/make_analysis.ipynb).
-
-### Static Tables
-
-*Wallet* proposes two main tables showing different kinds of statistics.
+|      | input                   | experiment_ware         |    cpu_time | Checked answer   |   Wallclock time |      Memory | Solver name   | Solver version   |   timeout | success   | user_success   | missing   | consistent_xp   | consistent_input   | error   | family   |
+|-----:|:------------------------|:------------------------|------------:|:-----------------|-----------------:|------------:|:--------------|:-----------------|----------:|:----------|:---------------|:----------|:----------------|:-------------------|:--------|:---------|
+| 3576 | XCSP19/hcp/graph255.xml | cosoco 2                |    0.045418 | ERR UNSAT        |        0.0451421 | 0           | cosoco        | 2                |      2400 | False     | False          | False     | False           | True               | True    | hcp      |
+| 3596 | XCSP19/hcp/graph48.xml  | choco-solver 2019-09-16 | 2306.85     | ERR WRONGCERT    |      583.697     | 1.55305e+07 | choco-solver  | 2019-09-16       |      2400 | False     | False          | False     | False           | True               | True    | hcp      |
 
 #### The Statistic Table
 
-The first one allows to show a global overview of the results through the following statistics:
+The table allows to show a global overview of the results through the following statistics:
 
-- `count` is the number of solved inputs for a given experiment-ware.
-- `sum` is the time taken by the experiment-ware to solve (or not) inputs (including timeout inputs).
-- `PARx` is equivalent to `sum` but adds a penalty of `x` times the timeout to failed experiments (*PAR* stands for *Penalised Average Runtime*).
-- `common count` is the number of inputs commonly solved by all the experiment-wares.
-- `common sum` is the time taken to solve the commonly solved inputs.
-- `uncommon count` corresponds to the number of inputs solved by an experiment-ware less the common ones (the common ones could be considered as easy inputs).
+- `count` is the number of solved inputs for a given experiment-ware;
+- `sum` is the time taken by the experiment-ware to solve (or not) inputs (including timeout inputs);
+- `PARx` is equivalent to `sum` but adds a penalty of `x` times the timeout to failed experiments (*PAR* stands for *Penalised Average Runtime*);
+- `common count` is the number of inputs commonly solved by all the experiment-wares;
+- `common sum` is the time taken to solve the commonly solved inputs;
+- `uncommon count` corresponds to the number of inputs solved by an experiment-ware less the common ones (the common ones could be considered as easy inputs);
+- `total` the total number of experiments for a given experiment-ware.
 
 ```python
-my_analysis.get_stat_table(
-    par=[2, 10]
-
-    output='path/for/the/output.tex', # output path or None
-    
-    dollars_for_number=True, # 123456789 -> $123456789$
-    commas_for_number=True,  # 123456789 -> 123,456,789
-    
-    xp_ware_name_map=None, # a map to rename experiment-wares
+analysis.stat_table(
+    output='output/stat_table.tex',
+    commas_for_number=True,
+    dollars_for_number=True,
 )
 ```
 
-This first table is given by calling the previous method with different parameters:
-- `par` corresponds to the different values we want to give to the PARx column(s).
+This table is given by calling the previous method with different parameters:
+- `par` corresponds to the different values we want to give to the PARx column(s);
 - `output` is the path to the output we want to produce (e.g., a LaTeX table).
-- `dollars_for_number` puts numbers in math mode (for LaTeX outputs).
-- `commas_for_number` splits numbers with commas in math mode (for LaTeX outputs).
-- `xp_ware_name_map` is a map allowing to rename each experiment-ware names in the output table.
 
-> A statistic table is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/tables_and_output.ipynb).
+| experiment_ware                            |   count |    sum |   PAR1 |   PAR2 |            PAR10 |   common count |   common sum |   uncommon count |   total |
+|:-------------------------------------------|--------:|-------:|-------:|-------:|-----------------:|---------------:|-------------:|-----------------:|--------:|
+| VBS                                        |     270 |  90388 |  90388 | 162388 | 738388           |             65 |          405 |              205 |     300 |
+| PicatSAT 2019-09-12                        |     246 | 192377 | 192377 | 321977 |      1.35878e+06 |             65 |        11093 |              181 |     300 |
+| Fun-sCOP hybrid+CryptoMiniSat (2019-06-15) |     209 | 274323 | 274323 | 492723 |      2.23992e+06 |             65 |        16472 |              144 |     300 |
+| Fun-sCOP order+GlueMiniSat (2019-06-15)    |     190 | 320070 | 320070 | 584070 |      2.69607e+06 |             65 |        14632 |              125 |     300 |
+| AbsCon 2019-07-23                          |     168 | 341387 | 341387 | 658187 |      3.19259e+06 |             65 |         2805 |              103 |     300 |
+| choco-solver 2019-06-14                    |     168 | 369846 | 369846 | 686646 |      3.22105e+06 |             65 |         7875 |              103 |     300 |
+| Concrete 3.10                              |     165 | 369615 | 369615 | 693615 |      3.28562e+06 |             65 |         5182 |              100 |     300 |
+| choco-solver 2019-09-16                    |     165 | 372266 | 372266 | 696266 |      3.28827e+06 |             65 |         7790 |              100 |     300 |
+| choco-solver 2019-09-20                    |     165 | 372316 | 372316 | 696316 |      3.28832e+06 |             65 |         7754 |              100 |     300 |
+| Concrete 3.12.3                            |     156 | 386276 | 386276 | 731876 |      3.49668e+06 |             65 |         7198 |               91 |     300 |
+| choco-solver 2019-09-24                    |     149 | 390634 | 390634 | 753034 |      3.65223e+06 |             65 |         2570 |               84 |     300 |
+| BTD 19.07.01                               |     135 | 421087 | 421087 | 817087 |      3.98509e+06 |             65 |         6718 |               70 |     300 |
+| cosoco 2                                   |     127 | 448425 | 448425 | 863625 |      4.18522e+06 |             65 |         6810 |               62 |     300 |
+
+#### The Pivot Table
+
+The pivot table allows to show exhaustively a precise variable between the set of experiment-wares (rows) and inputs (cols).
+
+```python
+analysis.pivot_table(
+    index='input', 
+    columns='experiment_ware', 
+    values='cpu_time',
+    output='output/pivot_table.tex',
+    commas_for_number=True,
+    dollars_for_number=True,
+)#.head()
+```
+
+- `index` permits to precise what we want in the rows;
+- `columns` permits to precise what we want in the cols;
+- `values` permits to precise what we want to show in the cells as information crossing `index` and `columns`.
+
+| input                                                    |   AbsCon 2019-07-23 |   BTD 19.07.01 |   Concrete 3.10 |   Concrete 3.12.3 |   Fun-sCOP hybrid+CryptoMiniSat (2019-06-15) |   Fun-sCOP order+GlueMiniSat (2019-06-15) |   PicatSAT 2019-09-12 |        VBS |   choco-solver 2019-06-14 |   choco-solver 2019-09-16 |   choco-solver 2019-09-20 |   choco-solver 2019-09-24 |    cosoco 2 |
+|:---------------------------------------------------------|--------------------:|---------------:|----------------:|------------------:|---------------------------------------------:|------------------------------------------:|----------------------:|-----------:|--------------------------:|--------------------------:|--------------------------:|--------------------------:|------------:|
+| XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-035.xml |             3.65329 |       0.031203 |         81.2146 |           9.80993 |                                      11.6944 |                                   14.1492 |              228.644  |   0.031203 |                   1.60424 |                   1.51053 |                   1.52427 |                   69.1219 |   14.919    |
+| XCSP17/AllInterval/AllInterval-m1-s1/AllInterval-040.xml |             3.77132 |       0.045375 |        127.241  |         189.841   |                                      14.8833 |                                   14.6022 |              290.328  |   0.045375 |                   1.68856 |                   1.75339 |                   1.57938 |                   46.7505 |    0.347661 |
+| XCSP17/Bibd/Bibd-sc-open/Bibd-sc-85-085-36-36-15.xml     |          2520.04    |    2519.91     |       2520.16   |        2520.2     |                                    2520.44   |                                 2520.28   |             2520.07   | 140.442    |                2520.42    |                2520.66    |                2520.74    |                 2520.05   |  140.442    |
+| XCSP17/Bibd/Bibd-sc-stab1/Bibd-sc-25-05-01.xml           |          2520.1     |    2519.89     |       2520.11   |        2520.12    |                                      45.027  |                                   43.2998 |               21.1751 |  21.1751   |                2520.63    |                1666.8     |                1680.89    |                  379.265  | 2519.75     |
+| XCSP17/Bibd/Bibd-sc-stab1/Bibd-sc-25-09-03.xml           |          2520.11    |    2519.77     |       2520.1    |        2520.07    |                                    1689.17   |                                 2520.14   |              515.664  | 137.506    |                 137.506   |                 260.369   |                 211.421   |                 2520.11   | 2520.02     |
+
+The output is truncated.
 
 #### The Contribution Table
 
-The second table proposed by *Wallet* allowing to show the **contribution** of each experiment-ware:
+This last table proposed by *Wallet* allowing to show the **contribution** of each experiment-ware:
 
-- `vbew simple` corresponds to the number of times an experiment-ware has been selected in the VBEW.
-- `vbew d` corresponds to the number of times an experiment-ware solves an instance `d` second(s) faster than all other solvers.
+- `vbew simple` corresponds to the number of times an experiment-ware has been selected in the VBEW;
+- `vbew d` corresponds to the number of times an experiment-ware solves an instance `d` second(s) faster than all other solvers;
 - `contribution` corresponds to the case that an experiment-ware is the only one that has been able to solve an input (a.k.a. state-of-the-art contribution).
 
 As for the previous table, one just needs to call the following method:
 
 ```python
-my_analysis.get_contribution_table(
-    output='path/for/the/output.tex', # output path or None
-    
-    deltas=[1, 10, 100], # minimum resolution cpu_time for the vbew
-    
-    dollars_for_number=True, # if True, 123456789 -> $123456789$
-    commas_for_number=True,  # if True, 123456789 -> 123,456,789
-    
-    xp_ware_name_map=None, # a map to rename experiment-wares
+analysis.remove_experiment_wares(['VBS']).contribution_table(
+    output='output/contribution_table.tex',
+    commas_for_number=True,
+    dollars_for_number=True,
 )
 ```
 
+NB: the previously created virtual experiment-ware *VBS* is removed to avoid errors in the computations.
+
 `deltas` correspond to the list of `vbew d` we want to show in the table.
 
-> A contribution table is given in [this notebook](https://github.com/crillab/metrics/blob/master/example/sat-competition/2019/tables_and_output.ipynb).
+| experiment_ware                            |   vbew simple |   vbew 1s |   vbew 10s |   vbew 100s |   contribution |
+|:-------------------------------------------|--------------:|----------:|-----------:|------------:|---------------:|
+| BTD 19.07.01                               |            76 |        28 |         11 |           1 |              0 |
+| cosoco 2                                   |            59 |        35 |         17 |           9 |              5 |
+| PicatSAT 2019-09-12                        |            40 |        35 |         30 |           9 |              0 |
+| Fun-sCOP hybrid+CryptoMiniSat (2019-06-15) |            38 |        38 |         35 |          18 |              0 |
+| AbsCon 2019-07-23                          |            19 |        19 |         15 |           1 |              0 |
+| Fun-sCOP order+GlueMiniSat (2019-06-15)    |            16 |        16 |         11 |           5 |              3 |
+| choco-solver 2019-09-24                    |            14 |        14 |          6 |           1 |              0 |
+| choco-solver 2019-06-14                    |             7 |         6 |          5 |           3 |              0 |
+| Concrete 3.10                              |             6 |         6 |          5 |           1 |              0 |
+| Concrete 3.12.3                            |             4 |         4 |          4 |           0 |              0 |
+| choco-solver 2019-09-16                    |             3 |         3 |          2 |           1 |              0 |
+| choco-solver 2019-09-20                    |             1 |         1 |          1 |           0 |              0 |
 
 ### Static Plots
 
@@ -595,3 +655,6 @@ analysis = Analysis(
     is_success=<lambda>
 )
 ```
+
+
+- each table could be personnalized as a df
