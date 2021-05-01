@@ -98,8 +98,8 @@ An analysis could be exported as a csv (as a `DataFrame` representation) if the 
 To import an analysis from a file, the function `import_analysis_from_file` is imported:
 
 ```python
-from metrics.wallet import import_analysis_from_file
-imported_analysis = import_analysis(json_text)
+from metrics.wallet import import_analysis
+imported_analysis = import_analysis_from_file(filepath)
 ```
 
 > You can observe an example of these functions in [this notebook](https://github.com/crillab/metrics/blob/master/example/example/xcsp-19/create_analysis.ipynb).
