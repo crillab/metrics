@@ -11,6 +11,6 @@ class TestReadConfigurationBug(TestCase):
     def test_bug_gitlab_38(self):
         analysis = Analysis(
             input_file=os.path.join(self._example_dir, 'issue38/campaign/config/metrics_scalpel.yml'))
-        columns = analysis.campaign_df.data_frame.columns
+        columns = analysis.data_frame.columns
         self.assertTrue('best_bound' in columns)
         self.assertTrue('status' in columns)
