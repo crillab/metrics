@@ -208,7 +208,7 @@ class ScatterPlot(Plot):
 
         diag_style = PlotStyle()
         diag_style.line_type = LineType.DASH
-        diag_style.color = 'lightgray'
+        diag_style.color = 'gray'
         limits = [0, df.iloc[:, 0:2].max().max()]
 
         self._plot.plot(

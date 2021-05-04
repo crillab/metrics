@@ -63,8 +63,6 @@ setup(
         'metrics.scalpel.config',
         'metrics.scalpel.parser',
         'metrics.wallet',
-        'metrics.wallet.dataframe',
-        'metrics.wallet.figure',
         'metrics.studio.web',
         'metrics'
     ],
