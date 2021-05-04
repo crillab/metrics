@@ -8,6 +8,11 @@ test:
     tags:
         - pytest
     stage: test
+
+integration-test:
+  script:
+    - docker build .
+  stage: test
 sonar:
     script:
         - make sonar
