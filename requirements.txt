@@ -57,3 +57,4 @@ wrapt~=1.12.1
 zipp~=3.1.0
 crillab-autograph
 jupyter
+deprecated~=1.2.12
