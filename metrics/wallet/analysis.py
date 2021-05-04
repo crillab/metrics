@@ -96,15 +96,15 @@ def _compute_cpu_time_stats(df, par):
 
 
 def _contribution_agg(sli: pd.DataFrame):
-    sli = sli.sort_values(by=EXPERIMENT_CPU_TIME)
+    sli = sli.sort_values(by=[SUCCESS_COL, EXPERIMENT_CPU_TIME], ascending=[False, True])
     first = sli.iloc[0]
     second = sli.iloc[1]
     index = [EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, 'unique']
 
-    if first[EXPERIMENT_CPU_TIME] < first[TIMEOUT_COL]:
+    if first[SUCCESS_COL]:
         return pd.Series(
             [first[EXPERIMENT_XP_WARE], first[EXPERIMENT_CPU_TIME],
-             second[EXPERIMENT_CPU_TIME] >= second[TIMEOUT_COL]],
+             not second[SUCCESS_COL]],
             index=index)
 
     return pd.Series([None, None, False], index=index)
@@ -128,6 +128,8 @@ def _make_cactus_plot_df(analysis, cumulated, cactus_col):
 def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col=None):
     df = analysis.keep_experiment_wares({xp_ware_x, xp_ware_y}).data_frame
     df = df[df[SUCCESS_COL]]
+
+    df[EXPERIMENT_CPU_TIME] = df.apply(lambda x: x['timeout'] if not x['success'] else x['cpu_time'], axis=1)
 
     df1 = df.pivot_table(
         index=EXPERIMENT_INPUT,
@@ -455,10 +457,13 @@ class Analysis:
         stats = self._data_frame.groupby(EXPERIMENT_XP_WARE).apply(
             lambda df: _compute_cpu_time_stats(df, par))
         common = self.keep_common_solved_inputs().data_frame
-        stats[STAT_TABLE_COMMON_COUNT] = common.groupby(EXPERIMENT_XP_WARE).apply(
-            lambda df: df[SUCCESS_COL].sum())
-        stats[STAT_TABLE_COMMON_SUM] = common.groupby(EXPERIMENT_XP_WARE).apply(
-            lambda df: df.apply(lambda x: _cpu_time_stat(x, 1), axis=1).sum())
+        if len(common) > 0:
+            stats[STAT_TABLE_COMMON_COUNT] = common.groupby(EXPERIMENT_XP_WARE).apply(
+                lambda df: df[SUCCESS_COL].sum())
+            stats[STAT_TABLE_COMMON_SUM] = common.groupby(EXPERIMENT_XP_WARE).apply(
+                lambda df: df.apply(lambda x: _cpu_time_stat(x, 1), axis=1).sum())
+        else:
+            stats[STAT_TABLE_COMMON_COUNT] = stats[STAT_TABLE_COMMON_SUM] = 0
         stats[STAT_TABLE_UNCOMMON_COUNT] = stats[STAT_TABLE_COUNT] - stats[STAT_TABLE_COMMON_COUNT]
         stats[STAT_TABLE_TOTAL] = len(self.inputs)
 
