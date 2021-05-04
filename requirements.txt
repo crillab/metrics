@@ -55,5 +55,5 @@ wcwidth~=0.1.8
 Werkzeug~=1.0.1
 wrapt~=1.12.1
 zipp~=3.1.0
-crillab-autograph>=0.1.0rc3
+crillab-autograph
 jupyter
