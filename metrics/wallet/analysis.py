@@ -42,6 +42,8 @@ warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 from pandas import DataFrame
 from itertools import product
 import pandas as pd
+from deprecated import deprecated
+from types import SimpleNamespace
 
 from metrics.core.model import Campaign
 from metrics.core.constants import *
@@ -176,6 +178,13 @@ class Analysis:
             inputs=campaign.get_input_set().get_input_names(),
             experiment_wares=campaign.get_experiment_ware_names()
         )
+
+    @property
+    @deprecated(version='1.0.4', reason="This function will be removed for the 2.0.0 version")
+    def campaign_df(self):
+        return SimpleNamespace(**{
+            'data_frame': self._data_frame
+        })
 
     @property
     def data_frame(self):
