@@ -391,12 +391,11 @@ class DirectoryCampaignParser(CampaignParser):
                  relevant file inside this directory, or (None, None) if the file is not
                  relevant.
         """
-        split_path = path.split(file_path)
+        split_path = file_path.split(path.sep)
         for i in range(len(split_path) - 1, -1, -1):
             directory = path.join(split_path[0], *split_path[1:i]) if i > 0 else "."
             file = path.join(split_path[i], *split_path[i+1:]) if i < len(split_path) - 1 else split_path[i]
             if self._configuration.is_to_be_parsed(file):
-                print(directory, file)
                 return directory, file
         return None, None
 
