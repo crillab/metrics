@@ -147,9 +147,9 @@ def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col
     return df1
 
 
-def _make_box_plot_df(analysis, box_col):
+def _make_box_plot_df(analysis, box_by, box_col):
     return analysis.data_frame.pivot(
-        columns=EXPERIMENT_XP_WARE,
+        columns=box_by,
         index=EXPERIMENT_INPUT,
         values=box_col
     )
@@ -530,8 +530,8 @@ class Analysis:
 
         return plot.show()
 
-    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
-        df = _make_box_plot_df(self, box_col)
+    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, box_by=EXPERIMENT_XP_WARE, **kwargs: dict):
+        df = _make_box_plot_df(self, box_by, box_col)
 
         plot = BoxPlot(df, **kwargs)
         plot.save()
