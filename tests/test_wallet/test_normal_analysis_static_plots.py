@@ -317,7 +317,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
             label_font_weight=FontWeight.BOLD,
 
             # Others
-            latex_writing=True,
+            latex_writing=False,
             output="data/xcsp19/full_analysis/output/box_by_family.pdf",
             dynamic=False
         )
