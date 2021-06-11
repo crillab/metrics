@@ -65,12 +65,12 @@ def create_parser(configuration: ScalpelConfiguration, listener: CampaignParserL
         return EvaluationCampaignParser(listener, configuration.get_file_name_meta())
 
     if campaign_format == CampaignFormat.SINGLE_EXPERIMENT_LOG_FILE:
-        return DirectoryCampaignParser(SingleFileExplorationStrategy(listener, configuration))
+        return DirectoryCampaignParser(configuration, SingleFileExplorationStrategy(listener, configuration))
 
     if campaign_format == CampaignFormat.MULTIPLE_EXPERIMENT_LOG_FILES:
-        return DirectoryCampaignParser(NameBasedFileExplorationStrategy(listener, configuration))
+        return DirectoryCampaignParser(configuration, NameBasedFileExplorationStrategy(listener, configuration))
 
     if campaign_format == CampaignFormat.EXPERIMENT_DIRECTORY:
-        return DirectoryCampaignParser(AllFilesExplorationStrategy(listener, configuration))
+        return DirectoryCampaignParser(configuration, AllFilesExplorationStrategy(listener, configuration))
 
     raise ValueError(f'Unrecognized input format: {campaign_format}')
