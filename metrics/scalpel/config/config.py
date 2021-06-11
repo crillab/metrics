@@ -667,12 +667,18 @@ class FileNameMetaConfiguration:
         pattern = None
         simplified_pattern = self.get_simplified_pattern()
         if simplified_pattern is not None:
-            pattern = compile_all_named_patterns(simplified_pattern, self.is_exact(), *groups)
+            try:
+                pattern = compile_all_named_patterns(simplified_pattern, self.is_exact(), *groups)
+            except ValueError:
+                pattern = compile_all_regexes(simplified_pattern, self.is_exact(), *groups)
 
         if pattern is None:
             regex = self.get_regex_pattern()
             if regex is not None:
-                pattern = compile_all_regexes(regex, self.is_exact(), *groups)
+                try:
+                    pattern = compile_all_regexes(regex, self.is_exact(), *groups)
+                except ValueError:
+                    pattern = compile_all_named_patterns(regex, self.is_exact(), *groups)
 
         # The description of the data is missing!
         if pattern is None:

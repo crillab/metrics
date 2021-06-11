@@ -74,11 +74,12 @@ class NamedPattern(Enum):
         return string, False
 
     @staticmethod
-    def compile(string: str, exact: bool = False) -> Optional[Pattern]:
+    def compile(string: str, exact_match: bool = False) -> Optional[Pattern]:
         """
         Compiles the given string as a regular expression using named patterns.
 
         :param string: The string to compile.
+        :param exact_match: Whether the pattern must be matched exactly.
 
         :return: The compiled pattern, or None if the input string does not
                  contain any named pattern.
@@ -93,7 +94,7 @@ class NamedPattern(Enum):
             escaped, found = named_pattern._replace_in(escaped)
             any_found = any_found or found
 
-        if exact:
+        if exact_match:
             escaped = f'^{escaped}$'
 
         # Compiling the pattern (if any).
@@ -210,14 +211,14 @@ class UserDefinedPatterns(AbstractUserDefinedPattern):
         return tuple(values)
 
 
-def _compile_all(string: str, exact: bool, group_ids: Tuple[int],
+def _compile_all(string: str, exact_match: bool, group_ids: Tuple[int],
                  compile_fct: Callable[[str, bool, int], AbstractUserDefinedPattern]) -> AbstractUserDefinedPattern:
     """
     Compiles a string as a pattern allowing to identify several values.
     The values are supposed to be matched by one of the given groups.
 
     :param string: The string to compile as a pattern.
-    :param exact: Whether the pattern must be matched exactly.
+    :param exact_match: Whether the pattern must be matched exactly.
     :param group_ids: The indices of the groups identifying the values
                       to retrieve.
     :param compile_fct: The function to use to compile the pattern.
@@ -234,17 +235,17 @@ def _compile_all(string: str, exact: bool, group_ids: Tuple[int],
     # Aggregating the patterns.
     all_patterns = UserDefinedPatterns()
     for group_id in group_ids:
-        all_patterns.add(compile_fct(string, exact, group_id))
+        all_patterns.add(compile_fct(string, exact_match, group_id))
     return all_patterns
 
 
-def compile_regex(regex: str, exact: bool = False, group_id: int = 1) -> AbstractUserDefinedPattern:
+def compile_regex(regex: str, exact_match: bool = False, group_id: int = 1) -> AbstractUserDefinedPattern:
     """
     Compiles a string as a regular expression allowing to identify a value.
     The value is supposed to be matched by the group having the given index.
 
     :param regex: The string to compile as a regular expression.
-    :param exact: Whether the pattern must be matched exactly.
+    :param exact_match: Whether the pattern must be matched exactly.
     :param group_id: The index of the group identifying the value to retrieve.
 
     :return: The compiled pattern.
@@ -252,24 +253,20 @@ def compile_regex(regex: str, exact: bool = False, group_id: int = 1) -> Abstrac
     :raises ValueError: If the index of the group is incorrect given the
                         specified regular expression.
     """
-    if exact:
-        pattern = compile(f'^{regex}$')
-    else:
-        pattern = compile(regex)
-
+    pattern = compile(f'^{regex}$') if exact_match else compile(regex)
     if group_id > pattern.groups:
         raise ValueError(f'"{regex}" must define at least {group_id} group(s) ({pattern.groups} found)')
     return UserDefinedPattern(pattern, group_id)
 
 
-def compile_all_regexes(regex: str, exact: bool = False, *group_ids: int) -> AbstractUserDefinedPattern:
+def compile_all_regexes(regex: str, exact_match: bool = False, *group_ids: int) -> AbstractUserDefinedPattern:
     """
     Compiles a string as a regular expression allowing to identify several
     values.
     The values are supposed to be matched by one of the given groups.
 
     :param regex: The string to compile as a regular expression.
-    :param exact: Whether the pattern must be matched exactly.
+    :param exact_match: Whether the pattern must be matched exactly.
     :param group_ids: The indices of the groups identifying the values to
                       retrieve.
 
@@ -279,10 +276,10 @@ def compile_all_regexes(regex: str, exact: bool = False, *group_ids: int) -> Abs
                         indices is incorrect given the specified regular
                         expression.
     """
-    return _compile_all(regex, exact, group_ids, compile_regex)
+    return _compile_all(regex, exact_match, group_ids, compile_regex)
 
 
-def compile_named_pattern(string: str, exact: bool = False, pattern_id: int = 1) -> AbstractUserDefinedPattern:
+def compile_named_pattern(string: str, exact_match: bool = False, pattern_id: int = 1) -> AbstractUserDefinedPattern:
     """
     Compiles a string as a simplified regular expression allowing to
     identify a value with a named pattern.
@@ -290,7 +287,7 @@ def compile_named_pattern(string: str, exact: bool = False, pattern_id: int = 1)
     given index.
 
     :param string: The string to compile as a simplified regular expression.
-    :param exact: Whether the pattern must be matched exactly.
+    :param exact_match: Whether the pattern must be matched exactly.
     :param pattern_id: The index of the named pattern identifying the value to
                        retrieve.
 
@@ -298,7 +295,7 @@ def compile_named_pattern(string: str, exact: bool = False, pattern_id: int = 1)
 
     :raises ValueError: If the string does not contain enough named patterns.
     """
-    pattern = NamedPattern.compile(string, exact)
+    pattern = NamedPattern.compile(string, exact_match)
     if pattern is None:
         raise ValueError(f'"{string}" does not contain a recognized named pattern')
     if pattern_id > pattern.groups:
@@ -306,7 +303,7 @@ def compile_named_pattern(string: str, exact: bool = False, pattern_id: int = 1)
     return UserDefinedPattern(pattern, pattern_id)
 
 
-def compile_all_named_patterns(string: str, exact: bool = False, *pattern_ids: int) -> AbstractUserDefinedPattern:
+def compile_all_named_patterns(string: str, exact_match: bool = False, *pattern_ids: int) -> AbstractUserDefinedPattern:
     """
     Compiles a string as a simplified regular expression allowing to identify
     several values with named patterns.
@@ -314,7 +311,7 @@ def compile_all_named_patterns(string: str, exact: bool = False, *pattern_ids: i
     the given indices.
 
     :param string: The string to compile as a simplified regular expression.
-    :param exact: Whether the pattern must be matched exactly.
+    :param exact_match: Whether the pattern must be matched exactly.
     :param pattern_ids: The indices of the the named patterns identifying the
                         values to retrieve.
 
@@ -323,4 +320,4 @@ def compile_all_named_patterns(string: str, exact: bool = False, *pattern_ids: i
     :raises ValueError: If no group index is specified or if the string does
                         not contain enough named patterns.
     """
-    return _compile_all(string, exact, pattern_ids, compile_named_pattern)
+    return _compile_all(string, exact_match, pattern_ids, compile_named_pattern)
