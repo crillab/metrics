@@ -7,7 +7,7 @@ setup:
   timeout: 5000
   memout: 64000
 source:
-  path: input/sat2019.csv
+  path: example/sat-competition/2019/input/sat2019.csv
 data:
   mapping:
     input: benchmark

@@ -28,7 +28,7 @@ data:
       file: "execution.out"
       pattern: "s {word}"
     - log-data: status
-      file: "execution.out"
+      file: "*execution.out"
       pattern: "d {word} EXPLORATION"
     - log-data:
         - timestamp
