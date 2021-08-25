@@ -196,6 +196,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
             title='',
             x_axis_name=None,
             y_axis_name=None,
+            show_label_count=True,
 
             # Axis limits
             x_min=1,
@@ -268,6 +269,56 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
             # Others
             latex_writing=True,
             output="data/xcsp19/full_analysis/output/box.pdf",
+            dynamic=False
+        )
+
+    def test_box_plot_by_family(self):
+        family_re = re.compile(r'^XCSP\d\d/(.*?)/')
+
+        new_analysis = self.analysis.add_variable(
+            new_var='family',
+            function=lambda x: family_re.match(x['input']).group(1)
+        )
+
+        new_analysis = new_analysis.keep_experiment_wares({
+            'cosoco 2'
+        })
+
+        new_analysis.box_plot(
+            # Box plot specificities
+            box_by='family',
+            box_col='cpu_time',
+
+            # Figure size
+            figure_size=(7, 20),
+
+            # Titles
+            title='',
+            x_axis_name=None,
+            y_axis_name=None,
+
+            # Axis limits
+            x_min=None,
+            x_max=None,
+
+            # Axis scaling
+            logx=True,
+
+            # Title font styles
+            title_font_name='Helvetica',
+            title_font_color='#000000',
+            title_font_size=FONT_SIZE,
+            title_font_weight=FontWeight.BOLD,
+
+            # Label font styles
+            label_font_name='Helvetica',
+            label_font_color='#000000',
+            label_font_size=FONT_SIZE,
+            label_font_weight=FontWeight.BOLD,
+
+            # Others
+            latex_writing=False,
+            output="data/xcsp19/full_analysis/output/box_by_family.pdf",
             dynamic=False
         )
 

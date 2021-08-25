@@ -32,3 +32,15 @@ nosetests.xml
 #/docs/rst
 
 bin/cache-directory
+
+data/xcsp19/full_analysis/output/box_by_family.pdf
+
+data/xcsp19/full_analysis/output/box.pdf
+
+data/xcsp19/full_analysis/output/cactus.pdf
+
+data/xcsp19/full_analysis/output/cactus2.pdf
+
+data/xcsp19/full_analysis/output/cdf.pdf
+
+data/xcsp19/full_analysis/output/scatter.pdf

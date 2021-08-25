@@ -53,7 +53,7 @@ class NormalAnalysisTablesTestCase(unittest.TestCase):
     def test_contribution_table(self):
         df = self.analysis.contribution_table()
 
-        print(df)
+        #print(df)
 
         self.assertEqual(67, df.loc['PicatSAT 2019-09-12', 'vbew simple'])
         self.assertEqual(3, df.loc['PicatSAT 2019-09-12', 'contribution'])

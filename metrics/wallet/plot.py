@@ -191,6 +191,7 @@ class ScatterPlot(Plot):
                  title=SCATTER_TITLE,
                  x_axis_name=None,
                  y_axis_name=None,
+                 show_label_count=False,
                  legend_location=Position.RIGHT,
                  legend_offset=(0, 0),
                  ncol_legend=1,
@@ -200,11 +201,8 @@ class ScatterPlot(Plot):
         super().__init__(**kwargs)
 
         self._plot.title = title
-
-        x_axis_name = df.columns[0] if x_axis_name is None else x_axis_name
-        y_axis_name = df.columns[1] if y_axis_name is None else y_axis_name
-        self._plot.x_label = x_axis_name
-        self._plot.y_label = y_axis_name
+        self._plot.x_label = df.columns[0] if x_axis_name is None else x_axis_name
+        self._plot.y_label = df.columns[1] if y_axis_name is None else y_axis_name
 
         diag_style = PlotStyle()
         diag_style.line_type = LineType.DASH
@@ -224,10 +222,20 @@ class ScatterPlot(Plot):
             for name, sub in df.groupby(color_col):
                 self._plot.scatter(sub.iloc[:, 0], sub.iloc[:, 1], label=name)
 
+        if show_label_count:
+            self._label_count(df)
+
         if legend_location is not None and color_col is not None:
             self._legend(legend_location, legend_offset, ncol_legend)
 
         self._set_limitations()
+
+    def _label_count(self, df):
+        x = df.apply(lambda x: x[0] < x[1], axis=1).sum()
+        y = df.apply(lambda x: x[0] > x[1], axis=1).sum()
+
+        self._plot.x_label = f'{self._plot.x_label} (count={x})'
+        self._plot.y_label = f'{self._plot.y_label} (count={y})'
 
 
 class BoxPlot(Plot):
