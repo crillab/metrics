@@ -484,7 +484,7 @@ files using regular expressions, as in the following example:
      raw-data:
        - log-data: cpu_time
          file: "*.out"
-         regex: "overall runtime: (\d+.\d+) seconds"
+         regex: 'overall runtime: (\d+.\d+) seconds'
          group: 1
 
 In this case, when *Scalpel* reads a file with extension ``.out``, it
@@ -523,7 +523,7 @@ whitespace characters.
 -  ``{any}`` for any sequence of characters (not greedy).
 
 If the same line contains multiple relevant data, you can extract them
-by using lists for both ``log-data`` and ``group`` (you need to use the
+by using lists for both ``log-data`` and ``groups`` (you need to use the
 same order for both lists), as in the following example:
 
 .. code:: yaml
@@ -535,7 +535,7 @@ same order for both lists), as in the following example:
            - wall_time
          file: "*.out"
          pattern: "runtime: {real} seconds (cpu), {real} seconds (wallclock)"
-         group:
+         groups:
            - 1
            - 2
 
