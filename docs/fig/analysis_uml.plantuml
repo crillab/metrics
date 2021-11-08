@@ -1,0 +1,49 @@
+
+@startuml
+class Analysis {
+  .. getters ..
+  + data_frame
+  + inputs
+  + experiment_wares
+
+  .. checkers ..
+  + check_success(...)
+  + check_missing_experiments(...)
+  + check_xp_consistency(...)
+  + check_input_consistency(...)
+
+  .. manipulations ..
+  + add_variable(...)
+  + remove_variables(...)
+  + add_analysis(...)
+  + add_data_frame(...)
+  + add_virtual_experiment_ware(...)
+
+  + filter_analysis(...)
+  + ∟remove_experiment_wares(...)
+  + ∟keep_experiment_wares(...)
+
+  + filter_inputs(...)
+  + ∟delete_common_failed_inputs(...)
+  + ∟delete_common_solved_inputs(...)
+  + ∟keep_common_failed_inputs(...)
+  + ∟keep_common_solved_inputs(...)
+
+  + all_experiment_ware_pair_analysis(...)
+  + groupby(...)
+
+  .. figures ..
+  + description_table(...)
+  + error_table(...)
+  + pivot_table(...)
+  + stat_table(...)
+  + contribution_table(...)
+  + cactus_plot(...)
+  + cdf_plot(...)
+  + scatter_plot(...)
+  + box_plot(...)
+
+  .. others ..
+  + export(...)
+}
+@enduml

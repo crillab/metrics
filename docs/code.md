@@ -1,31 +1,31 @@
-API
-===
+# API
 
-Core
-----
+## Core
 
+```rst
 .. automodule:: metrics.core.model
     :members:
+```
 
-Builder
--------
+## Builder
 
-Attribute Manager
-~~~~~~~~~~~~~~~~~
+### Attribute Manager
 
+```rst
 .. automodule:: metrics.core.builder.attribute_manager
     :members:
+```
 
-.. _builder-1:
+### Builder
 
-Builder
-~~~~~~~
-
+```rst
 .. automodule:: metrics.core.builder.builder
     :members:
+```
 
-Typing Strategy
-~~~~~~~~~~~~~~~
+### Typing Strategy
 
+```rst
 .. automodule:: metrics.core.builder.typing_strategy
     :members:
+```
