@@ -27,13 +27,8 @@ This module provides a simple class corresponding to the builder of the datafram
 from __future__ import annotations
 
 import pickle
-from typing import Callable, Any, List
 import warnings
-
-import numpy as np
-from autograph import create_plot
-from autograph.core.enumstyle import Position, FontWeight, LineType
-from autograph.core.style import LegendStyle, TextStyle, PlotStyle
+from typing import List
 
 from metrics.wallet.plot import CactusPlot, CDFPlot, ScatterPlot, BoxPlot
 
@@ -209,7 +204,8 @@ class Analysis:
     def copy(self):
         return self.__class__(data_frame=self._data_frame.copy())
 
-    def check(self, is_success=None, is_consistent_by_xp=None, is_consistent_by_input=None, inputs=None, experiment_wares=None):
+    def check(self, is_success=None, is_consistent_by_xp=None, is_consistent_by_input=None, inputs=None,
+              experiment_wares=None):
         self.check_success(is_success)
         self.check_missing_experiments(inputs, experiment_wares)
         self.check_xp_consistency(is_consistent_by_xp)
@@ -228,7 +224,7 @@ class Analysis:
         )
 
         self._data_frame[ERROR_COL] = self._data_frame.apply(
-            lambda x: x[MISSING_DATA_COL] or not(x[XP_CONSISTENCY_COL]) or not(x[INPUT_CONSISTENCY_COL]),
+            lambda x: x[MISSING_DATA_COL] or not (x[XP_CONSISTENCY_COL]) or not (x[INPUT_CONSISTENCY_COL]),
             axis=1
         )
 
@@ -238,7 +234,7 @@ class Analysis:
         self._data_frame[USER_SUCCESS_COL] = self._data_frame.apply(is_success, axis=1)
         self._check_global_success()
 
-    def check_missing_experiments(self, inputs: List[str]=None, experiment_wares: List[str]=None):
+    def check_missing_experiments(self, inputs: List[str] = None, experiment_wares: List[str] = None):
         inputs = self.inputs if inputs is None else inputs
         experiment_wares = self.experiment_wares if experiment_wares is None else experiment_wares
 
