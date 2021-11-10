@@ -1,13 +1,14 @@
 # Welcome to Metrics's documentation!
 
-```{toctree}
+```{eval-rst}
+.. toctree::
    :maxdepth: 3
-   :caption: Contents:
+   :caption: Contents
 
-   tutorial.md
-   code.md
-   scalpel-config.md
-   wallet.md
+   tutorial
+   code
+   scalpel-config
+   wallet
 ```
 ## Indices and tables
 

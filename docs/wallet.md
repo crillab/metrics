@@ -1,6 +1,6 @@
 # Analyze a Campaign in *Metrics*
 
-Once the YAML file is correctly configured ([Reading a Campaign into *Metrics*](scalpel-config.html)), the analysis of data can started.
+Once the YAML file is correctly configured ([Reading a Campaign into *Metrics*](scalpel-config.md)), the analysis of data can started.
 To analyze the campaign of experiments thanks to *Metrics*, 
 you need to use the *Wallet* module of *Metrics*.
 *Wallet* stands for *"Automated tooL for expLoiting Experimental resulTs"*
