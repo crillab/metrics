@@ -31,6 +31,7 @@ source:
   hierarchy-depth:
   experiment-ware:
   parser:
+  follow-symlinks:
 
 data:
   mapping:

@@ -411,8 +411,7 @@ class DirectoryCampaignParser(CampaignParser):
                 self._file_exploration_strategy.parse_file(file_path, file)
             self._file_exploration_strategy.exit_directory(directory)
 
-    @staticmethod
-    def _find(directory: str) -> Generator[str]:
+    def _find(self, directory: str) -> Generator[str]:
         """
         Finds all regular files in the file hierarchy whose root is the given
         directory.
@@ -421,7 +420,7 @@ class DirectoryCampaignParser(CampaignParser):
 
         :return: A generator of the regular files in the hierarchy.
         """
-        for root, _, files in walk(directory):
+        for root, _, files in walk(directory, followlinks=self._configuration.follow_symlinks()):
             for file in files:
                 yield path.join(root, file)
 
