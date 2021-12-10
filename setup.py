@@ -63,7 +63,6 @@ setup(
         'metrics.scalpel.config',
         'metrics.scalpel.parser',
         'metrics.wallet',
-        'metrics.studio.web',
         'metrics'
     ],
 

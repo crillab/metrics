@@ -27,7 +27,7 @@
 """
 Metrics-Scalpel (sCAlPEL - extraCting dAta of exPeriments from softwarE Logs)
 provides tools for extracting data produced during software experiments so as
-to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
+to analyze this data later on, e.g., using Metrics-Wallet.
 """
 
 

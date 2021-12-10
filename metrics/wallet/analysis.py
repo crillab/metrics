@@ -27,13 +27,8 @@ This module provides a simple class corresponding to the builder of the datafram
 from __future__ import annotations
 
 import pickle
-from typing import Callable, Any, List
 import warnings
-
-import numpy as np
-from autograph import create_plot
-from autograph.core.enumstyle import Position, FontWeight, LineType
-from autograph.core.style import LegendStyle, TextStyle, PlotStyle
+from typing import List
 
 from metrics.wallet.plot import CactusPlot, CDFPlot, ScatterPlot, BoxPlot
 
@@ -101,15 +96,15 @@ def _contribution_agg(sli: pd.DataFrame):
     sli = sli.sort_values(by=[SUCCESS_COL, EXPERIMENT_CPU_TIME], ascending=[False, True])
     first = sli.iloc[0]
     second = sli.iloc[1]
-    index = [EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, 'unique']
+    index = [EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, 'unique', 'second_time']
 
     if first[SUCCESS_COL]:
         return pd.Series(
             [first[EXPERIMENT_XP_WARE], first[EXPERIMENT_CPU_TIME],
-             not second[SUCCESS_COL]],
+             not second[SUCCESS_COL], second[EXPERIMENT_CPU_TIME] if second[SUCCESS_COL] else 1000000],
             index=index)
 
-    return pd.Series([None, None, False], index=index)
+    return pd.Series([None, None, False, None], index=index)
 
 
 def _make_cactus_plot_df(analysis, cumulated, cactus_col):
@@ -138,7 +133,7 @@ def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col
         columns=EXPERIMENT_XP_WARE,
         values=scatter_col,
         fill_value=analysis.data_frame[TIMEOUT_COL].max()
-    )
+    )[[xp_ware_x, xp_ware_y]]
 
     if color_col is not None:
         df2 = df.groupby(EXPERIMENT_INPUT).apply(lambda dff: set(dff[color_col]))
@@ -147,9 +142,9 @@ def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col
     return df1
 
 
-def _make_box_plot_df(analysis, box_col):
+def _make_box_plot_df(analysis, box_by, box_col):
     return analysis.data_frame.pivot(
-        columns=EXPERIMENT_XP_WARE,
+        columns=box_by,
         index=EXPERIMENT_INPUT,
         values=box_col
     )
@@ -209,7 +204,8 @@ class Analysis:
     def copy(self):
         return self.__class__(data_frame=self._data_frame.copy())
 
-    def check(self, is_success=None, is_consistent_by_xp=None, is_consistent_by_input=None, inputs=None, experiment_wares=None):
+    def check(self, is_success=None, is_consistent_by_xp=None, is_consistent_by_input=None, inputs=None,
+              experiment_wares=None):
         self.check_success(is_success)
         self.check_missing_experiments(inputs, experiment_wares)
         self.check_xp_consistency(is_consistent_by_xp)
@@ -217,12 +213,18 @@ class Analysis:
 
     def _check_global_success(self):
         self._data_frame[SUCCESS_COL] = self._data_frame.apply(
-            lambda x: x[USER_SUCCESS_COL] and not(x[MISSING_DATA_COL]) and x[XP_CONSISTENCY_COL] and x[INPUT_CONSISTENCY_COL],
+            lambda x: x[USER_SUCCESS_COL] and not (x[MISSING_DATA_COL]) and x[XP_CONSISTENCY_COL] and x[
+                INPUT_CONSISTENCY_COL],
+            axis=1
+        )
+
+        self._data_frame[EXPERIMENT_CPU_TIME] = self._data_frame.apply(
+            lambda x: x[EXPERIMENT_CPU_TIME] if x[USER_SUCCESS_COL] else x[TIMEOUT_COL],
             axis=1
         )
 
         self._data_frame[ERROR_COL] = self._data_frame.apply(
-            lambda x: x[MISSING_DATA_COL] or not(x[XP_CONSISTENCY_COL]) or not(x[INPUT_CONSISTENCY_COL]),
+            lambda x: x[MISSING_DATA_COL] or not (x[XP_CONSISTENCY_COL]) or not (x[INPUT_CONSISTENCY_COL]),
             axis=1
         )
 
@@ -232,7 +234,7 @@ class Analysis:
         self._data_frame[USER_SUCCESS_COL] = self._data_frame.apply(is_success, axis=1)
         self._check_global_success()
 
-    def check_missing_experiments(self, inputs: List[str]=None, experiment_wares: List[str]=None):
+    def check_missing_experiments(self, inputs: List[str] = None, experiment_wares: List[str] = None):
         inputs = self.inputs if inputs is None else inputs
         experiment_wares = self.experiment_wares if experiment_wares is None else experiment_wares
 
@@ -490,7 +492,7 @@ class Analysis:
         contrib['vbew simple'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).cpu_time.count()
 
         for delta in deltas:
-            sub = contrib_raw[contrib_raw.cpu_time > delta]
+            sub = contrib_raw[(contrib_raw['second_time'] - contrib_raw.cpu_time) >= delta]
             contrib[f'vbew {delta}s'] = sub.groupby(EXPERIMENT_XP_WARE).cpu_time.count()
 
         contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
@@ -530,8 +532,8 @@ class Analysis:
 
         return plot.show()
 
-    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
-        df = _make_box_plot_df(self, box_col)
+    def box_plot(self, box_col=EXPERIMENT_CPU_TIME, box_by=EXPERIMENT_XP_WARE, **kwargs: dict):
+        df = _make_box_plot_df(self, box_by, box_col)
 
         plot = BoxPlot(df, **kwargs)
         plot.save()

@@ -1,6 +1,6 @@
 # Analyze a Campaign in *Metrics*
 
-Once the YAML file is correctly configured ([Reading a Campaign into *Metrics*](scalpel-config.html)), the analysis of data can started.
+Once the YAML file is correctly configured ([Reading a Campaign into *Metrics*](scalpel-config.md)), the analysis of data can started.
 To analyze the campaign of experiments thanks to *Metrics*, 
 you need to use the *Wallet* module of *Metrics*.
 *Wallet* stands for *"Automated tooL for expLoiting Experimental resulTs"*
@@ -611,6 +611,7 @@ the random function seed for a given fixed solver configuration using it.
 ```python
 analysis.box_plot(
     # Box plot specificities
+    box_by='experiment_ware',
     box_col='cpu_time',
 
     # Figure size
@@ -647,7 +648,7 @@ analysis.box_plot(
 )
 ```
 
-By default, the box plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `box_col` parameter.
+By default, the box plot draw its graphic by using the `cpu_time` of results: the user is free to change this behaviour by replacing the `box_col` parameter. Also, by default, the `box_by` parameter is set to `experiment_ware` meaning that each box represents an experiment_ware. The user may like to replace this by another column, for example the `family` col, and explore family data distributions.
 
 ![](fig/box.svg)
 
