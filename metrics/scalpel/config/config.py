@@ -139,7 +139,7 @@ class ScalpelConfiguration:
                  data_files: Optional[Dict[str, DataFile]],
                  log_datas: Optional[Dict[str, List[LogData]]],
                  custom_parser: Optional[str], file_name_meta: FileNameMetaConfiguration,
-                 is_success) -> None:
+                 is_success, follow_symlinks) -> None:
         """
         Creates a new ScalpelConfiguration.
 
@@ -163,6 +163,7 @@ class ScalpelConfiguration:
         self._custom_parser = custom_parser
         self._file_name_meta = file_name_meta
         self._is_success = is_success
+        self._followlinks = follow_symlinks
 
     def get_main_file(self) -> str:
         """
@@ -249,6 +250,9 @@ class ScalpelConfiguration:
 
     def get_is_consistent(self):
         pass
+
+    def follow_symlinks(self):
+        return self._followlinks
 
     def get_output_format(self, file: str) -> Tuple[OutputFormat, Any]:
         fmt = OutputFormat.guess_format(file)
@@ -1046,6 +1050,7 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         self._log_datas = defaultdict(list)
         self._custom_parser = None
         self._is_success = None
+        self._followlinks = False
         self._file_name_meta = EmptyFileNameMetaConfiguration()
 
     def build(self) -> ScalpelConfiguration:
@@ -1065,7 +1070,7 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         return ScalpelConfiguration(self._format, self._csv_configuration, self._main_file,
                                     self._data_files, self._log_datas,
                                     self._custom_parser, self._file_name_meta,
-                                    self._is_success)
+                                    self._is_success, self._followlinks)
 
     def read_mapping(self) -> None:
         """
@@ -1187,6 +1192,7 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         self._format = self._get_format()
         self._custom_parser = self._get_custom_parser()
         self._is_success = self._get_is_success()
+        self._followlinks = self._get_followlinks()
         self.read_csv_configuration()
 
     def _get_is_success(self):
@@ -1363,6 +1369,9 @@ class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
         if value is not None:
             self._listener.log_data(key, value)
 
+    def _get_followlinks(self):
+        raise NotImplementedError('Method "_get_followlinks()" is abstract!')
+
 
 class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
     """
@@ -1522,6 +1531,9 @@ class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
         :return: Return the quote char
         """
         return self._get('source').get('quote-char')
+
+    def _get_followlinks(self):
+        return self._get('source').get('follow-symlinks') or False
 
     def _separator(self) -> str:
         """
