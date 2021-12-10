@@ -4,6 +4,8 @@ before_script:
 
 test:
     script:
+        - rm -rf venv
+        - source venv/bin/activate
         - pip install -r requirements.txt
         - make test
     tags:
