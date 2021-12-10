@@ -1,20 +1,17 @@
 # Welcome to Metrics's documentation!
 
-```rst
+```{eval-rst}
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
+   :caption: Contents
 
    tutorial
    code
    scalpel-config
    wallet
 ```
-
 ## Indices and tables
 
-```rst
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-```
+* {ref}`genindex`
+* {ref}`modindex`
+* {ref}`search`
