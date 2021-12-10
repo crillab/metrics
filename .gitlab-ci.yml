@@ -4,15 +4,12 @@ before_script:
 
 test:
     script:
+        - pip install -r requirements.txt
         - make test
     tags:
         - pytest
     stage: test
 
-integration-test:
-  script:
-    - docker build .
-  stage: test
 sonar:
     script:
         - make sonar
