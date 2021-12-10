@@ -126,6 +126,7 @@ new_analysis = analysis.add_variable(
 `add_variable()` takes as first parameter the name of the future created column, and as second parameter the lambda that applies the regular expression `family_re` to the variable `input` of the row `x` (the regular expression returns an object corresponding to the matching strings: `.group(1)` permits to retrieve the family name of the input).
 
 The result (as a sample of 5 experiments with the only 2 interesting columns shown) is:
+
 |      | input                                                        | family        |
 |-----:|:-------------------------------------------------------------|:--------------|
 | 3641 | XCSP17/Primes/Primes-m1-p25/Primes-25-80-2-7.xml             | Primes        |
