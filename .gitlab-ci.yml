@@ -21,8 +21,8 @@ sonar:
         - source venv/bin/activate
         - pip install -r requirements.txt
         - pip install coverage
+        - pip install pylint
         - make sonar
     tags:
-        - pylint
         - sonar
     stage: test
