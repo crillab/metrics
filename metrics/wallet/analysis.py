@@ -121,8 +121,20 @@ def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_
                 #bold_rows=True,
                 **kwargs
             )
+    elif ext == 'csv':
+        with open(output, 'w') as file:
+            df.fillna('').to_csv(
+                buf=file,
+                **kwargs
+            )
+    elif ext == 'xls' or ext == 'xlsx':
+        with open(output, 'w') as file:
+            df.fillna('').to_excel(
+                buf=file,
+                **kwargs
+            )
     else:
-        raise ValueError('Only .tex extension is accepted.')
+        raise ValueError('Only .tex|csv|xls(x) extensions are accepted.')
 
     return data_frame
 
