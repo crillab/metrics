@@ -30,6 +30,8 @@ import jsonpickle.ext.pandas as jsonpickle_pd
 
 jsonpickle_pd.register_handlers()
 
+from metrics.wallet.analysis import export_data_frame
+
 
 def import_bin_analysis(str) -> Analysis:
     return pickle.loads(str)

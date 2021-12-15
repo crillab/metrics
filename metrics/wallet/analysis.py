@@ -35,7 +35,7 @@ from autograph import create_plot
 from autograph.core.enumstyle import Position, FontWeight, LineType
 from autograph.core.style import LegendStyle, TextStyle, PlotStyle
 
-from metrics.wallet.plot import CactusPlot, CDFPlot, ScatterPlot, BoxPlot
+from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot
 
 warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 
@@ -50,16 +50,59 @@ from metrics.core.constants import *
 from metrics.scalpel import read_campaign
 
 
+def make_list(l):
+    if isinstance(l, list):
+        return l
+    if l is None:
+        return []
+    return [l]
+
+
+def default_explode(df, samp):
+    d = df.iloc[0].to_dict()
+    times = make_list(d.pop('timestamp_list'))
+    bounds = make_list(d.pop('bound_list'))
+    if d.pop('objective') == 'min':
+        bounds = [-x for x in bounds]
+
+    if len(bounds) != len(times):
+        raise Exception('Bound list length and time list length must be equals.')
+
+    l = []
+    i = 0
+    for j in range(len(bounds)):
+        while times[j] > samp[i]:
+            d2 = d.copy()
+            d2['status'] = d2['status'] if d2['cpu_time'] < samp[i] else 'INCOMPLETE'
+            d2['success'] = d2['status'] == 'COMPLETE'
+            d2['cpu_time'] = times[j - 1] if j - 1 >= 0 else samp[i]
+            d2['timeout'] = samp[i]
+            d2['best_bound'] = bounds[j - 1] if j - 1 >= 0 else None
+            l.append(d2)
+            i += 1
+
+    for j in range(i, len(samp)):
+        d2 = d.copy()
+        d2['cpu_time'] = times[-1] if len(times) > 0 else samp[j]
+        d2['timeout'] = samp[j]
+        d2['best_bound'] = bounds[-1] if len(times) > 0 else None
+        l.append(d2)
+
+    return pd.DataFrame(l)
+
 def find_best_cpu_time_input(df):
     return df.sort_values(by=[SUCCESS_COL, EXPERIMENT_CPU_TIME], ascending=[False, True]).iloc[0]
 
 
-def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False,
+def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False, col_dict=None,
                       **kwargs):
     if output is None:
         return data_frame
 
     df = data_frame
+
+    if col_dict is not None:
+        df = df[col_dict.keys()].rename(columns=col_dict)
 
     if commas_for_number:
         df = df.applymap(lambda x: f"{x:,}")
@@ -71,11 +114,11 @@ def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_
 
     if ext == 'tex':
         with open(output, 'w') as file:
-            df.to_latex(
+            df.fillna('').to_latex(
                 buf=file,
                 escape=False,
                 index_names=False,
-                bold_rows=True,
+                #bold_rows=True,
                 **kwargs
             )
     else:
@@ -417,6 +460,26 @@ class Analysis:
             inplace=inplace
         )
 
+    def apply_on_groupby(self, by, func, inplace=False):
+        if not inplace:
+            return self.copy().apply_on_groupby(by, func, inplace=True)
+
+        self._data_frame = self._data_frame.groupby(
+            by
+        ).apply(func).reset_index(drop=True)
+
+        return self
+
+    def explode_experiments(self, func=default_explode, samp=None, inplace=False):
+        return self.apply_on_groupby(
+            by=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE],
+            func=lambda df: func(
+                df,
+                [self.data_frame.timeout.max()] if samp is None else samp
+            ),
+            inplace=inplace
+        )
+
     def all_experiment_ware_pair_analysis(self) -> List[Analysis]:
         xpw = self.experiment_wares
 
@@ -424,6 +487,9 @@ class Analysis:
             self.keep_experiment_wares([xpw[i], j]) for i in range(len(xpw) - 1) for j in
             xpw[i + 1:]
         ]
+
+    def all_xp_ware_pair_analysis(self) -> List[Analysis]:
+        return self.all_experiment_ware_pair_analysis()
 
     def groupby(self, column) -> List[Analysis]:
         """
@@ -507,10 +573,25 @@ class Analysis:
             **kwargs
         )
 
+    def line_plot(self, index, column, values, **kwargs: dict):
+        df = self.pivot_table(
+            index=index,
+            columns=column,
+            values=values
+        )
+
+        s = df.iloc[-1].sort_values(ascending=False).index
+        df = df[s]
+
+        plot = LinePlot(df, **kwargs)
+        plot.save()
+
+        return plot.show()
+
     def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         df = _make_cactus_plot_df(self, cumulated, cactus_col)
 
-        plot = CactusPlot(df, **kwargs)
+        plot = LinePlot(df, **kwargs)
         plot.save()
 
         return plot.show()
