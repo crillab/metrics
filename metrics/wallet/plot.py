@@ -96,7 +96,7 @@ class Plot:
             self._plot.save(self._output, bbox_inches='tight', transparent=True)
 
     def show(self):
-        self._plot.show()
+        return self._plot.show()
 
 
 class LinePlot(Plot):
