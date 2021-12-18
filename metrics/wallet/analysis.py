@@ -48,6 +48,16 @@ warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 
 def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False, col_dict=None,
                       **kwargs):
+    """
+    Export a formatted dataframe
+    @param data_frame: the dataframe to export
+    @param output: the filepath of the output
+    @param commas_for_number: commas at each 10**3
+    @param dollars_for_number: dollars for tex export (math environment)
+    @param col_dict: a dict to rename each cols
+    @param kwargs: kwargs are given to the dataframe export mechanism
+    @return: return the original data_frame
+    """
     if output is None:
         return data_frame
 
@@ -92,8 +102,16 @@ def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_
 
 
 class BasicAnalysis:
+    """
+    A basic analysis is an analysis with only the constraint of having the cartesian product of experiment-wares and inputs
+    """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None):
+        """
+        Creates a basic analysis by using input_file or data_frame
+        @param input_file: the yaml file given to scalpel to parse logs
+        @param data_frame: the data_frame used to create the Analysis
+        """
         if data_frame is not None:
             self._data_frame = data_frame
             self.check()
@@ -124,13 +142,17 @@ class BasicAnalysis:
 
     @property
     def data_frame(self):
+        """
+
+        @return: the data_frame of the analysis
+        """
         return self._data_frame
 
     @property
     def inputs(self) -> List[str]:
         """
 
-        @return: the input names of the dataframe.
+        @return: the input of the dataframe.
         """
         return list(self._data_frame[EXPERIMENT_INPUT].unique())
 
@@ -138,15 +160,27 @@ class BasicAnalysis:
     def experiment_wares(self) -> List[str]:
         """
 
-        @return: the experimentware names of the dataframe.
+        @return: the experimentwares of the dataframe.
         """
         return list(self._data_frame[EXPERIMENT_XP_WARE].unique())
 
     def copy(self):
+        """
+
+        @return: a copy of the analysis
+        """
         return self.__class__(data_frame=self._data_frame.copy())
 
     def check(self, is_success=None, is_consistent_by_xp=None, is_consistent_by_input=None, inputs=None,
               experiment_wares=None):
+        """
+        Check many consistency properties
+        @param is_success: lambda testing if an experiment/observation is a sucess
+        @param is_consistent_by_xp: lambda certifying that an experiment/observation is consistent
+        @param is_consistent_by_input: lambda certifying that an input is consistent
+        @param inputs: gives the entire list of inputs (complete the missing ones)
+        @param experiment_wares: gives the entire list of experiment-wares (complete the missing ones)
+        """
         self.check_success(is_success)
         self.check_missing_experiments(inputs, experiment_wares)
         self.check_xp_consistency(is_consistent_by_xp)
@@ -170,12 +204,21 @@ class BasicAnalysis:
         )
 
     def check_success(self, is_success):
+        """
+        Check success property
+        @param is_success: lambda testing if an experiment/observation is a sucess
+        """
         if is_success is None:
             return
         self._data_frame[USER_SUCCESS_COL] = self._data_frame.apply(is_success, axis=1)
         self._check_global_success()
 
     def check_missing_experiments(self, inputs: List[str]=None, experiment_wares: List[str]=None):
+        """
+        Check missing experiments
+        @param inputs: the entire list of inputs (complete the missing ones)
+        @param experiment_wares: the entire list of experiment-wares (complete the missing ones)
+        """
         inputs = self.inputs if inputs is None else inputs
         experiment_wares = self.experiment_wares if experiment_wares is None else experiment_wares
 
@@ -195,6 +238,10 @@ class BasicAnalysis:
                 f'{n_missing} experiments are missing and have been added as unsuccessful.')
 
     def check_xp_consistency(self, is_consistent):
+        """
+        Check experiment consistency
+        @param is_consistent: lambda certifying that an experiment/observation is consistent
+        """
         if is_consistent is None:
             return
 
@@ -210,6 +257,10 @@ class BasicAnalysis:
                 f'{n_inconsistencies} experiments are inconsistent and are declared as unsuccessful.')
 
     def check_input_consistency(self, is_consistent):
+        """
+        Check input consistency
+        @param is_consistent_by_input: lambda certifying that an input is consistent
+        """
         if is_consistent is None:
             return
 
@@ -226,6 +277,13 @@ class BasicAnalysis:
                 f'{len(inconsistent_inputs)} inputs are inconsistent and linked experiments are now declared as unsuccessful.')
 
     def add_variable(self, new_var, function, inplace=False):
+        """
+        Add a variable (column) to the dataframe
+        @param new_var: the variable name
+        @param function: the function for creating this new column data
+        @param inplace: False to make a copy of data, True else
+        @return: the analysis with a new computed variable
+        """
         if not inplace:
             return self.copy().add_variable(new_var, function, inplace=True)
         df = self._data_frame
@@ -233,22 +291,37 @@ class BasicAnalysis:
         return self
 
     def remove_variables(self, vars: List[str], inplace=False):
+        """
+        Remove variables from the dataframe
+        @param vars: variables to remove
+        @param inplace: False to make a copy of data, True else
+        @return: the analysis with removed variables
+        """
         if not inplace:
             return self.copy().remove_variables(vars, inplace=True)
         self._data_frame.drop(columns=vars, inplace=True)
         return self
 
     def add_analysis(self, analysis):
+        """
+        Add an external analysis to the current one. The external analysis needs to be verified by the user.
+        @param analysis: the external analysis to add.
+        @return: the merged analysis
+        """
         return self.add_data_frame(analysis.data_frame)
 
     def add_data_frame(self, data_frame):
+        """
+        Add an external data_frame to the current analysis. The external data_frame needs to be verified by the user.
+        @param data_frame: the external data_frame to add.
+        @return: the merged analysis
+        """
         return self.__class__(data_frame=self._data_frame.append(data_frame, ignore_index=True))
 
     def filter_analysis(self, function, inplace=False) -> BasicAnalysis:
         """
-        Filters the dataframe in function of sub set of authorized values for a given column.
-        @param column: column where  to keep the sub set of values.
-        @param sub_set: the sub set of authorised values.
+        Filters the dataframe based on the given function.
+        @param column: the filtering function.
         @return: the filtered dataframe in a new instance of Analysis.
         """
         if not inplace:
@@ -260,10 +333,9 @@ class BasicAnalysis:
 
     def remove_experiment_wares(self, experiment_wares, inplace=False) -> BasicAnalysis:
         """
-        Filters the dataframe in function of sub set of authorized values for a given column.
-        @param column: column where  to keep the sub set of values.
-        @param sub_set: the sub set of authorised values.
-        @return: the filtered dataframe in a new instance of Analysis.
+        Filters the dataframe in function of a subset of experiment-wares to remove.
+        @param experiment_wares: the sub set of experiment_wares to remove.
+        @return: the filtered analysis in a new instance of Analysis.
         """
         if not inplace:
             return self.copy().remove_experiment_wares(experiment_wares, inplace=True)
@@ -272,19 +344,20 @@ class BasicAnalysis:
 
     def keep_experiment_wares(self, experiment_wares, inplace=False) -> BasicAnalysis:
         """
-        Filters the dataframe in function of sub set of authorized values for a given column.
-        @param column: column where  to keep the sub set of values.
-        @param sub_set: the sub set of authorised values.
-        @return: the filtered dataframe in a new instance of Analysis.
+        Filters the dataframe in function of a subset of experiment-wares to keep.
+        @param experiment_wares: the sub set of experiment_wares to keep.
+        @return: the filtered analysis in a new instance of Analysis.
         """
         return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] in experiment_wares, inplace)
 
     def filter_inputs(self, function, how='all', inplace=False) -> BasicAnalysis:
         """
-        Filters the dataframe in function of sub set of authorized values for a given column.
-        @param column: column where  to keep the sub set of values.
-        @param sub_set: the sub set of authorised values.
-        @return: the filtered dataframe in a new instance of Analysis.
+        Filters the dataframe based on a function returns and the method 'how'. To keep an experiment:
+        - 'all' needs that the function returns always the True value for each experiment of the input
+        - 'any' needs that the function returns the True value for at least one experiment of the input
+        @param function: the filtering function.
+        @param how: the how method.
+        @return: the filtered analysis in a new instance of Analysis.
         """
         if not inplace:
             return self.copy().filter_inputs(function, how, inplace=True)
@@ -304,6 +377,10 @@ class BasicAnalysis:
         return self
 
     def delete_common_failed_inputs(self, inplace=False):
+        """
+        Based on success column, it removes all the inputs that no solver has solved.
+        @rtype: the filtered analysis
+        """
         return self.filter_inputs(
             function=lambda x: x[SUCCESS_COL],
             how='any',
@@ -311,6 +388,10 @@ class BasicAnalysis:
         )
 
     def delete_common_solved_inputs(self, inplace=False):
+        """
+        Based on success column, it removes all the inputs that all solver has solved.
+        @rtype: the filtered analysis
+        """
         return self.filter_inputs(
             function=lambda x: not x[SUCCESS_COL],
             how='any',
@@ -318,6 +399,10 @@ class BasicAnalysis:
         )
 
     def keep_common_failed_inputs(self, inplace=False):
+        """
+        Based on success column, it keeps all the inputs that all solver has failed.
+        @rtype: the filtered analysis
+        """
         return self.filter_inputs(
             function=lambda x: not x[SUCCESS_COL],
             how='all',
@@ -325,32 +410,15 @@ class BasicAnalysis:
         )
 
     def keep_common_solved_inputs(self, inplace=False):
+        """
+        Based on success column, it keeps all the inputs that no solver has failed.
+        @rtype: the filtered analysis
+        """
         return self.filter_inputs(
             function=lambda x: x[SUCCESS_COL],
             how='all',
             inplace=inplace
         )
-
-    def apply_on_groupby(self, by, func, inplace=False):
-        if not inplace:
-            return self.copy().apply_on_groupby(by, func, inplace=True)
-
-        self._data_frame = self._data_frame.groupby(
-            by
-        ).apply(func).reset_index(drop=True)
-
-        return self
-
-    def all_experiment_ware_pair_analysis(self) -> List[BasicAnalysis]:
-        xpw = self.experiment_wares
-
-        return [
-            self.keep_experiment_wares([xpw[i], j]) for i in range(len(xpw) - 1) for j in
-            xpw[i + 1:]
-        ]
-
-    def all_xp_ware_pair_analysis(self) -> List[BasicAnalysis]:
-        return self.all_experiment_ware_pair_analysis()
 
     def groupby(self, column) -> List[BasicAnalysis]:
         """
@@ -362,13 +430,56 @@ class BasicAnalysis:
             self.__class__(data_frame=group.copy()) for _, group in self._data_frame.groupby(column)
         ]
 
+    def apply_on_groupby(self, by, func, inplace=False):
+        """
+        Makes a groupby of the analysis and apply a function on each group.
+        @rtype: The merged returns of each function calls in a new analysis.
+        """
+        if not inplace:
+            return self.copy().apply_on_groupby(by, func, inplace=True)
+
+        self._data_frame = self._data_frame.groupby(
+            by
+        ).apply(func).reset_index(drop=True)
+
+        return self
+
+    def all_experiment_ware_pair_analysis(self) -> List[BasicAnalysis]:
+        """
+
+        @return: all the analysis pairs (of each pair of experiment-wares)
+        """
+        xpw = self.experiment_wares
+
+        return [
+            self.keep_experiment_wares([xpw[i], j]) for i in range(len(xpw) - 1) for j in
+            xpw[i + 1:]
+        ]
+
+    def all_xp_ware_pair_analysis(self) -> List[BasicAnalysis]:
+        """
+
+        @return: all the analysis pairs (of each pair of experiment-wares)
+        """
+        return self.all_experiment_ware_pair_analysis()
+
     def error_table(self, **kwargs):
+        """
+
+        @param kwargs: kwargs given to dataframe export
+        @return: the error data_frame of all problematic experiments.
+        """
         return export_data_frame(
             data_frame=self._data_frame[self._data_frame.error].copy(),
             **kwargs
         )
 
     def description_table(self, **kwargs):
+        """
+
+        @param kwargs:  kwargs given to dataframe export
+        @return: the data_frame describing the current analysis.
+        """
         df = self._data_frame
 
         return export_data_frame(
@@ -386,6 +497,14 @@ class BasicAnalysis:
 
     def pivot_table(self, index=EXPERIMENT_INPUT, columns=EXPERIMENT_XP_WARE,
                     values=EXPERIMENT_CPU_TIME, **kwargs):
+        """
+        Returns the current dataframe with a new view (produces by a pivot)
+        @param index: col for the index of the new data_frame
+        @param columns: col for the columns of the new data_frame
+        @param values: col for the values of the new data_frame
+        @param kwargs: kwargs given to dataframe export
+        @return: the pivot data_frame
+        """
         return export_data_frame(
             data_frame=self._data_frame.pivot(
                 index=index,
@@ -396,6 +515,14 @@ class BasicAnalysis:
         )
 
     def line_plot(self, index, column, values, **kwargs: dict):
+        """
+        Makes a lineplot of the data
+        @param index: the x axis (colname of the current dataframe) of the line plot
+        @param column: the different plots (colname of the current dataframe)
+        @param values: the y axis (colname of the current dataframe) of the line plot
+        @param kwargs: kwargs are given to the @LinePlot object
+        @return: the lineplot figure
+        """
         df = self.pivot_table(
             index=index,
             columns=column,
@@ -411,6 +538,11 @@ class BasicAnalysis:
         return plot.show()
 
     def export(self, filename=None):
+        """
+        Export the current Analysis
+        @param filename: the exported Analysis filename.
+        @return: True if the analysis is well exported, else False.
+        """
         if filename is None:
             return pickle.dumps(self._data_frame, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -422,6 +554,11 @@ class BasicAnalysis:
 
     @classmethod
     def import_from_file(cls, filename):
+        """
+        Import an Analysis from a file.
+        @param filename: the filename of a previously exported Analysis.
+        @return: the imported Analysis.
+        """
         with open(filename, 'rb') as file:
             if filename.split('.')[-1] == 'csv':
                 return cls(data_frame=pd.read_csv(file))
@@ -785,6 +922,9 @@ class DecisionAnalysis(BasicAnalysis):
         plot.save()
 
         return plot.show()
+
+
+Analysis = DecisionAnalysis
 
 
 class DataFrameBuilder:
