@@ -22,7 +22,7 @@
 # ##############################################################################
 import pickle
 
-from metrics.wallet.analysis import Analysis, find_best_cpu_time_input
+from metrics.wallet.analysis import BasicAnalysis, DecisionAnalysis, OptiAnalysis, find_best_cpu_time_input
 from autograph.core.enumstyle import *
 
 import pandas as pd
@@ -33,12 +33,12 @@ jsonpickle_pd.register_handlers()
 from metrics.wallet.analysis import export_data_frame
 
 
-def import_bin_analysis(str) -> Analysis:
+def import_bin_analysis(str) -> BasicAnalysis:
     return pickle.loads(str)
 
 
-def import_analysis_from_file(filename) -> Analysis:
+def import_analysis_from_file(filename) -> BasicAnalysis:
     with open(filename, 'rb') as file:
         if filename.split('.')[-1] == 'csv':
-            return Analysis(data_frame=pd.read_csv(file))
+            return BasicAnalysis(data_frame=pd.read_csv(file))
         return pickle.load(file)

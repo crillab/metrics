@@ -11,7 +11,7 @@ class ProblematicAnalysisTestCase(unittest.TestCase):
         inconsistent_returns = {'ERR WRONGCERT', 'ERR UNSAT'}
         successful_returns = {'SAT', 'UNSAT'}
 
-        cls.analysis = Analysis(
+        cls.analysis = DecisionAnalysis(
             input_file='data/xcsp19/problematic_analysis/config/metrics_scalpel_full_paths.yml'
         )
 

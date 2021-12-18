@@ -40,8 +40,9 @@ Globally, the Analysis object is composed of five parts:
 To create a new analysis, you only need to import the `Analysis` class from *Wallet* module and instantiate a new `Analysis` object with the path to the YAML configuration file:
 
 ```python
-from metrics.wallet import Analysis
-analysis = Analysis(input_file='path/to/xcsp19/YAML/file')
+from metrics.wallet import BasicAnalysis
+
+analysis = BasicAnalysis(input_file='path/to/xcsp19/YAML/file')
 ```
 
 The analysis is composed of many variables describing the experiments: 

@@ -30,7 +30,7 @@ from metrics.studio.web.component.footer import get_footer as footer
 from metrics.studio.web.config import external_stylesheets, LIMIT
 from metrics.studio.web.util import util
 from metrics.studio.web.util.util import create_listener, decode
-from metrics.wallet.analysis import Analysis
+from metrics.wallet.analysis import BasicAnalysis
 from metrics.wallet.figure.dynamic_figure import BoxPlotly
 from metrics.wallet.figure.static_figure import StatTable, ContributionTable
 from datetime import datetime
@@ -158,7 +158,7 @@ dash.layout = serve_first_layout
 
 
 def _create_analysis(campaign, is_success=None):
-    analysis_web = Analysis(campaign=campaign, is_success=is_success)
+    analysis_web = BasicAnalysis(campaign=campaign, is_success=is_success)
     return analysis_web
 
 
