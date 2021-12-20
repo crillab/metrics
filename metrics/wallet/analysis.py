@@ -22,13 +22,13 @@
 # ##############################################################################
 
 """
-This module provides a simple class corresponding to the builder of the dataframe linked to a campaign.
+This module provides a simple class corresponding to the builder of the dataframe linked to a
+campaign.
 """
 from __future__ import annotations
 
 import math
 import pickle
-from typing import List
 import warnings
 from typing import List
 
@@ -47,8 +47,8 @@ from metrics.scalpel import read_campaign
 warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 
 
-def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False, col_dict=None,
-                      **kwargs):
+def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_for_number=False,
+                      col_dict=None, **kwargs):
     """
     Export a formatted dataframe
     @param data_frame: the dataframe to export
@@ -59,52 +59,51 @@ def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_
     @param kwargs: kwargs are given to the dataframe export mechanism
     @return: return the original data_frame
     """
-    if output is None:
-        return data_frame
+    if output is not None:
+        df = data_frame
 
-    df = data_frame
+        if col_dict is not None:
+            df = df[col_dict.keys()].rename(columns=col_dict)
 
-    if col_dict is not None:
-        df = df[col_dict.keys()].rename(columns=col_dict)
+        if commas_for_number:
+            df = df.applymap(lambda x: f"{x:,}")
 
-    if commas_for_number:
-        df = df.applymap(lambda x: f"{x:,}")
+        if dollars_for_number:
+            df = df.applymap(lambda x: f"${x}$")
 
-    if dollars_for_number:
-        df = df.applymap(lambda x: f"${x}$")
+        ext = output.split('.')[-1]
 
-    ext = output.split('.')[-1]
-
-    if ext == 'tex':
-        with open(output, 'w') as file:
-            df.fillna('').to_latex(
-                buf=file,
-                escape=False,
-                index_names=False,
-                #bold_rows=True,
-                **kwargs
-            )
-    elif ext == 'csv':
-        with open(output, 'w') as file:
-            df.fillna('').to_csv(
-                buf=file,
-                **kwargs
-            )
-    elif ext == 'xls' or ext == 'xlsx':
-        with open(output, 'w') as file:
-            df.fillna('').to_excel(
-                buf=file,
-                **kwargs
-            )
-    else:
-        raise ValueError('Only .tex|csv|xls(x) extensions are accepted.')
+        if ext == 'tex':
+            with open(output, 'w') as file:
+                df.fillna('').to_latex(
+                    buf=file,
+                    escape=False,
+                    index_names=False,
+                    #bold_rows=True,
+                    **kwargs
+                )
+        elif ext == 'csv':
+            with open(output, 'w') as file:
+                df.fillna('').to_csv(
+                    buf=file,
+                    **kwargs
+                )
+        elif ext == 'xls' or ext == 'xlsx':
+            with open(output, 'w') as file:
+                df.fillna('').to_excel(
+                    buf=file,
+                    **kwargs
+                )
+        else:
+            raise ValueError('Only .tex|csv|xls(x) extensions are accepted.')
 
     return data_frame
 
 
 class BasicAnalysis:
     """
-    A basic analysis is an analysis with only the constraint of having the cartesian product of experiment-wares and inputs
+    A basic analysis is an analysis with only the constraint of having the cartesian product of
+    experiment-wares and inputs
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None):
@@ -172,15 +171,16 @@ class BasicAnalysis:
         """
         return self.__class__(data_frame=self._data_frame.copy())
 
-    def check(self, is_success=None, is_consistent_by_xp=None, is_consistent_by_input=None, inputs=None,
-              experiment_wares=None):
+    def check(self, is_success=None, is_consistent_by_xp=None, is_consistent_by_input=None,
+              inputs=None, experiment_wares=None):
         """
         Check many consistency properties
         @param is_success: lambda testing if an experiment/observation is a sucess
         @param is_consistent_by_xp: lambda certifying that an experiment/observation is consistent
         @param is_consistent_by_input: lambda certifying that an input is consistent
         @param inputs: gives the entire list of inputs (complete the missing ones)
-        @param experiment_wares: gives the entire list of experiment-wares (complete the missing ones)
+        @param experiment_wares: gives the entire list of experiment-wares (complete the missing
+        ones)
         """
         self.check_success(is_success)
         self.check_missing_experiments(inputs, experiment_wares)
@@ -189,8 +189,8 @@ class BasicAnalysis:
 
     def _check_global_success(self):
         self._data_frame[SUCCESS_COL] = self._data_frame.apply(
-            lambda x: x[USER_SUCCESS_COL] and not (x[MISSING_DATA_COL]) and x[XP_CONSISTENCY_COL] and
-                      x[INPUT_CONSISTENCY_COL],
+            lambda x: x[USER_SUCCESS_COL] and not (x[MISSING_DATA_COL]) and x[XP_CONSISTENCY_COL]
+                      and x[INPUT_CONSISTENCY_COL],
             axis=1
         )
 
@@ -200,7 +200,8 @@ class BasicAnalysis:
         )
 
         self._data_frame[ERROR_COL] = self._data_frame.apply(
-            lambda x: x[MISSING_DATA_COL] or not (x[XP_CONSISTENCY_COL]) or not (x[INPUT_CONSISTENCY_COL]),
+            lambda x: x[MISSING_DATA_COL] or not (x[XP_CONSISTENCY_COL])
+                      or not (x[INPUT_CONSISTENCY_COL]),
             axis=1
         )
 
@@ -223,7 +224,10 @@ class BasicAnalysis:
         inputs = self.inputs if inputs is None else inputs
         experiment_wares = self.experiment_wares if experiment_wares is None else experiment_wares
 
-        theoretical_df = DataFrame(product(inputs, experiment_wares), columns=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE])
+        theoretical_df = DataFrame(
+            product(inputs, experiment_wares),
+            columns=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE]
+        )
 
         self._data_frame[MISSING_DATA_COL] = False
         self._data_frame = self._data_frame.join(
@@ -255,7 +259,9 @@ class BasicAnalysis:
         if n_inconsistencies > 0:
             self._check_global_success()
             warnings.warn(
-                f'{n_inconsistencies} experiments are inconsistent and are declared as unsuccessful.')
+                f'{n_inconsistencies} experiments are inconsistent '
+                f'and are declared as unsuccessful.'
+            )
 
     def check_input_consistency(self, is_consistent):
         """
@@ -275,7 +281,9 @@ class BasicAnalysis:
         if len(inconsistent_inputs) > 0:
             self._check_global_success()
             warnings.warn(
-                f'{len(inconsistent_inputs)} inputs are inconsistent and linked experiments are now declared as unsuccessful.')
+                f'{len(inconsistent_inputs)} inputs are inconsistent and linked experiments '
+                f'are now declared as unsuccessful.'
+            )
 
     def add_variable(self, new_var, function, inplace=False):
         """
@@ -305,7 +313,8 @@ class BasicAnalysis:
 
     def add_analysis(self, analysis):
         """
-        Add an external analysis to the current one. The external analysis needs to be verified by the user.
+        Add an external analysis to the current one. The external analysis needs to be verified by
+        the user.
         @param analysis: the external analysis to add.
         @return: the merged analysis
         """
@@ -313,7 +322,8 @@ class BasicAnalysis:
 
     def add_data_frame(self, data_frame):
         """
-        Add an external data_frame to the current analysis. The external data_frame needs to be verified by the user.
+        Add an external data_frame to the current analysis. The external data_frame needs to be
+        verified by the user.
         @param data_frame: the external data_frame to add.
         @return: the merged analysis
         """
@@ -341,7 +351,10 @@ class BasicAnalysis:
         if not inplace:
             return self.copy().remove_experiment_wares(experiment_wares, inplace=True)
 
-        return self.filter_analysis(lambda x: x[EXPERIMENT_XP_WARE] not in experiment_wares, inplace)
+        return self.filter_analysis(
+            lambda x: x[EXPERIMENT_XP_WARE] not in experiment_wares,
+            inplace
+        )
 
     def keep_experiment_wares(self, experiment_wares, inplace=False) -> BasicAnalysis:
         """
@@ -353,9 +366,14 @@ class BasicAnalysis:
 
     def filter_inputs(self, function, how='all', inplace=False) -> BasicAnalysis:
         """
-        Filters the dataframe based on a function returns and the method 'how'. To keep an experiment:
-        - 'all' needs that the function returns always the True value for each experiment of the input
-        - 'any' needs that the function returns the True value for at least one experiment of the input
+        Filters the dataframe based on a function returns and the method 'how'.
+        To keep an experiment:
+
+        - 'all' needs that the function returns always the True value for each experiment of the
+        input
+        - 'any' needs that the function returns the True value for at least one experiment of the
+        input
+
         @param function: the filtering function.
         @param how: the how method.
         @return: the filtered analysis in a new instance of Analysis.
@@ -611,12 +629,12 @@ def _default_explode(df, samp):
     return pd.DataFrame(l)
 
 
-def _norm(minB, maxB, x):
-    if maxB == minB:
-        return 1 if x == maxB else 0
+def _norm(min_b, max_b, x):
+    if max_b == min_b:
+        return 1 if x == max_b else 0
     if _is_none_or_nan(x):
         return 0
-    return (float(x) - minB) / (float(maxB) - minB)
+    return (float(x) - min_b) / (float(max_b) - min_b)
 
 
 def _borda(x, df):
@@ -669,7 +687,8 @@ def dominance_score(x, min_b, max_b, df):
 
 def norm_bound_score(x, min_b, max_b, df):
     """
-    Normalized bound score is the normalization of the current bound, base on min and max values found.
+    Normalized bound score is the normalization of the current bound, base on min and max values
+    found.
     @param x: The experiment tuple
     @param min_b: The min bound for the current input
     @param max_b: The max bound for the current input
@@ -728,7 +747,8 @@ def _input_agg(df, col):
 
 class OptiAnalysis(BasicAnalysis):
     """
-    An Optimality Analysis is an analysis with the constraint of having the cartesian product of experiment-wares and inputs and additionnal informations:
+    An Optimality Analysis is an analysis with the constraint of having the cartesian product of
+    experiment-wares and inputs and additionnal informations:
 
     - the success status of the experiment
     - the cpu time for producing this success status
@@ -736,13 +756,17 @@ class OptiAnalysis(BasicAnalysis):
     - the list of each corresponding timestamp for each found bound
     """
 
-    def __init__(self, input_file: str = None, data_frame: DataFrame = None, basic_analysis: BasicAnalysis = None, func=_default_explode, samp=None):
+    def __init__(self, input_file: str = None, data_frame: DataFrame = None,
+                 basic_analysis: BasicAnalysis = None, func=_default_explode, samp=None):
         """
-        Conctructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a 'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to build an OptiAnalysis.
+        Conctructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
+        'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
+        build an OptiAnalysis.
         @param input_file: the yaml file to extract data
         @param data_frame: a valid dataframe containing the exploded experiments
         @param basic_analysis: a BasicAnalysis with the needed columns
-        @param func: the function that permits to explode the current experiments (a default one is given)
+        @param func: the function that permits to explode the current experiments
+        (a default one is given)
         @param samp: the sampling times to apply on the exploding function
         """
         if input_file is not None or basic_analysis is not None:
@@ -769,7 +793,8 @@ class OptiAnalysis(BasicAnalysis):
     def compute_scores(self, default_solver=None, score_map=DEFAULT_SCORE_METHODS):
         """
         Computes the list of scoring method on the analysis.
-        @param default_solver: A default solver permits to apply an additional operation (with additional data variables) permitting to compare scores to a default solver score.
+        @param default_solver: A default solver permits to apply an additional operation
+        (with additional data variables) permitting to compare scores to a default solver score.
         @param score_map: a dictionnary of scores with their names and the function to apply.
         """
         self.apply_on_groupby(
@@ -825,10 +850,14 @@ def _contribution_agg(sli: pd.DataFrame):
     index = [EXPERIMENT_XP_WARE, EXPERIMENT_CPU_TIME, 'unique', 'second_time']
 
     if first[SUCCESS_COL]:
-        return pd.Series(
-            [first[EXPERIMENT_XP_WARE], first[EXPERIMENT_CPU_TIME],
-             not second[SUCCESS_COL], second[EXPERIMENT_CPU_TIME] if second[SUCCESS_COL] else 1000000],
-            index=index)
+        return pd.Series([
+                first[EXPERIMENT_XP_WARE],
+                first[EXPERIMENT_CPU_TIME],
+                not second[SUCCESS_COL],
+                second[EXPERIMENT_CPU_TIME] if second[SUCCESS_COL] else 1000000
+            ],
+            index=index
+        )
 
     return pd.Series([None, None, False, None], index=index)
 
@@ -852,7 +881,10 @@ def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col
     df = analysis.keep_experiment_wares({xp_ware_x, xp_ware_y}).data_frame
     df = df[df[SUCCESS_COL]]
 
-    df[EXPERIMENT_CPU_TIME] = df.apply(lambda x: x['timeout'] if not x['success'] else x['cpu_time'], axis=1)
+    df[EXPERIMENT_CPU_TIME] = df.apply(
+        lambda x: x['timeout'] if not x['success'] else x['cpu_time'],
+        axis=1
+    )
 
     df1 = df.pivot_table(
         index=EXPERIMENT_INPUT,
@@ -878,15 +910,19 @@ def _make_box_plot_df(analysis, box_by, box_col):
 
 class DecisionAnalysis(BasicAnalysis):
     """
-    A Decision Analysis is an analysis with the constraint of having the cartesian product of experiment-wares and inputs and additionnal informations:
+    A Decision Analysis is an analysis with the constraint of having the cartesian product of
+    experiment-wares and inputs and additionnal informations:
 
     - the success status of the experiment
     - the cpu time for producing this success status
     """
 
-    def __init__(self, input_file: str = None, data_frame: DataFrame = None, basic_analysis: BasicAnalysis = None):
+    def __init__(self, input_file: str = None, data_frame: DataFrame = None,
+                 basic_analysis: BasicAnalysis = None):
         """
-        Conctructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a 'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to build a DecisionAnalysis.
+        Conctructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
+        'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
+        build a DecisionAnalysis.
         @param input_file: the yaml file to extract data
         @param data_frame: a valid dataframe containing the exploded experiments
         @param basic_analysis: a BasicAnalysis with the needed columns
@@ -902,11 +938,14 @@ class DecisionAnalysis(BasicAnalysis):
 
         # test if the naalysis is in conformity
 
-    def add_virtual_experiment_ware(self, function=find_best_cpu_time_input, xp_ware_set=None, name='vbew') -> BasicAnalysis:
+    def add_virtual_experiment_ware(self, function=find_best_cpu_time_input,
+                                    xp_ware_set=None, name='vbew') -> BasicAnalysis:
         """
         Make a Virtual ExperimentWare.
-        By default, the function that made the virtual ExperimentWare is 'find_best_cpu_time_input' corresponding
-        to the best results of a sub set of experiment wares (xp_ware_set=None corresponds to the overall solvers).
+        By default, the function that made the virtual ExperimentWare is 'find_best_cpu_time_input'
+        corresponding
+        to the best results of a sub set of experiment wares (xp_ware_set=None corresponds to the
+        overall solvers).
         @param function: the function to create the virtual ExperimentWare
         @param xp_ware_set: a sub set of experiment-wares for which we take the wanted values
         @param name: name of the vbew.
@@ -925,7 +964,8 @@ class DecisionAnalysis(BasicAnalysis):
 
     def stat_table(self, par=[1, 2, 10], **kwargs):
         """
-        The statictic table allows to show a global overview of the results: number of solved inputs, time, etc.
+        The statictic table allows to show a global overview of the results: number of solved
+        inputs, time, etc.
         @param par: corresponds to the different values we want to give to the PARx column(s);
         @param kwargs: kwargs are given to the 'export_data_frame(...)' function
         @return: a static table as a dataframe
@@ -951,8 +991,10 @@ class DecisionAnalysis(BasicAnalysis):
 
     def contribution_table(self, deltas=[1, 10, 100], **kwargs):
         """
-        The contribution table allows to show the contribution of each experiment-ware: a contribution corresponds to
-        the number of experiment where an experiment-ware is the best (depending on the delta seconds of difference with
+        The contribution table allows to show the contribution of each experiment-ware: a
+        contribution corresponds to
+        the number of experiment where an experiment-ware is the best (depending on the delta
+        seconds of difference with
         the second best experiment-ware)
         @param deltas: the list of deltas to show
         @param kwargs: kwargs are given to the 'export_data_frame(...)' function
@@ -978,9 +1020,12 @@ class DecisionAnalysis(BasicAnalysis):
 
     def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         """
-        By default, the cactus plot draws its graphic by using the cpu_time of the results: you are free to change this
-        behaviour by replacing the cactus_col parameter. You can ask this plot to cumulate the runtime by giving
-        cumulated=True. We can show and hide markers thanks to show_marker parameter. The legend ordering corresponds
+        By default, the cactus plot draws its graphic by using the cpu_time of the results: you are
+        free to change this
+        behaviour by replacing the cactus_col parameter. You can ask this plot to cumulate the
+        runtime by giving
+        cumulated=True. We can show and hide markers thanks to show_marker parameter. The legend
+        ordering corresponds
         to the decreasing order of the number of solved inputs for each experiment-ware.
         @param cumulated: True if we want to cumulate the cpu_time, else False.
         @param cactus_col: The data to plot (cpu_time by default)
@@ -996,9 +1041,12 @@ class DecisionAnalysis(BasicAnalysis):
 
     def cdf_plot(self, cumulated=False, cdf_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         """
-        By default, the cdf plot draws its graphic by using the cpu_time of the results: you are free to change this
-        behaviour by replacing the cdf_col parameter. You can ask this plot to cumulate the runtime by giving
-        cumulated=True. We can show and hide markers thanks to show_marker parameter. The legend ordering corresponds
+        By default, the cdf plot draws its graphic by using the cpu_time of the results: you are
+        free to change this
+        behaviour by replacing the cdf_col parameter. You can ask this plot to cumulate the runtime
+        by giving
+        cumulated=True. We can show and hide markers thanks to show_marker parameter. The legend
+        ordering corresponds
         to the decreasing order of the number of solved inputs for each experiment-ware.
         @param cumulated: True if we want to cumulate the cpu_time, else False.
         @param cdf_col: The data to plot (cpu_time by default)
@@ -1012,10 +1060,13 @@ class DecisionAnalysis(BasicAnalysis):
 
         return plot.show()
 
-    def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME, **kwargs):
+    def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME,
+                     **kwargs):
         """
-        To draw a scatter-plot, we need to specify the experiment-wares on the x-axis and tge y-axis: xp_ware_x and
-        xp_ware_y. By default, the scatter plot draw its graphic by using the cpu_time of results: you are free to
+        To draw a scatter-plot, we need to specify the experiment-wares on the x-axis and tge
+        y-axis: xp_ware_x and
+        xp_ware_y. By default, the scatter plot draw its graphic by using the cpu_time of results:
+        you are free to
         change this behaviour by replacing the scatter_col parameter.
         @param xp_ware_x: the first experiment-ware
         @param xp_ware_y: the second experiment-ware
@@ -1038,9 +1089,12 @@ class DecisionAnalysis(BasicAnalysis):
 
     def box_plot(self, box_col=EXPERIMENT_CPU_TIME, box_by=EXPERIMENT_XP_WARE, **kwargs: dict):
         """
-        By default, the box plot draw its graphic by using the cpu_time of results: the user is free to change this
-        behaviour by replacing the box_col parameter. Also, by default, the box_by parameter is set to experiment_ware
-        meaning that each box represents an experiment_ware. The user may like to replace this by another column, for
+        By default, the box plot draw its graphic by using the cpu_time of results: the user is
+        free to change this
+        behaviour by replacing the box_col parameter. Also, by default, the box_by parameter is
+        set to experiment_ware
+        meaning that each box represents an experiment_ware. The user may like to replace this by
+        another column, for
         example the family col, and explore family data distributions.
         @param box_col: The data to plot (cpu_time by default)
         @param box_by: The box nature (by default, experiment-ware)
