@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -15,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -25,8 +25,7 @@
 
 
 """
-This module provides the enumerations representing the formats recognized by
-Scalpel.
+This module provides the enumerations representing the formats recognized by Scalpel.
 """
 
 
@@ -53,7 +52,7 @@ class FormatEnum(Enum):
     def __contains__(self, identifier: str) -> bool:
         """
         Checks whether the given identifier identifies this format.
-        The comparison is case insensitive.
+        The comparison is case-insensitive.
 
         :param identifier: The identifier to check.
 
@@ -125,16 +124,35 @@ class CampaignFormat(FileFormatEnum):
     REVERSE_TSV = 'reverse-tsv', 'reverse-table', 'rtsv', 'rtable'
     EVALUATION = 'evaluation', 'or'
     JSON = 'json'
-    SINGLE_EXPERIMENT_LOG_FILE = 'file', 'log-file', 'one-file', 'one-log-file', 'single-file', 'single-log-file'
-    MULTIPLE_EXPERIMENT_LOG_FILES = 'files', 'log-files', 'multi-files', 'multi-log-files'
+    SINGLE_EXPERIMENT_LOG_FILE = 'file', 'log-file', 'one-file', 'single-file'
+    MULTIPLE_EXPERIMENT_LOG_FILES = 'files', 'log-files', 'multi-files'
     EXPERIMENT_DIRECTORY = 'dir', 'experiment-dir', 'experiment-directory', 'xp-dir', 'xp-directory'
+
+    def is_csv(self):
+        """
+        Checks whether this format identifies a variant of the CSV format.
+
+        :return: Whether this format is a CSV format.
+        """
+        return self in (CampaignFormat.CSV,
+                        CampaignFormat.CSV2,
+                        CampaignFormat.TSV)
+
+    def is_reverse_csv(self):
+        """
+        Checks whether this format identifies a variant of the reverse CSV format.
+
+        :return: Whether this format is a reverse CSV format.
+        """
+        return self in (CampaignFormat.REVERSE_CSV,
+                        CampaignFormat.REVERSE_CSV2,
+                        CampaignFormat.REVERSE_TSV)
 
 
 class OutputFormat(FileFormatEnum):
     """
-    The OutputFormat defines the different formats that can be parsed by
-    Scalpel to retrieve the data about an experiment from the experiment-ware's
-    output.
+    The OutputFormat defines the different formats that can be parsed by Scalpel
+    to retrieve the data about an experiment from the experiment-ware's output.
     """
 
     CSV = 'csv'
@@ -143,3 +161,13 @@ class OutputFormat(FileFormatEnum):
     JSON = 'json'
     XML = 'xml'
     RAW_LOG = 'out', 'log'
+
+    def is_csv(self):
+        """
+        Checks whether this format identifies a variant of the CSV format.
+
+        :return: Whether this format is a CSV format.
+        """
+        return self in (OutputFormat.CSV,
+                        OutputFormat.CSV2,
+                        OutputFormat.TSV)

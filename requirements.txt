@@ -4,4 +4,6 @@ deprecated
 jsonpickle
 myst-parser
 pandas
+pyparsing
 tenacity
+pyyaml

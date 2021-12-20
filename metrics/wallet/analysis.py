@@ -571,8 +571,7 @@ class DataFrameBuilder:
         experiment_wares_df = self._make_experiment_wares_df()
         inputs_df = self._make_inputs_df()
         experiments_df = self._make_experiments_df()
-
-        return experiments_df \
+        df = experiments_df \
             .join(inputs_df.set_index(INPUT_NAME), on=EXPERIMENT_INPUT, lsuffix=SUFFIX_EXPERIMENT,
                   rsuffix=SUFFIX_INPUT,
                   how='inner') \
@@ -580,6 +579,7 @@ class DataFrameBuilder:
                   on=EXPERIMENT_XP_WARE, lsuffix=SUFFIX_EXPERIMENT, rsuffix=SUFFIX_XP_WARE,
                   how='inner'
                   )
+        return df
 
     def _make_experiment_wares_df(self) -> DataFrame:
         """

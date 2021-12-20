@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -15,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -28,13 +28,23 @@
 This module provides tools for writing simple filters that are used by Scalpel
 to define filter functions.
 """
+
+
+from __future__ import annotations
+
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from pyparsing import alphanums, delimitedList, oneOf, ParserElement, pyparsing_common, quotedString, Word
+from pyparsing import ParserElement, Word
+from pyparsing import alphanums, delimitedList, oneOf, pyparsing_common, quotedString
 
 
 class Operator(Enum):
+    """
+    The Operator enumeration defines the different operators allowed in the
+    simplified expressions used for writing filters.
+    """
+
     LT = '<', lambda a, b: a < b
     LE = '<=', lambda a, b: a <= b
     EQ = '==', lambda a, b: a == b
@@ -44,23 +54,51 @@ class Operator(Enum):
     IN = 'in', lambda a, b: a in b
     NOT_IN = 'notin', lambda a, b: a not in b
 
-    def __init__(self, symbol, function):
-        self.symbol = symbol
-        self.function = function
+    def __init__(self, symbol: str, function: Callable[[Any, Any], bool]) -> None:
+        """
+        Creates a new Operator.
 
-    def __call__(self, a, b):
-        return self.function(a, b)
+        :param symbol: The symbol representing the operator.
+        :param function: The function to invoke to evaluate this operator.
+        """
+        self._symbol = symbol
+        self._function = function
+
+    def __call__(self, a: Any, b: Any) -> bool:
+        """
+        Invokes this operator with the two given parameters.
+
+        :param a: The first parameter with which to invoke this operator.
+        :param b: The second parameter with which to invoke this operator.
+
+        :return: The result of evaluating this operator on a and b.
+        """
+        return self._function(a, b)
 
     @classmethod
-    def value_of(cls, symbol):
+    def value_of(cls, symbol: str) -> Operator:
+        """
+        Gives the operator that is represented with the given symbol.
+
+        :param symbol: The symbol from which to retrieve an operator.
+
+        :return: The operator represented by the given symbol.
+
+        :raises ValueError: If the given symbol does not represent any operator.
+        """
         for operator in cls:
-            if operator.symbol == symbol:
+            if operator._symbol == symbol:
                 return operator
-        raise ValueError(f"Unrecognised symbol {symbol}")
+        raise ValueError(f'Unrecognized symbol "{symbol}"')
 
     @classmethod
-    def symbols(cls):
-        return [o.symbol for o in cls]
+    def symbols(cls) -> List[str]:
+        """
+        Gives the list of all existing operators, given by their symbols.
+
+        :return: The list of symbols representing operators.
+        """
+        return [o._symbol for o in cls]
 
 
 class ExpressionParser:
@@ -69,7 +107,6 @@ class ExpressionParser:
     to parse filter expressions.
     """
 
-    # The single instance of this class.
     instance = None
 
     class __ExpressionParser:
@@ -77,14 +114,14 @@ class ExpressionParser:
         The __ExpressionParser is the actual class of the singleton.
         """
 
-        def __init__(self):
+        def __init__(self) -> None:
             """
             Creates a new __ExpressionParser, for which the wrapped ParserElement
             is not instantiated yet.
             """
             self._parser = None
 
-        def __getattr__(self, attr):
+        def __getattr__(self, attr: str) -> Any:
             """
             Delegates the access to any attribute to the wrapped ParserElement.
 
@@ -116,9 +153,9 @@ class ExpressionParser:
             # Defining what the different possible values are.
             real = pyparsing_common.real.setResultsName('real')
             integer = pyparsing_common.integer.setResultsName('integer')
-            boolean = oneOf("true false", caseless=True)
+            boolean = oneOf('true false', caseless=True)
             boolean = boolean.setResultsName('boolean')
-            boolean.setParseAction(lambda toks: list(map(lambda b: b == 'true', toks)))
+            boolean.setParseAction(lambda toks: list(map(lambda b: b.lower() == 'true', toks)))
             string = quotedString.setResultsName('string')
             string.setParseAction(lambda toks: list(map(lambda s: s[1:-1], toks)))
 
@@ -142,9 +179,11 @@ class ExpressionParser:
             both_variable = both_variable.setResultsName('both')
             return variable_right | variable_left | both_variable | main_variable
 
-    def __new__(cls):
+    def __new__(cls) -> __ExpressionParser:
         """
         Gives the single instance of ExpressionParser.
+
+        :return: The single instance of this class.
         """
         if ExpressionParser.instance is None:
             ExpressionParser.instance = ExpressionParser.__ExpressionParser()
@@ -163,10 +202,9 @@ class ExpressionParser:
 
 class AbstractExpression:
     """
-    The AbstractExpression is the base class of the expressions used to
-    define filter functions.
-    Such a filter takes as input a piece of data and outputs a Boolean
-    value.
+    The AbstractExpression is the base class of the expressions used to define
+    filter functions.
+    Such a filter takes as input a piece of data and outputs a Boolean value.
     """
 
     def __call__(self, data: Any) -> bool:
@@ -196,8 +234,7 @@ class ConjunctiveExpression(AbstractExpression):
     def __call__(self, data: Any) -> bool:
         """
         Checks whether the given piece of data must be kept or filtered out.
-        The data is kept if and only if all conjuncts agree to keep the piece
-        of data.
+        The data is kept if and only if all conjuncts agree to keep the piece of data.
 
         :param data: The piece of data to check.
 
@@ -225,8 +262,7 @@ class DisjunctiveExpression(AbstractExpression):
     def __call__(self, data: Any) -> bool:
         """
         Checks whether the given piece of data must be kept or filtered out.
-        The data is kept if and only if any disjunct agree to keep the piece
-        of data.
+        The data is kept if and only if any disjunct agree to keep the piece of data.
 
         :param data: The piece of data to check.
 
@@ -347,7 +383,7 @@ def _create_disjunctive_filter(expression: str) -> AbstractExpression:
     """
     disjuncts = []
     for disjunct in expression.split(' or '):
-        disjuncts.append(_create_simple_filter(disjunct))
+        disjuncts.append(_create_simple_filter(disjunct.strip()))
     return DisjunctiveExpression(*disjuncts)
 
 

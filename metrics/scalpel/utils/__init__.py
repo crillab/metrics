@@ -25,51 +25,15 @@
 
 
 """
-This package provides the modules for setting up Scalpel, in particular to configure
-how it can extract relevant data from the files of the campaign to parse.
+This package provides utility classes designed to make easier the parsing
+of campaign data inside Scalpel.
 """
 
+from metrics.scalpel.utils.csvutils import CsvConfiguration, CsvReader
 
-from yaml import safe_load as load_yaml
+from metrics.scalpel.utils.filters import AbstractExpression
+from metrics.scalpel.utils.filters import create_filter
 
-from metrics.scalpel import CampaignParserListener
-
-from metrics.scalpel.config.config import FileNameMetaConfiguration
-from metrics.scalpel.config.config import ScalpelConfiguration
-from metrics.scalpel.config.config import ScalpelConfigurationLoader
-
-from metrics.scalpel.config.format import CampaignFormat
-from metrics.scalpel.config.format import OutputFormat
-
-from metrics.scalpel.config.wrapper import DictScalpelConfigurationWrapper
-from metrics.scalpel.config.wrapper import IScalpelConfigurationWrapper
-
-
-def read_configuration(yaml_file: str, listener: CampaignParserListener) -> ScalpelConfiguration:
-    """
-    Loads Scalpel's configuration from the given YAML file.
-
-    :param yaml_file: The path of the file to load the configuration from.
-    :param listener: The listener to notify about the context of the campaign
-                     while reading the configuration.
-
-    :return: The read configuration.
-    """
-    with open(yaml_file, 'r') as yaml_stream:
-        yaml_dict = load_yaml(yaml_stream)
-        return load_configuration(DictScalpelConfigurationWrapper(yaml_dict), listener)
-
-
-def load_configuration(configuration: IScalpelConfigurationWrapper,
-                       listener: CampaignParserListener) -> ScalpelConfiguration:
-    """
-    Loads Scalpel's configuration using the given wrapper.
-
-    :param configuration: The wrapper of Scalpel's configuration.
-    :param listener: The listener to notify about the context of the campaign
-                     while loading the configuration.
-
-    :return: The loaded configuration.
-    """
-    loader = ScalpelConfigurationLoader(configuration, listener)
-    return loader.load()
+from metrics.scalpel.utils.pattern import AbstractUserDefinedPattern, NullUserDefinedPattern
+from metrics.scalpel.utils.pattern import LogData
+from metrics.scalpel.utils.pattern import compile_any

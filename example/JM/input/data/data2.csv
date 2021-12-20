@@ -1,4 +1,4 @@
-input;id_instance;method;k;size;percent;res3700re;time;cut;ite;cover
+name;id_instance;method;k;size;percent;res3700re;time;cut;ite;cover
 TF-37.tf;0;ptf;3;24;0.9913644214162349;5.0;561.6353869438171;True;211;99
 TF-70.tf;1;ptf;3;19;0.9913644214162349;5.0;58.95387148857117;True;103;99
 cire100-4.txt;2;ptf;3;26;1.0;0;2.6177432537078857;True;18;99

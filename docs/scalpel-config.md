@@ -29,7 +29,7 @@ will be an object representation of this description).
 
 ## Metadata of the Campaign
 
-In the YAML file, you first need to give elementary informations about the
+In the YAML file, you first need to give elementary information about the
 campaign, such as its name and the date on which it has been run.
 
 ```yaml
@@ -37,7 +37,7 @@ name: my-awesome-campaign
 date: 2020-11-17
 ```
 
-These informations are used to identify your campaign, and are particularly
+This information is used to identify your campaign, and is particularly
 interesting for the traceability of your experiments.
 
 The YAML file must also contain the experimental setup on which the campaign
@@ -47,6 +47,7 @@ took place, as in the following example:
 setup:
   os: Linux CentOS 7 (x86_64)
   cpu: Intel XEON X5550 (2.66 GHz, 8 MB cache)
+  gpu: Nvidia GeForce 256 SDR
   ram: 32GB
   timeout: 1800
   memout: 1024
@@ -60,9 +61,9 @@ reproducibility purposes.
 
 *Scalpel* is able to parse a wide variety of files that contain the output
 of the experiments you ran during your campaign.
-All informations describing the source of your campaign must be given
+All the information describing the source of your campaign must be given
 in the `source` section of your YAML configuration file.
-The main key of this section is `path`, which states the file(s) containing
+The main key of this section is `path`, which lists the file(s) containing
 the data to extract.
 
 ```yaml
@@ -72,7 +73,7 @@ source:
     - path/to/second/file
 ```
 
-This key declares the list of the files (either regular files or directories
+This key declares the list of the files (either regular files or directories,
 depending on the format of your campaign) that *Scalpel* will parse.
 Note that all files must have the same format.
 
@@ -108,7 +109,7 @@ experiment.
 Depending on the variant, columns may be separated by:
 
 + a comma (`,`), giving the default `csv` format,
-+ a semi-colon (`;`), giving the `csv2` format, or
++ a semicolon (`;`), giving the `csv2` format, or
 + a tabulation (`\t`), giving the `table` format.
 
 To specify that your campaign is in one of these formats, you need to add the
@@ -166,8 +167,8 @@ If you are interested in analyzing the results of a campaign run with
 the so-called "Evaluation" platform (such as, for instance, the
 [results of the XCSP'19 competition](http://www.cril.univ-artois.fr/XCSP19/),
 we provide a parser to read the "results of individual jobs as text file"
-provided by this platform (as the text file of the XCSP'19 competition,
-available [here](http://www.cril.univ-artois.fr/XCSP19/results/export.php?idev=99)).
+provided by this platform (as the one of the XCSP'19 competition, available
+[here](http://www.cril.univ-artois.fr/XCSP19/results/export.php?idev=99)).
 
 To do so, specify the following in your YAML configuration file:
 
@@ -177,16 +178,16 @@ source:
   format: evaluation
 ```
 
-As this platform do not use in general the same naming convention as that of
+As this platform does not use in general the same naming convention as that of
 *Scalpel*, do not forget to specify the mapping of the columns in the text file
 to fit *Scalpel*'s needs (see [below](#mapping-data-to-scalpel-s-expectations)
 for more details).
 
 ### Parsing a "Reverse" CSV File
 
-We call a CSV file "reverse" when it each line in this file corresponds
-to an input, and the columns to the different statistics collected for
-the experiment-wares run during the campaign.
+We call a CSV file "reverse" when each line in this file corresponds to an
+input, and the columns to the different statistics collected for the
+experiment-wares run during the campaign.
 Here is an example of such a file:
 
 ```csv
@@ -200,8 +201,9 @@ Each column is by default interpreted as the CPU time of the corresponding
 experiment, as this is the only statistic required for an experiment.
 Also, note that no input is specified in this example.
 This is tolerated, as each line in such a format maps to exactly one input.
-However, we strongly recommend to specify the name of the input file, especially
-because it makes easier the interpretation of the experimental results.
+However, we strongly recommend specifying the name of the input file,
+especially  because it makes easier the interpretation of the experimental
+results and their reproducibility.
 
 A more complete example of a "reverse" CSV file is given below:
 
@@ -225,7 +227,7 @@ source:
   title-separator: "!"
 ```
 
-To configure how a reverse CSV file is parsed, you can aslo use the same
+To configure how a reverse CSV file is parsed, you can also use the same
 properties as those used in classical CSV file (see the previous section),
 and specify one of the formats `reverse-csv`, `reverse-csv2` or
 `reverse-table` (using the same naming convention as before).
@@ -237,6 +239,16 @@ If you have gathered the output of your experiment-wares in a directory,
 extract all relevant data for you.
 We support three different kinds of file hierarchies, which are described
 below.
+
+Note that, by default, *Scalpel* does **not** follow symlinks when
+exploring a file hierarchy.
+For each of the configurations below, you may alter this behavior by
+adding the following to the `source` section of the YAML file:
+
+```yaml
+source:
+  follow-symlinks: true
+``` 
 
 #### One File per Experiment
 
@@ -273,7 +285,7 @@ Each file `experiment-a.log`, `experiment-b.log`, `experiment-c.log` and
 
 Note that these files may have common formats (such as JSON, XML or CSV) or
 may also be the raw output of the solver.
-More details on how to retrieve relevant informations from these files
+More details on how to retrieve relevant information from these files
 are given [here](#description-of-the-data-to-extract).
 
 #### Multiple Files per Experiment
@@ -318,7 +330,7 @@ will be considered as outputs of the same experiment (they are both named
 
 Note that these files may have common formats (such as JSON, XML or CSV) or
 may also be the raw output of the solver.
-More details on how to retrieve relevant informations from these files
+More details on how to retrieve relevant information from these files
 are given [here](#description-of-the-data-to-extract).
 
 #### One Directory per Experiment
@@ -366,11 +378,11 @@ dedicated documentation [here](#description-of-the-data-to-extract) for more
 details).
 For instance, the `stdout` and `stderr` files in the directory `experiment-a`
 will be considered as output files of the experiment `experiment-a`, and will
-thus be used together to extract relevant informations for this experiment.
+thus be used together to extract relevant information for this experiment.
 
 Note that these files may have common formats (such as JSON, XML or CSV) or
 may also be the raw output of the solver.
-More details on how to retrieve relevant informations from these files
+More details on how to retrieve relevant information from these files
 are given [here](#description-of-the-data-to-extract).
 
 ### Parsing Unsupported Formats
@@ -381,8 +393,8 @@ However, it may happen that you need to parse a campaign that uses a format
 that is not recognized (yet) by *Scalpel*.
 If this is the case you may write your own parser. by extending the class
 `CampaignParser`.
-This class must define a constructor taking as argument a `ScalpelConfiguration`
-and a `CampaignParserListener`.
+This class must define a constructor taking as argument a
+`CampaignParserListener` and a `ScalpelConfiguration`.
 To give you ideas on how to write such a parser, you may have a look to the
 [source of our parsers](https://github.com/crillab/metrics/tree/master/metrics/scalpel/parser).
 
@@ -448,13 +460,13 @@ value (which can be a Boolean value, an integer, a float number or a
 string) or another variable.
 A predicate can also check that a variable is either contained in
 a list of values (either literal values or variables) or contains a
-value (either a literal value or a variables) using the `in` operator.
+value (either a literal value or a variable) using the `in` operator.
 Lists are delimited using `[...]`.
 
 > **Remark**
 >
 > It is worth noting that *Scalpel* itself does **not** use `is-success`
-> to filter data, in the sense that even failed experiment are included
+> to filter data, in the sense that even failed experiments are included
 > in the campaign it builds.
 >
 > Instead, *Scalpel* passes this filter on to *Wallet*, so that the drawn
@@ -469,8 +481,9 @@ In the following, we describe how to write such a description.
 ### Extracting Data from Raw Files
 
 If your experiment-ware produces raw output, and you want *Scalpel* to parse it,
-you can describe how to extract data from the corresponding files using
-regular expressions, as in the following example:
+you can describe how to extract data from the corresponding files (which can
+be given using wildcards or relative paths) by providing regular expressions,
+as in the following example:
 
 ```yaml
 data:
@@ -502,31 +515,28 @@ Observe that, here, `pattern` is used in place of `regex`, and that the
 group `(\d+.\d+)` used in the previous example is replaced by `{real}`.
 This syntax allows to use one of the different symbols used to represent
 common data, and to avoid worrying about whitespaces (in a simplified
-pattern, any whitespace is interpreted as a sequence of whitespace characters.
+pattern, any whitespace is interpreted as a sequence of whitespace characters).
 
 *Scalpel* can interpret the following symbols.
 
 + `{integer}` for a (possibly signed) integer,
 + `{real}` for a real number, 
-+ `{boolean}` for a Boolean value (`true` or `false`, case insensitive),
++ `{boolean}` for a Boolean value (`true` or `false`, case-insensitive),
 + `{word}` for a word (i.e., a sequence of letters, digits and `_`), and
 + `{any}` for any sequence of characters (not greedy).
 
 If the same line contains multiple relevant data, you can extract them
-by using lists for both `log-data` and `groups` (you need to use the
-same order for both lists), as in the following example:
+by giving names to the groups you specified (in this case, the value for
+`log-data` may be omitted).
 
 ```yaml
 data:
   raw-data:
-    - log-data:
-        - cpu_time
-        - wall_time
-      file: "*.out"
+    - file: "*.out"
       pattern: "runtime: {real} seconds (cpu), {real} seconds (wallclock)"
       groups:
-        - 1
-        - 2
+        cpu_time: 1
+        wall_time: 2
 ```
 
 Note that it is not possible to mix regular expressions and simplified
@@ -564,7 +574,7 @@ the group `2` matches with `my-input`, which is thus identified as the
 If your output files use a common format (as JSON, CSV or XML), you do
 not need to use `raw-data` to extract their value.
 Instead, you just need to specify the name of such files as follows
-(wildcards are supported).
+(wildcards and relative paths are supported).
 
 ```yaml
 data:
@@ -612,10 +622,12 @@ data:
   data-files:
     - name: "*.json"
       format: json
+      name-as-prefix: true
     - name: "*.csv"
       format: csv
       has-header: false
       separator: " "
+      name-as-prefix: true
     - name: "*.txt"
       parser: my.completely.specified.AwesomeParser
 ```
@@ -623,22 +635,27 @@ data:
 Observe in the example above that CSV files may be configured as for
 CSV campaigns (the same fields are used to describe the format of the file).
 
+For each data-file, you can also set `name-as-prefix` to `true`, so that
+each field in the file will be prefixed by the name of the file, using a
+dotted notation.
+This is particularly useful whe the same key appears in different files.
+
 Moreover, it is also possible to specify a custom parser, provided you
 give the *completely specified* name of this class.
 This parser must extend `CampaignOutputParser`, and its constructor must take
-as input a `ScalpelConfiguration`, a `CampaignParserListener`, the path of the
+as input a `CampaignParserListener`, a `ScalpelConfiguration`, the path of the
 file to parse and its name.
 
 ### Mapping Data to *Scalpel*'s Expectations
 
-When parsing an experiment, *Scalpel* expects to find several required
-informations to describe the result of this experiment.
+When parsing an experiment, *Scalpel* expects to find the required
+information to describe the result of this experiment.
 The identifier of such data is thus crucial to allow *Scalpel* to build
 consistent experiments.
 This is in particular true for the identifiers:
 
 + `experiment_ware`, which is the experiment-ware run in a given experiment,
-+ `input`, which is the input on which the expriment-ware has been run, and
++ `input`, which is the input on which the experiment-ware has been run, and
 + `cpu_time`, which is the runtime of the experiment.
 
 If these identifiers are not specified in your campaign files (for instance,
@@ -674,12 +691,31 @@ has two additional fields.
 > their identifiers are automatically inferred by *Scalpel*), or to group
 > together data that are separated in your campaign files.
 
+### Adding Default Values
+
+Sometimes, it may happen that some data are missing in your experiment files,
+either because some experiment-wares did not output them correctly, or did not
+have enough time to output them within the time limit.
+This may be a problem if this data is required by *Scalpel*.
+For such data, you may provide default values as follows:
+
+```yaml
+data:
+  default-values:
+    cpu_time: 1800
+```
+
+In this example, we have set the default `cpu_time` to the same value as the
+time limit (note that this is done by default by *Scalpel*).
+You may set default values for any key of the campaign, and even for
+"partial keys" (i.e., those that are part of a mapping).
+
 ## Additional Information About the Campaign
 
 When collecting data about a campaign, you may want to add relevant
 information that do not appear in the files produced during the
 execution of your experiments regarding its settings.
-This section present how you can describe the experiment-wares and
+This section presents how you can describe the experiment-wares and
 inputs you used for your experiments. 
 
 ### Description of the Experiment-Wares
@@ -693,7 +729,7 @@ However, you may want to specify additional data w.r.t. the programs you
 experimented (for instance, the version of the software, the command line
 options passed to the program that was executed, etc.).
 
-As such data may not be appear in your campaign files, you can specify them
+As such data may not appear in your campaign files, you can specify them
 in the YAML configuration as follows:
 
 ```yaml
@@ -706,18 +742,18 @@ experiment-wares:
     command-line: ./my-great-xpware -v value
 ```
 
-When you specify informations about experiment-wares, only their names
-are required.
+When you specify information about experiment-wares, only their names are
+required.
 The name of an experiment-ware must uniquely identify this experiment-ware
 in the campaign, and must match the one that *Scalpel* will extract from
 your campaign files.
-For all other informations you specify, you may use any key you want to
-identify these informations.
+For all other information you specify, you may use any key you want to
+identify this information.
 
 Also, note that you are not required to use the same keys for all
 experiment-wares.
-You may also omit experiment-wares for which you do not need more informations
-than those mentionned in the campaign files: these experiment-wares will
+You may also omit experiment-wares for which you do not need more information
+than those mentioned in the campaign files: these experiment-wares will
 simply be discovered when parsing the files.
 
 Moreover, you may simply specify the list of the experiment-wares used
@@ -740,7 +776,7 @@ for instance, if you do not have run all experiment-wares yet.
 As for experiment-wares, you may want to add data about the inputs of your
 experiments.
 This is achieved by defining an `input-set` in your YAML configuration file,
-and giving it a proper nam, as in the following example:
+and giving it a proper name, as in the following example:
 
 ```yaml
 input-set:
@@ -757,8 +793,8 @@ In this example, `files` allows to list all the inputs you used in your
 experiments.
 As for experiment-wares, you may specify as many data as you want for your
 inputs.
-You may also used different keys for these data, and omit input files when
-you do not need to add more information than those provided in the campaign
+You may also use different keys for these data, and omit input files when
+you do not need to add more information than that provided in the campaign
 files.
 The only required key is `path`.
 
@@ -796,7 +832,7 @@ also specify a list of extensions if you have more than one).
 
 Also, observe that a `file-name-meta` section is specified, with the
 same syntax as that described [here](#extracting-data-from-file-names).
-It allows to extract relevant informations from the name of each input.
+It allows extracting relevant information from the name of each input.
 
 Both `extensions` and `file-name-meta` are taken into account for
 any type of input-sets.

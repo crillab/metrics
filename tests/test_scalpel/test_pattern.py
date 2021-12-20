@@ -31,7 +31,7 @@ Unit tests for the "pattern" module from Scalpel.
 
 from unittest import TestCase
 
-from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex
+from metrics.scalpel.utils.pattern import compile_named_pattern, compile_regex
 
 
 class TestCompileRegex(TestCase):
