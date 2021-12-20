@@ -643,18 +643,51 @@ def _borda(x, df):
 
 
 def optimality_score(x, min_b, max_b, df):
+    """
+    Optimality score is equal to 1 if the optimality is found/proved or 0.
+    @param x: The experiment tuple
+    @param min_b: The min bound for the current input
+    @param max_b: The max bound for the current input
+    @param df: The dataframe of the input experiments (all solvers)
+    @return: 1 if the optimality is found/proved or 0.
+    """
     return 1 if x['success'] else 0
 
 
 def dominance_score(x, min_b, max_b, df):
+    """
+    Dominance score is equal to 1 if the current bound is equal to the best one for this input.
+    @param x: The experiment tuple
+    @param min_b: The min bound for the current input
+    @param max_b: The max bound for the current input
+    @param df: The dataframe of the input experiments (all solvers)
+    @return: 1 if the current bound is equal to the best one for this input.
+    """
     return 1 if x['best_bound'] == max_b else 0
 
 
 def norm_bound_score(x, min_b, max_b, df):
+    """
+    Normalized bound score is the normalization of the current bound, base on min and max values found.
+    @param x: The experiment tuple
+    @param min_b: The min bound for the current input
+    @param max_b: The max bound for the current input
+    @param df: The dataframe of the input experiments (all solvers)
+    @return: The normalized bound
+    """
     return _norm(min_b, max_b, x['best_bound'])
 
 
 def borda_score(x, min_b, max_b, df):
+    """
+    Borda score is based on the Borda voting method by rating each solver for a given input.
+    "Complete Scoring Procedure" : https://www.minizinc.org/challenge2020/rules2020.html
+    @param x: The experiment tuple
+    @param min_b: The min bound for the current input
+    @param max_b: The max bound for the current input
+    @param df: The dataframe of the input experiments (all solvers)
+    @return: The Borda score of the current experiment.
+    """
     return _borda(x, df)
 
 
@@ -693,8 +726,24 @@ def _input_agg(df, col):
 
 
 class OptiAnalysis(BasicAnalysis):
+    """
+    An Optimality Analysis is an analysis with the constraint of having the cartesian product of experiment-wares and inputs and additionnal informations:
+
+    - the success status of the experiment
+    - the cpu time for producing this success status
+    - the list of each found bound during the resolution
+    - the list of each corresponding timestamp for each found bound
+    """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None, basic_analysis: BasicAnalysis = None, func=_default_explode, samp=None):
+        """
+        Conctructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a 'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to build an OptiAnalysis.
+        @param input_file: the yaml file to extract data
+        @param data_frame: a valid dataframe containing the exploded experiments
+        @param basic_analysis: a BasicAnalysis with the needed columns
+        @param func: the function that permits to explode the current experiments (a default one is given)
+        @param samp: the sampling times to apply on the exploding function
+        """
         if input_file is not None or basic_analysis is not None:
             super().__init__(
                 input_file,
@@ -717,6 +766,11 @@ class OptiAnalysis(BasicAnalysis):
         )
 
     def compute_scores(self, default_solver=None, score_map=DEFAULT_SCORE_METHODS):
+        """
+        Computes the list of scoring method on the analysis.
+        @param default_solver: A default solver permits to apply an additional operation (with additional data variables) permitting to compare scores to a default solver score.
+        @param score_map: a dictionnary of scores with their names and the function to apply.
+        """
         self.apply_on_groupby(
             by=['input', 'timeout'],
             func=lambda df: _compute_scores(df, default_solver, score_map),
@@ -724,6 +778,12 @@ class OptiAnalysis(BasicAnalysis):
         )
 
     def opti_line_plot(self, col, **kwargs):
+        """
+        Draw a line plot with the given score column.
+        @param col: The col data to draw in function of the sampling time.
+        @param kwargs: kwargs are given to the line_plot figure
+        @return: the drawn figure
+        """
         return self.apply_on_groupby(
             by=['experiment_ware', 'timeout'],
             func=lambda df: _input_agg(df, col)
@@ -736,6 +796,11 @@ class OptiAnalysis(BasicAnalysis):
 
 
 def find_best_cpu_time_input(df):
+    """
+    Find the best cpu time experiment in a dataframe
+    @param df: the dataframe where finding the best experiment
+    @return: the best experiment
+    """
     return df.sort_values(by=[SUCCESS_COL, EXPERIMENT_CPU_TIME], ascending=[False, True]).iloc[0]
 
 
@@ -811,8 +876,20 @@ def _make_box_plot_df(analysis, box_by, box_col):
 
 
 class DecisionAnalysis(BasicAnalysis):
+    """
+    A Decision Analysis is an analysis with the constraint of having the cartesian product of experiment-wares and inputs and additionnal informations:
+
+    - the success status of the experiment
+    - the cpu time for producing this success status
+    """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None, basic_analysis: BasicAnalysis = None):
+        """
+        Conctructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a 'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to build a DecisionAnalysis.
+        @param input_file: the yaml file to extract data
+        @param data_frame: a valid dataframe containing the exploded experiments
+        @param basic_analysis: a BasicAnalysis with the needed columns
+        """
         if input_file is not None:
             super().__init__(input_file, data_frame)
         elif data_frame is not None:
@@ -826,14 +903,12 @@ class DecisionAnalysis(BasicAnalysis):
 
     def add_virtual_experiment_ware(self, function=find_best_cpu_time_input, xp_ware_set=None, name='vbew') -> BasicAnalysis:
         """
-        Make a Virtual Best ExperimentWare.
-        We get the best results of a sub set of experiment wares.
-        For example, we can create the vbew of all current experimentwares based on the column cpu_time. A new
-        experiment_ware "vbew" is created with best experiments (in term of cpu_time) of the xp_ware_set.
-        @param xp_ware_set: we based this vbew on this subset of experimentwares.
-        @param opti_col: the col we want to optimize.
-        @param minimize: True if the min value is the optimal, False if it is the max value.
-        @param vbew_name: name of the vbew.
+        Make a Virtual ExperimentWare.
+        By default, the function that made the virtual ExperimentWare is 'find_best_cpu_time_input' corresponding
+        to the best results of a sub set of experiment wares (xp_ware_set=None corresponds to the overall solvers).
+        @param function: the function to create the virtual ExperimentWare
+        @param xp_ware_set: a sub set of experiment-wares for which we take the wanted values
+        @param name: name of the vbew.
         @return: a new instance of Analysis with the new vbew.
         """
         df = self._data_frame
@@ -848,6 +923,12 @@ class DecisionAnalysis(BasicAnalysis):
         return self.add_data_frame(data_frame=df_vbs)
 
     def stat_table(self, par=[1, 2, 10], **kwargs):
+        """
+        The statictic table allows to show a global overview of the results: number of solved inputs, time, etc.
+        @param par: corresponds to the different values we want to give to the PARx column(s);
+        @param kwargs: kwargs are given to the 'export_data_frame(...)' function
+        @return: a static table as a dataframe
+        """
         stats = self._data_frame.groupby(EXPERIMENT_XP_WARE).apply(
             lambda df: _compute_cpu_time_stats(df, par))
         common = self.keep_common_solved_inputs().data_frame
@@ -868,6 +949,14 @@ class DecisionAnalysis(BasicAnalysis):
         )
 
     def contribution_table(self, deltas=[1, 10, 100], **kwargs):
+        """
+        The contribution table allows to show the contribution of each experiment-ware: a contribution corresponds to
+        the number of experiment where an experiment-ware is the best (depending on the delta seconds of difference with
+        the second best experiment-ware)
+        @param deltas: the list of deltas to show
+        @param kwargs: kwargs are given to the 'export_data_frame(...)' function
+        @return: a contribution table as a dataframe
+        """
         contrib_raw = self._data_frame.groupby(EXPERIMENT_INPUT).apply(
             lambda x: _contribution_agg(x))
         contrib = pd.DataFrame()
@@ -887,6 +976,16 @@ class DecisionAnalysis(BasicAnalysis):
         )
 
     def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
+        """
+        By default, the cactus plot draws its graphic by using the cpu_time of the results: you are free to change this
+        behaviour by replacing the cactus_col parameter. You can ask this plot to cumulate the runtime by giving
+        cumulated=True. We can show and hide markers thanks to show_marker parameter. The legend ordering corresponds
+        to the decreasing order of the number of solved inputs for each experiment-ware.
+        @param cumulated: True if we want to cumulate the cpu_time, else False.
+        @param cactus_col: The data to plot (cpu_time by default)
+        @param kwargs: kwars are given to the LinePlot(...) object.
+        @return: the drawn figure
+        """
         df = _make_cactus_plot_df(self, cumulated, cactus_col)
 
         plot = LinePlot(df, **kwargs)
@@ -895,6 +994,16 @@ class DecisionAnalysis(BasicAnalysis):
         return plot.show()
 
     def cdf_plot(self, cumulated=False, cdf_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
+        """
+        By default, the cdf plot draws its graphic by using the cpu_time of the results: you are free to change this
+        behaviour by replacing the cdf_col parameter. You can ask this plot to cumulate the runtime by giving
+        cumulated=True. We can show and hide markers thanks to show_marker parameter. The legend ordering corresponds
+        to the decreasing order of the number of solved inputs for each experiment-ware.
+        @param cumulated: True if we want to cumulate the cpu_time, else False.
+        @param cdf_col: The data to plot (cpu_time by default)
+        @param kwargs: kwars are given to the LinePlot(...) object.
+        @return: the drawn figure
+        """
         df = _make_cactus_plot_df(self, cumulated, cdf_col)
 
         plot = CDFPlot(df, len(self.inputs), **kwargs)
@@ -903,6 +1012,17 @@ class DecisionAnalysis(BasicAnalysis):
         return plot.show()
 
     def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME, **kwargs):
+        """
+        To draw a scatter-plot, we need to specify the experiment-wares on the x-axis and tge y-axis: xp_ware_x and
+        xp_ware_y. By default, the scatter plot draw its graphic by using the cpu_time of results: you are free to
+        change this behaviour by replacing the scatter_col parameter.
+        @param xp_ware_x: the first experiment-ware
+        @param xp_ware_y: the second experiment-ware
+        @param color_col: to give a specific color to points in function of a column
+        @param scatter_col: The data to plot (cpu_time by default)
+        @param kwargs: kwargs are given to the ScatterPlot(...) object.
+        @return: the drawn figure
+        """
         if xp_ware_x not in self.experiment_wares:
             raise ValueError(f'Experiment-ware xp_ware_x={xp_ware_x} does not exist.')
         if xp_ware_y not in self.experiment_wares:
@@ -916,6 +1036,16 @@ class DecisionAnalysis(BasicAnalysis):
         return plot.show()
 
     def box_plot(self, box_col=EXPERIMENT_CPU_TIME, box_by=EXPERIMENT_XP_WARE, **kwargs: dict):
+        """
+        By default, the box plot draw its graphic by using the cpu_time of results: the user is free to change this
+        behaviour by replacing the box_col parameter. Also, by default, the box_by parameter is set to experiment_ware
+        meaning that each box represents an experiment_ware. The user may like to replace this by another column, for
+        example the family col, and explore family data distributions.
+        @param box_col: The data to plot (cpu_time by default)
+        @param box_by: The box nature (by default, experiment-ware)
+        @param kwargs: kwargs are given to the BoxPlot(...) object.
+        @return: the drawn figure
+        """
         df = _make_box_plot_df(self, box_by, box_col)
 
         plot = BoxPlot(df, **kwargs)
