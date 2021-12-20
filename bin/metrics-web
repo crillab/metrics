@@ -1,5 +1,0 @@
-#!/usr/bin/env python3
-from metrics.studio.web import dash
-
-if __name__ == '__main__':
-    dash.run_server(debug=True, host='0.0.0.0')

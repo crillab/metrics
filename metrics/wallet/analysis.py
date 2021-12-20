@@ -30,6 +30,7 @@ import math
 import pickle
 from typing import List
 import warnings
+from typing import List
 
 from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot
 
@@ -199,7 +200,7 @@ class BasicAnalysis:
         )
 
         self._data_frame[ERROR_COL] = self._data_frame.apply(
-            lambda x: x[MISSING_DATA_COL] or not(x[XP_CONSISTENCY_COL]) or not(x[INPUT_CONSISTENCY_COL]),
+            lambda x: x[MISSING_DATA_COL] or not (x[XP_CONSISTENCY_COL]) or not (x[INPUT_CONSISTENCY_COL]),
             axis=1
         )
 

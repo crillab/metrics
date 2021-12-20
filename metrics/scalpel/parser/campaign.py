@@ -32,10 +32,11 @@ containing the results of a campaign, so as to build its representation.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from glob import glob
-from os import path, scandir
+from os import path, scandir, walk
 from os.path import basename, splitext
-from typing import Any, Dict, List, TextIO
+from typing import Any, Dict, List, TextIO, Generator, Tuple, Optional
 
 from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE
 from metrics.scalpel.config import ScalpelConfiguration
@@ -346,7 +347,8 @@ class DirectoryCampaignParser(CampaignParser):
     it contains.
     """
 
-    def __init__(self, file_exploration_strategy: FileExplorationStrategy) -> None:
+    def __init__(self, configuration: ScalpelConfiguration,
+                 file_exploration_strategy: FileExplorationStrategy) -> None:
         """
         Creates a new DirectoryCampaignParser.
 
@@ -355,7 +357,8 @@ class DirectoryCampaignParser(CampaignParser):
                                           outputs.
         """
         self._file_exploration_strategy = file_exploration_strategy
-        self._directories = []
+        self._configuration = configuration
+        self._directories = None
 
     def parse_file(self, root: str) -> None:
         """
@@ -363,28 +366,63 @@ class DirectoryCampaignParser(CampaignParser):
 
         :param root: The root directory of the file hierarchy to explore.
         """
-        self._directories.append(root)
-        while self._directories:
-            current_dir = self._directories.pop()
-            self._file_exploration_strategy.enter_directory(current_dir)
-            with scandir(current_dir) as directory:
-                self._explore_directory(current_dir, directory)
-            self._file_exploration_strategy.exit_directory(current_dir)
+        self._directories = defaultdict(list)
+        self._find_relevant_files(root)
+        self._parse_relevant_files()
 
-    def _explore_directory(self, directory_path: str, directory: Any) -> None:
+    def _find_relevant_files(self, root: str):
         """
-        Explores the files contained in the given directory.
+        Finds the relevant files in the file hierarchy of the campaign.
 
-        :param directory_path: The path of the directory to explore.
-        :param directory: The iterator allowing to iterate over the files in the
-                          directory.
+        :param root: The root of the file hierarchy to explore.
         """
-        for file in directory:
-            file_path = path.join(directory_path, file.name)
-            if path.isdir(file_path):
-                self._directories.append(file_path)
-            else:
-                self._file_exploration_strategy.parse_file(file_path, file.name)
+        for file in self._find(root):
+            xp_dir, xp_file = self._extract_relevant_file(file)
+            if xp_file is not None:
+                self._directories[xp_dir].append(xp_file)
+
+    def _extract_relevant_file(self, file_path: str) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Extracts a relevant file from the given path.
+
+        :param file_path: The path of the file to extract a file from.
+
+        :return: The path of the directory containing the relevant file and the path of the
+                 relevant file inside this directory, or (None, None) if the file is not
+                 relevant.
+        """
+        split_path = file_path.split(path.sep)
+        for i in range(len(split_path) - 1, -1, -1):
+            directory = path.join(split_path[0], *split_path[1:i]) if i > 0 else "."
+            file = path.join(split_path[i], *split_path[i+1:]) if i < len(split_path) - 1 else split_path[i]
+            if self._configuration.is_to_be_parsed(file):
+                return directory, file
+        return None, None
+
+    def _parse_relevant_files(self) -> None:
+        """
+        Parses the relevant files that have been found in the file hierarchy of the
+        campaign.
+        """
+        for directory, files in self._directories.items():
+            self._file_exploration_strategy.enter_directory(directory)
+            for file in files:
+                file_path = path.join(directory, file)
+                self._file_exploration_strategy.parse_file(file_path, file)
+            self._file_exploration_strategy.exit_directory(directory)
+
+    def _find(self, directory: str) -> Generator[str]:
+        """
+        Finds all regular files in the file hierarchy whose root is the given
+        directory.
+
+        :param directory: The root directory of the file hierarchy to explore.
+
+        :return: A generator of the regular files in the hierarchy.
+        """
+        for root, _, files in walk(directory, followlinks=self._configuration.follow_symlinks()):
+            for file in files:
+                yield path.join(root, file)
 
 
 class FileExplorationStrategy(CampaignParserListenerNotifier):
