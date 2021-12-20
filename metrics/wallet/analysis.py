@@ -100,6 +100,15 @@ def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_
     return data_frame
 
 
+def find_best_cpu_time_input(df):
+    """
+    Find the best cpu time experiment in a dataframe
+    @param df: the dataframe where finding the best experiment
+    @return: the best experiment
+    """
+    return df.sort_values(by=[SUCCESS_COL, EXPERIMENT_CPU_TIME], ascending=[False, True]).iloc[0]
+
+
 class BasicAnalysis:
     """
     A basic analysis is an analysis with only the constraint of having the cartesian product of
@@ -328,6 +337,30 @@ class BasicAnalysis:
         @return: the merged analysis
         """
         return self.__class__(data_frame=self._data_frame.append(data_frame, ignore_index=True))
+
+    def add_virtual_experiment_ware(self, function=find_best_cpu_time_input,
+                                    xp_ware_set=None, name='vbew') -> BasicAnalysis:
+        """
+        Make a Virtual ExperimentWare.
+        By default, the function that made the virtual ExperimentWare is 'find_best_cpu_time_input'
+        corresponding
+        to the best results of a sub set of experiment wares (xp_ware_set=None corresponds to the
+        overall solvers).
+        @param function: the function to create the virtual ExperimentWare
+        @param xp_ware_set: a sub set of experiment-wares for which we take the wanted values
+        @param name: name of the vbew.
+        @return: a new instance of Analysis with the new vbew.
+        """
+        df = self._data_frame
+        if xp_ware_set is None:
+            xp_ware_set = self.experiment_wares
+
+        df_vbs = df[df[EXPERIMENT_XP_WARE].isin(xp_ware_set)]
+
+        df_vbs = df_vbs.groupby(EXPERIMENT_INPUT).apply(function).dropna(how='all') \
+            .assign(experiment_ware=lambda x: name)
+
+        return self.add_data_frame(data_frame=df_vbs)
 
     def filter_analysis(self, function, inplace=False) -> BasicAnalysis:
         """
@@ -596,7 +629,7 @@ def _make_list(l):
     return [l]
 
 
-def _default_explode(df, samp):
+def default_explode(df, samp):
     d = df.iloc[0].to_dict()
     times = _make_list(d.pop('timestamp_list'))
     bounds = _make_list(d.pop('bound_list'))
@@ -757,7 +790,7 @@ class OptiAnalysis(BasicAnalysis):
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 basic_analysis: BasicAnalysis = None, func=_default_explode, samp=None):
+                 basic_analysis: BasicAnalysis = None, func=default_explode, samp=None):
         """
         Conctructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
@@ -795,7 +828,7 @@ class OptiAnalysis(BasicAnalysis):
         Computes the list of scoring method on the analysis.
         @param default_solver: A default solver permits to apply an additional operation
         (with additional data variables) permitting to compare scores to a default solver score.
-        @param score_map: a dictionnary of scores with their names and the function to apply.
+        @param score_map: a dictionnary of scoring methods with their names and the function to apply.
         """
         self.apply_on_groupby(
             by=['input', 'timeout'],
@@ -819,15 +852,6 @@ class OptiAnalysis(BasicAnalysis):
             values=col,
             **kwargs
         )
-
-
-def find_best_cpu_time_input(df):
-    """
-    Find the best cpu time experiment in a dataframe
-    @param df: the dataframe where finding the best experiment
-    @return: the best experiment
-    """
-    return df.sort_values(by=[SUCCESS_COL, EXPERIMENT_CPU_TIME], ascending=[False, True]).iloc[0]
 
 
 def _cpu_time_stat(x, i):
@@ -937,30 +961,6 @@ class DecisionAnalysis(BasicAnalysis):
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
 
         # test if the naalysis is in conformity
-
-    def add_virtual_experiment_ware(self, function=find_best_cpu_time_input,
-                                    xp_ware_set=None, name='vbew') -> BasicAnalysis:
-        """
-        Make a Virtual ExperimentWare.
-        By default, the function that made the virtual ExperimentWare is 'find_best_cpu_time_input'
-        corresponding
-        to the best results of a sub set of experiment wares (xp_ware_set=None corresponds to the
-        overall solvers).
-        @param function: the function to create the virtual ExperimentWare
-        @param xp_ware_set: a sub set of experiment-wares for which we take the wanted values
-        @param name: name of the vbew.
-        @return: a new instance of Analysis with the new vbew.
-        """
-        df = self._data_frame
-        if xp_ware_set is None:
-            xp_ware_set = self.experiment_wares
-
-        df_vbs = df[df[EXPERIMENT_XP_WARE].isin(xp_ware_set)]
-
-        df_vbs = df_vbs.groupby(EXPERIMENT_INPUT).apply(function).dropna(how='all') \
-            .assign(experiment_ware=lambda x: name)
-
-        return self.add_data_frame(data_frame=df_vbs)
 
     def stat_table(self, par=[1, 2, 10], **kwargs):
         """
