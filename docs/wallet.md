@@ -747,15 +747,15 @@ Every previous static tables correspond to pandas DataFrame and are thus manipul
 
 ## Make an Optimality Analysis with `OptiAnalysis`
 
-In order to make an optimality analysis, the user needs to parse and get back some needed information:
+To make an optimality analysis, the user needs to parse and get back some needed information:
 
-- the usual `input`, `experiment_ware`, `cpu_time`, `timeout`
-- the additional `bound_list`, `timestamp_list`, `objective`, `status`, `best_bound`:
-    - `bound_list` is the list of all found bound during an experiment
+- the usual `input`, `experiment_ware`, `cpu_time`, `timeout` columns
+- the additional columns:
+    - `bound_list` is the list of all found bounds during an experiment
     - `bound_list` is the corresponding timestamp of each bound of bound_list
     - `objective` is equal to `min` for minization problem else `max`
-    - `status` informs the final status of the experiment `COMPLETE` or `INCOMPLETE`
-    - `best_bound` is the final found bound before the end of resolution
+    - `status` informs the final status of the experiment (`COMPLETE` or `INCOMPLETE`)
+    - `best_bound` is the final found bound before the end of the resolution
 
 ### Create an `OptiAnalysis`
 
@@ -767,9 +767,9 @@ analysis = OptiAnalysis(input_file=SCALPEL_INPUT_FILE, samp=samp)
 ```
 
 The parameter `samp` permits to explode the experiments in many timestamps that will permit to compute a score for each of them.
-In the example we focus on four timestamps (1s, 10s, 100s and 1000s): this is an exponential way of observing results but a linear view is also interesting.
+In the example we focus on four timestamps (1s, 10s, 100s, and 1000s): this is an exponential way of observing results but a linear view is also interesting.
 
-A default function `default_explode` is given by default in order to explode these data, but the advanced user could give another one to well-matching with its own extracted data.
+A default function `default_explode` is given by default to explode these data, but the advanced user could give another one to well-matching with its own extracted data.
 
 Once constructed, the `analysis` object has this next data-frame in memory:
 
@@ -778,7 +778,7 @@ Once constructed, the `analysis` object has this next data-frame in memory:
 We can observe that the same couple (input, experiment-ware) appears many times -- for each sampling asked by the user, visible through the timeout column.
 Each tuple composed of a specific (input, experiment-ware, timeout) is composed of the best_bound at this time, the current status and the success column that inform about the actual performances.
 
-> A full example [here](http://localhost:8888/notebooks/Chap7/13_ace/1-logs_to_csv.ipynb).
+> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/1-logs_to_csv.ipynb).
 
 ### Compute scores
 
@@ -793,7 +793,7 @@ analysis.compute_scores(
 
 where:
 
-- `score_map` is a dictionnary of scoring methods with their names and the function to apply :
+- `score_map` is a dictionary of scoring methods with their names and the function to apply :
 
 ```python
 DEFAULT_SCORE_METHODS = {
@@ -809,11 +809,11 @@ DEFAULT_SCORE_METHODS = {
 By default the different methods inside `DEFAULT_SCORE_METHODS` will be applied on each observation:
 
 - `optimality` is equal to 1 if the optimality is found/proved or 0
-- `dominance`is equal to 1 if the current bound is equal to the best one for this input
-- `norm_bound` is the normalization of the current bound, base on min and max values found for this input at the current time
+- `dominance` is equal to 1 if the current bound is equal to the best one for this input
+- `norm_bound` is the normalization of the current bound, based on min and max values found for this input at the current time
 - `borda` is based on the Borda voting method by rating each solver for a given input; "Complete Scoring Procedure" in this [page](https://www.minizinc.org/challenge2020/rules2020.html)
 
-The advanced user could give its own function following this schema:
+The advanced user could give its function following this schema:
 
 ```python
 def dominance_score(x, min_b, max_b, df):
@@ -827,9 +827,7 @@ where:
 - `max_b` is the best found bound at the current time of the analysis for a given input
 - `df` is the dataframe of the current analyzed input experiments (from which `min_b` and `max_b` are computed)
 
-A
-
-> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/1-logs_to_csv.ipynb).
+> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2-make_agg_analysis.ipynb).
 >
 > with a preview of created score columns:
 > 
