@@ -1,6 +1,5 @@
-
 @startuml
-class Analysis {
+class BasicAnalysis {
   .. getters ..
   + data_frame
   + inputs
@@ -36,14 +35,33 @@ class Analysis {
   + description_table(...)
   + error_table(...)
   + pivot_table(...)
+  + line_plot(...)
+
+  .. others ..
+  + export(...)
+  + {static} import(...)
+}
+
+
+class DecisionAnalysis {
+  .. figures ..
   + stat_table(...)
   + contribution_table(...)
   + cactus_plot(...)
   + cdf_plot(...)
   + scatter_plot(...)
   + box_plot(...)
-
-  .. others ..
-  + export(...)
 }
+
+
+class OptiAnalysis {
+  .. manipulations ..
+  + compute_scores(...)
+
+  .. figures ..
+  + opti_line_plot(...)
+}
+
+DecisionAnalysis -|> BasicAnalysis
+OptiAnalysis -|> BasicAnalysis
 @enduml

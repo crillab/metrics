@@ -23,9 +23,9 @@ For the next, the documentation focuses on the analysis of a CSP solver competit
 
 ## A Preview of What is Able to Do an `Analysis`
 
-![Class diagram of an Analysis](fig/analysis_uml.png)
+![Class diagram of an *Analysis](fig/analysis_uml.png)
 
-Globally, the Analysis object is composed of five parts:
+Globally, an *Analysis object is composed of five parts:
 
 * `getters` to get basical objects from the analysis
 * `checkers` that permit to check many important information about the analysis
@@ -33,15 +33,28 @@ Globally, the Analysis object is composed of five parts:
 * `figures` that permit to draw some tables and plots representing the data
 * `others` that correspond to operations like exporting.
 
-## Create/Import/Export an Analysis
+Here, an analysis id divided in three different objects:
 
-### The Classical Analysis Object
+* `BasicAnalysis` is an analysis with the only constraint of a complete cartesian product between inputs and experiment-wares
+* `DecisionAnalysis` is an analysis taking into account the time and the success, or not, of each experiment
+* `OptiAnalysis` is an analysis of an optimality problem taking into account the list of bound and timestamps, and the success, or not, of each experiment
 
-To create a new analysis, you only need to import the `Analysis` class from *Wallet* module and instantiate a new `Analysis` object with the path to the YAML configuration file:
+A `BasicAnalysis` could be used openly without the constraint of success, time, or bound list information.
+
+In this tutorial, we firstly focus on a `DecisionAnalysis` with the inherited methods from a `BasicAnalysis`.
+
+A final part focuses on the optimality analysis of the object `OptiAnalysis`.
+
+## Create/Import/Export a DecisionAnalysis
+
+### The DecisionAnalysis Object
+
+To create a new analysis, you only need to import the `DecisionAnalysis` class from *Wallet* module and instantiate a new `DecisionAnalysis` object with the path to the YAML configuration file:
 
 ```python
-from metrics.wallet import Analysis
-analysis = Analysis(input_file='path/to/xcsp19/YAML/file')
+from metrics.wallet import BasicAnalysis
+
+analysis = DecisionAnalysis(input_file='path/to/xcsp19/YAML/file')
 ```
 
 The analysis is composed of many variables describing the experiments: 
@@ -51,11 +64,11 @@ The analysis is composed of many variables describing the experiments:
 These variables permit to check the consistency and the validity of information. Some methods, called checkers, permit to operate some basic operations:
 
 * `<analysis>.check_success(<lambda>)`: given a lambda, this method permits to check if an experiment is a success or not (this method is automatically executed when the user has informed it in the Scalpel file);
-* `<analysis>.check_missing_experiments()`: this method is automatically called by the `Analysis` constructor to replace missing experiments by unsuccessful experiments;
+* `<analysis>.check_missing_experiments()`: this method is automatically called by the `*Analysis` constructor to replace missing experiments by unsuccessful experiments;
 * `<analysis>.check_xp_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each experiment;
 * `<analysis>.check_input_consistency(<lambda>)`: given a lambda, this method permits to check the consistency for each input (composed of many experiments); it asks some basic knowledge on DataFrame manipulation (an example is given by the next).
 
-`check_success` and `check_missing_experiments` are automatically called during the Analysis constructor call. After, the user could (re-)check these success and consistency methods as follow:
+`check_success` and `check_missing_experiments` are automatically called during the `*Analysis` constructor call. After, the user could (re-)check these success and consistency methods as follow:
 
 ```python
 inconsistent_returns = {
@@ -73,7 +86,7 @@ analysis.check_input_consistency(is_consistent_by_input)
 analysis.check_xp_consistency(is_consistent_by_xp)
 ```
 
-The `Analysis` construction warns the user when inconsistencies are found, missing data, ...:
+The `*Analysis` construction warns the user when inconsistencies are found, missing data, ...:
 
 ```
 1 experiment is missing and has been added as unsuccessful.
@@ -87,7 +100,7 @@ It exists another way to build an analysis that is presented in the `Advanced Us
 
 ### Export and Import an Analysis
 
-At any moment, the analysis could be exported to save its state in a file:
+At any moment, the analysis could be exported to save its state into a file:
 
 ```python
 analysis.export('analysis.csv')
@@ -98,20 +111,19 @@ An analysis could be exported as a csv (as a `DataFrame` representation) if the 
 To import an analysis from a file, the function `import_analysis_from_file` is imported:
 
 ```python
-from metrics.wallet import import_analysis
-imported_analysis = import_analysis_from_file(filepath)
+imported_analysis = DecisionAnalysis.import_from_file(filepath)
 ```
 
 > You can observe an example of these functions in [this notebook](https://github.com/crillab/metrics/blob/master/example/example/xcsp-19/create_analysis.ipynb).
 
-## Manipulate the Data from Analysis
+## Manipulate the Data from *Analysis
 
 Before producing the first figures, *Wallet* proposes to manipulate the different experiments composing the dataframe.
 It allows to analyze more finely the campaign.
 
 ### Generate a New Information/Variable for Each Experiment
 
-*Wallet* can add new information to the underlying dataframe by giving a function/lambda to a mapping method of `Analysis`. For the next example, the input name corresponds to the path of the input (e.g., `/XCSPxx/family/.../input-parameters.xcsp`). It could be interesting to extract the family name to use it in the rest of the analysis. For this, the method `add_variable()` from `Analysis`:
+*Wallet* can add new information to the underlying dataframe by giving a function/lambda to a mapping method of `BasicAnalysis`. For the next example, the input name corresponds to the path of the input (e.g., `/XCSPxx/family/.../input-parameters.xcsp`). It could be interesting to extract the family name to use it in the rest of the analysis. For this, the method `add_variable()` from `BasicAnalysis`:
 
 ```python
 import re
@@ -196,18 +208,18 @@ def find_best_cpu_time_input(df):
 
 > You can observe an example of this method in [this notebook](https://github.com/crillab/metrics/blob/master/example/example/xcsp-19/create_analysis.ipynb).
 
-### Subset of `Analysis` Rows
+### Subset of `*Analysis` Rows
 
-`Analysis` is also able to make a subset of its experiments.
+`*Analysis` is also able to make a subset of its experiments.
 
 #### By Filtering Inputs
 
-By default, it exists some useful subset methods in `Analysis` object to filter input (and linked experiments):
+By default, it exists some useful subset methods in `*Analysis` object to filter inputs (and linked experiments):
 
-+ `keep_common_failed_inputs()`: returns a new `Analysis` with only the common failed experiments. It corresponds to inputs for which no experiment-ware has succeeded;
-+ `keep_common_solved_inputs()`: returns a new `Analysis` with only the common successful experiments. It corresponds to inputs for which no experiment-ware has failed;
-+ `delete_common_failed_inputs()`: returns a new `Analysis` where commonly failed inputs are removed;
-+ `delete_common_solved_inputs()`: returns a new `Analysis` where commonly succeeded inputs are removed.
++ `keep_common_failed_inputs()`: returns a new `*Analysis` with only the common failed experiments. It corresponds to inputs for which no experiment-ware has succeeded;
++ `keep_common_solved_inputs()`: returns a new `*Analysis` with only the common successful experiments. It corresponds to inputs for which no experiment-ware has failed;
++ `delete_common_failed_inputs()`: returns a new `*Analysis` where commonly failed inputs are removed;
++ `delete_common_solved_inputs()`: returns a new `*Analysis` where commonly succeeded inputs are removed.
 
 Finally, we present a last and generic method to make a subset of inputs:
 
@@ -258,7 +270,7 @@ To group the analysis into specific analysis, two more methods are presented: th
 
 #### `groupby` Operator
 
-The `groupby` operator allows to create a list of new `Analysis` instances grouped by a column value. For example, if we have the family name `family` of inputs in the dataframe, it could be interesting to make separated analysis of each of them:
+The `groupby` operator allows to create a list of new `*Analysis` instances grouped by a column value. For example, if we have the family name `family` of inputs in the dataframe, it could be interesting to make separated analysis of each of them:
 
 ```python
 for sub_analysis in analysis.groupby('family'):
@@ -732,3 +744,148 @@ analysis = Analysis(data_frame=modified_df)
 ```
 
 Every previous static tables correspond to pandas DataFrame and are thus manipulable.
+
+## Make an Optimality Analysis with `OptiAnalysis`
+
+To make an optimality analysis, the user needs to parse and get back some needed information:
+
+- the usual `input`, `experiment_ware`, `cpu_time`, `timeout` columns
+- the additional columns:
+    - `bound_list` is the list of all found bounds during an experiment
+    - `bound_list` is the corresponding timestamp of each bound of bound_list
+    - `objective` is equal to `min` for minization problem else `max`
+    - `status` informs the final status of the experiment (`COMPLETE` or `INCOMPLETE`)
+    - `best_bound` is the final found bound before the end of the resolution
+
+### Create an `OptiAnalysis`
+
+Once the previous needed data are well filled out in the yaml file (an example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/config/metrics_scalpel.yml)), we can build a first optimality campaign as follows:
+
+```python
+samp = [1,10,100,1000]
+analysis = OptiAnalysis(input_file=SCALPEL_INPUT_FILE, samp=samp)
+```
+
+The parameter `samp` permits to explode the experiments in many timestamps that will permit to compute a score for each of them.
+In the example we focus on four timestamps (1s, 10s, 100s, and 1000s): this is an exponential way of observing results but a linear view is also interesting.
+
+A default function `default_explode` is given by default to explode these data, but the advanced user could give another one to well-matching with its own extracted data.
+
+Once constructed, the `analysis` object has this next data-frame in memory:
+
+![COP table](fig/table_cop.png)
+
+We can observe that the same couple (input, experiment-ware) appears many times -- for each sampling asked by the user, visible through the timeout column.
+Each tuple composed of a specific (input, experiment-ware, timeout) is composed of the best_bound at this time, the current status and the success column that inform about the actual performances.
+
+> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/1-logs_to_csv.ipynb).
+
+### Compute scores
+
+Now we have a well constructed `analysis` we can apply scoring methods thanks to the `compute_scores` method:
+
+```python
+analysis.compute_scores(
+  score_map=DEFAULT_SCORE_METHODS,
+  default_solver=None
+)
+```
+
+where:
+
+- `score_map` is a dictionary of scoring methods with their names and the function to apply :
+
+```python
+DEFAULT_SCORE_METHODS = {
+    'optimality': optimality_score,
+    'dominance': dominance_score,
+    'norm_bound': norm_bound_score,
+    'borda': borda_score
+}
+```
+
+- `default_solver` is a default solver permitting to apply an additional operation (with additional data variables in the final data-frame) permitting to compare scores to a default solver score.
+
+By default the different methods inside `DEFAULT_SCORE_METHODS` will be applied on each observation:
+
+- `optimality` is equal to 1 if the optimality is found/proved or 0
+- `dominance` is equal to 1 if the current bound is equal to the best one for this input
+- `norm_bound` is the normalization of the current bound, based on min and max values found for this input at the current time
+- `borda` is based on the Borda voting method by rating each solver for a given input; "Complete Scoring Procedure" in this [page](https://www.minizinc.org/challenge2020/rules2020.html)
+
+The advanced user could give its function following this schema:
+
+```python
+def dominance_score(x, min_b, max_b, df):
+    return 1 if x['best_bound'] == max_b else 0
+```
+
+where:
+
+- `x` is the current experiment/observation
+- `min_b` is the worst found bound at the current time of the analysis for a given input
+- `max_b` is the best found bound at the current time of the analysis for a given input
+- `df` is the dataframe of the current analyzed input experiments (from which `min_b` and `max_b` are computed)
+
+> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2-make_agg_analysis.ipynb).
+>
+> with a preview of created score columns:
+> 
+> ![COP table 2](fig/table_cop_2.png)
+
+### Make figures
+
+Finally, the user is now able to draw figures with the previously computed scores by giving, for example, `col='borda'`:
+
+```python
+analysis.opti_line_plot(
+    col='borda',
+    show_marker=False,
+
+    # Figure size
+    figure_size=(5, 3),
+
+    # Titles
+    title='',
+    x_axis_name='Temps $t$',
+    y_axis_name='Borda score',
+
+    # Axis limits
+    x_min=None,
+    x_max=None,
+    y_min=None,
+    y_max=None,
+
+    # Axis scaling
+    logx=False,
+    logy=False,
+
+    # Legend parameters
+    legend_location=Position.RIGHT,
+    legend_offset=Nopne,
+    ncol_legend=1,
+
+    # Style mapping
+    color_map=None,
+    style_map=None,
+
+    # Title font styles
+    title_font_name='Helvetica',
+    title_font_color='#000000',
+    title_font_size=11,
+    title_font_weight=FontWeight.BOLD,
+
+    # Label font styles
+    label_font_name='Helvetica',
+    label_font_color='#000000',
+    label_font_size=11,
+    label_font_weight=FontWeight.BOLD,
+
+    # Others
+    latex_writing=True,
+    output=f'fig/borda_score.pdf',
+    dynamic=False
+)
+```
+
+> A full example is given [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2A-plots.ipynb)
