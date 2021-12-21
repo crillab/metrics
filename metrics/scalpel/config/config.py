@@ -45,7 +45,11 @@ from metrics.scalpel.config.inputset import create_input_set_reader
 from metrics.scalpel.config.wrapper import IDataFileConfigurationWrapper, \
     IFileNameMetaConfigurationWrapper, IScalpelConfigurationWrapper
 
-from metrics.core.constants import *
+from metrics.core.constants import CAMPAIGN_NAME, CAMPAIGN_DATE
+from metrics.core.constants import CAMPAIGN_OS, CAMPAIGN_CPU, CAMPAIGN_GPU, CAMPAIGN_MEMORY
+from metrics.core.constants import CAMPAIGN_TIMEOUT, CAMPAIGN_MEMOUT
+from metrics.core.constants import EXPERIMENT_CPU_TIME
+from metrics.core.constants import INPUT_SET_NAME
 
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.utils import CsvConfiguration

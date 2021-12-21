@@ -55,7 +55,7 @@ def read_configuration(yaml_file: str, listener: CampaignParserListener) -> Scal
 
     :return: The read configuration.
     """
-    with open(yaml_file, 'r') as yaml_stream:
+    with open(yaml_file, 'r', encoding='utf-8') as yaml_stream:
         yaml_dict = load_yaml(yaml_stream)
         return load_configuration(DictScalpelConfigurationWrapper(yaml_dict), listener)
 

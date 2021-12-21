@@ -64,16 +64,16 @@ class Operator(Enum):
         self._symbol = symbol
         self._function = function
 
-    def __call__(self, a: Any, b: Any) -> bool:
+    def __call__(self, arg_1: Any, arg_2: Any) -> bool:
         """
         Invokes this operator with the two given parameters.
 
-        :param a: The first parameter with which to invoke this operator.
-        :param b: The second parameter with which to invoke this operator.
+        :param arg_1: The first parameter with which to invoke this operator.
+        :param arg_2: The second parameter with which to invoke this operator.
 
         :return: The result of evaluating this operator on a and b.
         """
-        return self._function(a, b)
+        return self._function(arg_1, arg_2)
 
     @classmethod
     def value_of(cls, symbol: str) -> Operator:
@@ -340,10 +340,10 @@ class SimpleExpression(AbstractExpression):
 
         :return: The function corresponding to the operator.
         """
-        o = self._tokens.get('operator')
-        if o is None:
+        operator = self._tokens.get('operator')
+        if operator is None:
             return None
-        return Operator.value_of(o)
+        return Operator.value_of(operator)
 
     def get_value(self) -> Optional[Any]:
         """

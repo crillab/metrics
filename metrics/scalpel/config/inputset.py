@@ -113,8 +113,8 @@ class ListInputSetReader(InputSetReader):
             if self._is_ignored(file):
                 continue
             self._start_input()
-            for k, v in self._file_name_meta.extract_from(file).items():
-                self._log_data(k, v)
+            for key, value in self._file_name_meta.extract_from(file).items():
+                self._log_data(key, value)
             for key, value in input_description.items():
                 self._log_data(key, value)
             self._end_input()
@@ -180,8 +180,8 @@ class FileListInputSetReader(InputSetReader):
         self._log_data(INPUT_NAME, file)
 
         # Retrieving the name of the input.
-        for k, v in self._file_name_meta.extract_from(file).items():
-            self._log_data(k, v)
+        for key, value in self._file_name_meta.extract_from(file).items():
+            self._log_data(key, value)
         self._end_input()
 
     def _is_ignored(self, file: str) -> bool:
@@ -292,6 +292,6 @@ def _file_reader(listener: CampaignParserListener, source: Any,
     :param extensions: The list of the extensions of the inputs.
     :param file_name_meta: The configuration for extracting metadata from filenames.
     """
-    with open(source, 'r') as file:
+    with open(source, 'r', encoding='utf-8') as file:
         reader = FileListInputSetReader(listener, file, extensions, file_name_meta)
         reader.read()

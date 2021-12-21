@@ -66,7 +66,7 @@ class CampaignOutputParser:
         """
         Parses the associated file.
         """
-        with open(self._file_path, 'r') as stream:
+        with open(self._file_path, 'r', encoding='utf-8') as stream:
             self._internal_parse(stream)
 
     def _internal_parse(self, stream: TextIO) -> None:
@@ -186,22 +186,22 @@ class JsonCampaignOutputParser(MarkupCampaignOutputParser):
         """
         return load_json(stream)
 
-    def _decode(self, json: Any, prefix: Optional[str] = None) -> None:
+    def _decode(self, obj: Any, prefix: Optional[str] = None) -> None:
         """
         Decodes an object wrapping the content of a JSON stream to extract
         campaign data.
 
-        :param json: The object to decode.
+        :param obj: The object to decode.
         :param prefix: The prefix for the fields in the object.
         """
-        if isinstance(json, list):
-            self._decode_array(json, prefix)
+        if isinstance(obj, list):
+            self._decode_array(obj, prefix)
 
-        elif isinstance(json, dict):
-            self._decode_object(json, prefix)
+        elif isinstance(obj, dict):
+            self._decode_object(obj, prefix)
 
         else:
-            self.log_data(prefix, json)
+            self.log_data(prefix, obj)
 
     def _decode_array(self, array: list, field: Optional[str]) -> None:
         """
@@ -243,23 +243,23 @@ class XmlCampaignOutputParser(MarkupCampaignOutputParser):
         """
         return load_xml(stream).getroot()
 
-    def _decode(self, xml: Element, prefix: Optional[str] = None) -> None:
+    def _decode(self, obj: Element, prefix: Optional[str] = None) -> None:
         """
         Decodes an object wrapping the content of an XML stream to extract
         campaign data.
 
-        :param xml: The object to decode.
+        :param obj: The object to decode.
         :param prefix: The prefix for the fields in the object.
         """
-        name = MarkupCampaignOutputParser._create_prefix(prefix, xml.tag)
+        name = MarkupCampaignOutputParser._create_prefix(prefix, obj.tag)
 
-        if xml.text and xml.text.strip():
-            self.log_data(name, xml.text.strip())
+        if obj.text and obj.text.strip():
+            self.log_data(name, obj.text.strip())
 
-        for key, value in xml.attrib.items():
+        for key, value in obj.attrib.items():
             self.log_data(MarkupCampaignOutputParser._create_prefix(name, key), value)
 
-        for child in xml:
+        for child in obj:
             self._decode(child, name)
 
 

@@ -31,8 +31,9 @@ analyze this data later on with, e.g., Metrics-Wallet.
 """
 
 
-from jsonpickle import decode as load_json
 from typing import Any, Iterable, Optional, Tuple
+
+from jsonpickle import decode as load_json
 
 from metrics.core.model import Campaign
 
@@ -87,7 +88,7 @@ def read_json(json_file: str) -> Campaign:
 
     :return: The read campaign.
     """
-    with open(json_file, 'r') as json_campaign:
+    with open(json_file, 'r', encoding='utf-8') as json_campaign:
         return load_json(json_campaign.read())
 
 

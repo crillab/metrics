@@ -1067,7 +1067,7 @@ def _as_boolean(obj: Any, default: bool = False) -> bool:
     return bool(obj)
 
 
-def _as_list(obj: Any, default: List[Any] = []) -> List[Any]:
+def _as_list(obj: Any, default: Iterable[Any] = tuple()) -> List[Any]:
     """
     Represents an object as a list of values.
 
@@ -1077,7 +1077,7 @@ def _as_list(obj: Any, default: List[Any] = []) -> List[Any]:
     :return: The list representation of the object.
     """
     if obj is None:
-        return default
+        return list(default)
     if isinstance(obj, list):
         return obj
     return [obj]

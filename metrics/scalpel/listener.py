@@ -160,7 +160,6 @@ class DefaultCampaignParserListenerState(AbstractCampaignParserListenerState):
         :param identifier: The identifier of the element to create if needed.
         :param all_values: The values that have been read about the element.
         """
-        pass
 
 
 class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerState):
@@ -202,7 +201,8 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
 
         # This is the first time we read this experiment-ware: we need to create it on the fly.
         xp_ware_builder = campaign_builder.add_experiment_ware_builder()
-        self._build_on_the_fly(xp_ware_builder, XP_WARE_NAME, name, all_values)
+        InExperimentCampaignParserListenerState._build_on_the_fly(xp_ware_builder, XP_WARE_NAME,
+                                                                  name, all_values)
 
     def _create_input_if_missing(self, campaign_builder: CampaignBuilder,
                                  name: str, all_values: Dict[str, str]) -> None:
@@ -221,9 +221,11 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         # This is the first time we read this input: we need to create it on the fly.
         input_set_builder = self._listener.get_input_set_builder('auto_name')
         input_builder = input_set_builder.add_input_builder()
-        self._build_on_the_fly(input_builder, INPUT_NAME, name, all_values)
+        InExperimentCampaignParserListenerState._build_on_the_fly(input_builder, INPUT_NAME,
+                                                                  name, all_values)
 
-    def _build_on_the_fly(self, builder: ModelBuilder, element_key: str, element_id: str,
+    @staticmethod
+    def _build_on_the_fly(builder: ModelBuilder, element_key: str, element_id: str,
                           all_values: Dict[str, str]) -> None:
         """
         Creates an element of the campaign when it is first encountered while
@@ -413,11 +415,11 @@ class CampaignParserListener:
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
-        scalpel_key, nb = self._key_mapping[key]
+        scalpel_key, nb_keys = self._key_mapping[key]
         read_values = self._pending_keys[scalpel_key]
         read_values[key] = str(value)
         self._logged_keys.add(key)
-        if len(read_values) == nb:
+        if len(read_values) == nb_keys:
             self._commit_key(scalpel_key, read_values)
             del self._pending_keys[scalpel_key]
 

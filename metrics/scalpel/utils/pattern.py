@@ -161,7 +161,7 @@ class UserDefinedPattern(AbstractUserDefinedPattern):
         match = self._pattern.search(string)
         if match is None:
             return tuple()
-        return match.group(self._group_id),
+        return (match.group(self._group_id),)
 
 
 class UserDefinedPatterns(AbstractUserDefinedPattern):
@@ -368,7 +368,7 @@ def compile_any(pattern: Optional[str], regex: Optional[str],
     """
     if pattern is not None and regex is not None and pattern != regex:
         # Only one of pattern and regex can be specified.
-        raise ValueError(f'Cannot compile both pattern and regex')
+        raise ValueError('Cannot compile both pattern and regex')
 
     # Trying to compile a named pattern.
     if pattern is not None:

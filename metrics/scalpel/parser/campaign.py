@@ -138,7 +138,7 @@ class FileCampaignParser(CampaignParserListenerNotifier, CampaignParser):
         :param file_path: The path of the file to read.
         """
         self.update_file_name_data(file_path)
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             self.parse_stream(file)
         self.reset_file_name_data()
 
@@ -266,7 +266,7 @@ class ReverseCsvCampaignParser(CsvCampaignParser):
         invoking this method.
         """
         for line in self._reader.read_content():
-            line_data = {key: value for key, value in line}
+            line_data = dict(line)
             input_data = self._extract_input_data(line_data)
             for xp_ware in self._experiment_wares:
                 self.start_experiment()
@@ -361,14 +361,14 @@ class DirectoryCampaignParser(CampaignParser):
         self._file_exploration_strategy = file_exploration_strategy
         self._directories = None
 
-    def parse_file(self, root: str) -> None:
+    def parse_file(self, file_path: str) -> None:
         """
         Explores the file hierarchy rooted at the given directory.
 
-        :param root: The root directory of the file hierarchy to explore.
+        :param file_path: The root directory of the file hierarchy to explore.
         """
         self._directories = defaultdict(list)
-        self._find_relevant_files(root)
+        self._find_relevant_files(file_path)
         self._parse_relevant_files()
 
     def _find_relevant_files(self, root: str):
@@ -457,7 +457,6 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
 
         :param directory: The directory that is entered.
         """
-        pass
 
     def parse_file(self, file_path: str, file_name: str) -> None:
         """
@@ -475,7 +474,6 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
 
         :param directory: The directory that is exited.
         """
-        pass
 
     def _extract_from_file(self, file_path: str, file_name: str):
         """
@@ -587,7 +585,8 @@ class NameBasedFileExplorationStrategy(FileExplorationStrategy):
         :param file_name: The name of the file to parse.
         """
         if self._configuration.is_to_be_parsed(file_name):
-            self._file_names.add(self._file_name_without_extension(file_name))
+            name = NameBasedFileExplorationStrategy._file_name_without_extension(file_name)
+            self._file_names.add(name)
 
     def exit_directory(self, directory: str) -> None:
         """
@@ -602,7 +601,8 @@ class NameBasedFileExplorationStrategy(FileExplorationStrategy):
                 self._extract_from_file(file, basename(file))
             self.end_experiment()
 
-    def _file_name_without_extension(self, file_name: str):
+    @staticmethod
+    def _file_name_without_extension(file_name: str):
         """
         Removes the extension from the name of a file.
 
