@@ -80,9 +80,9 @@ setup(
     test_suite='nose.collector',
     tests_require=['nose'],
 
-    scripts=[
-        'bin/metrics-scalpel',
-    ],
+    # scripts=[
+    #     'bin/metrics-scalpel',
+    # ],
 
     classifiers=[
         'Programming Language :: Python :: 3.7',
