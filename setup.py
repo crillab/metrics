@@ -81,7 +81,6 @@ setup(
     tests_require=['nose'],
 
     scripts=[
-        'bin/metrics-cli',
         'bin/metrics-scalpel',
     ],
 
