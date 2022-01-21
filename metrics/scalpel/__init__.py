@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -15,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -26,8 +26,8 @@
 
 """
 Metrics-Scalpel (sCAlPEL - extraCting dAta of exPeriments from softwarE Logs)
-provides tools for extracting data produced during software experiments so as
-to analyze this data later on, e.g., using Metrics-Wallet or Metrics-Studio.
+provides tools for extracting data produced during software experiments to
+analyze this data later on with, e.g., Metrics-Wallet.
 """
 
 
@@ -37,14 +37,15 @@ from jsonpickle import decode as load_json
 
 from metrics.core.model import Campaign
 
-from metrics.scalpel.config import read_configuration, ScalpelConfiguration
 from metrics.scalpel.listener import CampaignParserListener
+
+from metrics.scalpel.config import read_configuration, ScalpelConfiguration
 from metrics.scalpel.parser import create_parser
 
 
 def read_campaign(input_file: str) -> Tuple[Campaign, Optional[ScalpelConfiguration]]:
     """
-    Reads the data about a campaign from the given input file.
+    Reads the data about a campaign based on the given input file.
 
     :param input_file: The input file describing the campaign.
 
@@ -52,10 +53,10 @@ def read_campaign(input_file: str) -> Tuple[Campaign, Optional[ScalpelConfigurat
 
     :raises ValueError: If the input file does not have a recognized format.
     """
-    if input_file.endswith('.yml') or input_file.endswith('.yaml'):
+    if input_file.lower().endswith('.yml') or input_file.lower().endswith('.yaml'):
         return read_yaml(input_file)
 
-    if input_file.endswith('.json'):
+    if input_file.lower().endswith('.json'):
         return read_json(input_file), None
 
     raise ValueError(f'Unrecognized campaign format for file "{input_file}"')
@@ -74,7 +75,7 @@ def read_yaml(yaml_configuration: str) -> Tuple[Campaign, ScalpelConfiguration]:
     parser_listener = CampaignParserListener()
     configuration = read_configuration(yaml_configuration, parser_listener)
     campaign_parser = create_parser(configuration, parser_listener)
-    for file in configuration.get_main_file():
+    for file in configuration.get_path():
         campaign_parser.parse_file(file)
     return parser_listener.get_campaign(), configuration
 
@@ -87,23 +88,22 @@ def read_json(json_file: str) -> Campaign:
 
     :return: The read campaign.
     """
-    with open(json_file, 'r') as json_campaign:
+    with open(json_file, 'r', encoding='utf-8') as json_campaign:
         return load_json(json_campaign.read())
 
 
-def read_object(yaml_configuration: str, campaign: Iterable[Any]) -> Tuple[Campaign, ScalpelConfiguration]:
+def read_object(yaml_configuration: str,
+                campaign: Iterable[Any]) -> Tuple[Campaign, ScalpelConfiguration]:
     """
     Reads the data stored in the given iterable object following the
     configuration described in the given YAML file.
 
-    :param yaml_configuration: The path of the YAML file describing Scalpel's
-                               configuration.
-    :param campaign: The object to iterate over so as to get the data about the
-                     campaign.
-                     Each element encountered during the iteration is supposed to
-                     represent an experiment, and must define an "items()" method
-                     returning a set of key-value pairs (such as dictionaries or
-                     rows in a data-frame, for instance).
+    :param yaml_configuration: The path of the YAML file describing Scalpel's configuration.
+    :param campaign: The object to iterate over to get the data about the campaign.
+                     Each element encountered during the iteration is supposed to represent
+                     an experiment, and must define an "items()" method returning a set of
+                     key-value pairs (such as dictionaries or rows in a data-frame,
+                     for instance).
 
     :return: The read campaign and the configuration of this campaign.
     """

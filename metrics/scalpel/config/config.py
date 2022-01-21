@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -15,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -32,190 +32,511 @@ describes how to read the data collected during a campaign.
 
 from __future__ import annotations
 
-from csv import reader as load_csv
-from abc import ABC, ABCMeta, abstractmethod
 from collections import defaultdict
 from fnmatch import fnmatch
 from os import path, walk
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, TextIO
+from os.path import splitext
+from pydoc import locate
+from typing import Any, Dict, List, Optional, Type
 
-from yaml import safe_load as load_yaml
-
-from metrics.core.constants import *
-from metrics.scalpel.config.datafile import DataFile, create_data_file
-from metrics.scalpel.config.filters import create_filter
+from metrics.scalpel.config.datafile import DataFile
 from metrics.scalpel.config.format import CampaignFormat, InputSetFormat, OutputFormat
 from metrics.scalpel.config.inputset import create_input_set_reader
-from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.config.pattern import compile_named_pattern, compile_regex, \
-    AbstractUserDefinedPattern, NullUserDefinedPattern, compile_all_named_patterns, \
-    compile_all_regexes
+from metrics.scalpel.config.wrapper import IDataFileConfigurationWrapper, \
+    IFileNameMetaConfigurationWrapper, IScalpelConfigurationWrapper
+
+from metrics.core.constants import CAMPAIGN_NAME, CAMPAIGN_DATE
+from metrics.core.constants import CAMPAIGN_OS, CAMPAIGN_CPU, CAMPAIGN_GPU, CAMPAIGN_MEMORY
+from metrics.core.constants import CAMPAIGN_TIMEOUT, CAMPAIGN_MEMOUT
+from metrics.core.constants import EXPERIMENT_CPU_TIME
+from metrics.core.constants import INPUT_SET_NAME
+
+from metrics.scalpel import CampaignParserListener
+from metrics.scalpel.utils import CsvConfiguration
+from metrics.scalpel.utils import AbstractExpression, create_filter
+from metrics.scalpel.utils import LogData, NullUserDefinedPattern, compile_any
 
 
-class CsvConfiguration:
-
-    def __init__(self, separator: str = ',', quote_char: Optional[str] = None, has_header: bool = True,
-                 title_separator: str = '.'):
-        """
-        Creates a new CsvReader.
-
-        :param separator: The value separator used in the CSV input.
-        :param quote_char: The character used to quote the fields in the
-                           CSV input, if any.
-        :param has_header: Whether the CSV input has a header line.
-        """
-        self._separator = separator
-        self._quote_char = quote_char
-        self._has_header = has_header
-        self._title_separator = title_separator
-
-    def has_header(self):
-        return self._has_header
-
-    def get_separator(self):
-        return self._separator
-
-    def get_quote_char(self):
-        return self._quote_char
-
-    def get_title_separator(self):
-        return self._title_separator
-
-    def create_loader(self, stream: TextIO):
-        """
-        Reads the associated CSV stream line-by-line.
-
-        :return: The lines of the CSV stream.
-        """
-        if self._quote_char is None:
-            return load_csv(stream, delimiter=self._separator)
-
-        return load_csv(stream, delimiter=self._separator, quotechar=self._quote_char)
-
-
-class LogData:
+class FileNameMetaConfiguration:
     """
-    The LogData contains all the information allowing to retrieve a value from
-    an experiment-ware output file.
+    The FileNameMetaConfiguration describes how to extract metadata from the
+    name of a file.
     """
 
-    def __init__(self, names: Union[str, List[str]], pattern: AbstractUserDefinedPattern) -> None:
+    def __init__(self, wrapper: IFileNameMetaConfigurationWrapper) -> None:
         """
-        Creates a new LogData.
+        Creates a new FileNameMetaConfiguration.
 
-        :param names: The name(s) of the log data.
-        :param pattern: The pattern identifying the log data.
+        :param wrapper: The wrapper to create the configuration from.
         """
-        self._names = names if isinstance(names, list) else [names]
-        self._pattern = pattern
+        self._log_data = FileNameMetaConfiguration._compile(wrapper)
 
-    def get_names(self) -> List[str]:
+    def get_log_data(self) -> LogData:
         """
-        Gives the names of this log data.
+        Gives the log-data describing how to extract filename metadata.
 
-        :return: The names of this log data.
+        :return: The log-data for the metadata to extract.
         """
-        return self._names
+        return self._log_data
 
-    def extract_value_from(self, string: str) -> Tuple[str]:
+    def extract_from(self, filename: str) -> Dict[str, str]:
         """
-        Extracts the value corresponding to this log data from the given string.
+        Extracts the metadata from the given filename.
 
-        :param string: The string to extract data from.
+        :param filename: The name of the file to extract metadata from.
 
-        :return: The value extracted from the string, or None if this log data
-                 does not appear in the string.
+        :return: The extracted data.
         """
-        return self._pattern.search(string)
+        extracted_data = self._log_data.extract_value_from(filename)
+        file_name_data = {}
+        if extracted_data is not None:
+            for name, value in zip(self._log_data.get_names(), extracted_data):
+                file_name_data[name] = value
+        return file_name_data
+
+    @staticmethod
+    def _compile(wrapper: IFileNameMetaConfigurationWrapper) -> LogData:
+        """
+        Compiles the description of filename metadata into log-data.
+
+        :param wrapper: The wrapper describing filename metadata.
+
+        :return: The compiled log-data.
+        """
+        pattern = wrapper.get_simplified_pattern()
+        regex = wrapper.get_regex_pattern()
+        if pattern or regex:
+            exact = wrapper.is_exact()
+            groups = wrapper.get_groups()
+            names, indices = zip(*groups)
+            return LogData(names, compile_any(pattern, regex, exact, *indices))
+        return LogData([], NullUserDefinedPattern())
+
+
+class ScalpelConfigurationLoader:
+    """
+    The ScalpelConfigurationLoader provides an easy way for loading
+    Scalpel's configuration from its wrapper.
+    """
+
+    def __init__(self, configuration_wrapper: IScalpelConfigurationWrapper,
+                 listener: CampaignParserListener) -> None:
+        """
+        Creates a new ScalpelConfigurationLoader.
+
+        :param configuration_wrapper: The wrapper for the configuration.
+        :param listener: The listener to notify while loading the configuration.
+        """
+        self._wrapper = configuration_wrapper
+        self._listener = listener
+        self._path = []
+        self._format = None
+
+    def load(self) -> ScalpelConfiguration:
+        """
+        Loads Scalpel's configuration.
+
+        :return: The loaded configuration.
+        """
+        self._listener.start_campaign()
+        self._load_metadata()
+        self._load_mapping()
+        self._load_default_values()
+        self._load_input_set()
+        self._load_experiment_wares()
+        return ScalpelConfiguration(self)
+
+    def _load_metadata(self) -> None:
+        """
+        Loads the metadata of the campaign.
+        """
+        # Loading data about the campaign itself.
+        self._listener.log_data(CAMPAIGN_NAME, self._wrapper.get_campaign_name())
+        self._listener.log_data(CAMPAIGN_DATE, self._wrapper.get_campaign_date())
+
+        # Loading the setup of the campaign.
+        self._listener.log_data(CAMPAIGN_OS, self._wrapper.get_os_description())
+        self._listener.log_data(CAMPAIGN_CPU, self._wrapper.get_cpu_description())
+        self._listener.log_data(CAMPAIGN_GPU, self._wrapper.get_gpu_description())
+        self._listener.log_data(CAMPAIGN_MEMORY, self._wrapper.get_total_memory())
+
+        # Loading the limits set to the campaign.
+        timeout = self._wrapper.get_time_out()
+        self._listener.add_default_value(EXPERIMENT_CPU_TIME, timeout)
+        self._listener.log_data(CAMPAIGN_TIMEOUT, self._wrapper.get_time_out())
+        self._listener.log_data(CAMPAIGN_MEMOUT, self._wrapper.get_memory_out())
+
+    def _load_experiment_wares(self) -> None:
+        """
+        Loads the description of the experiment-wares used in the campaign.
+        """
+        for xp_ware in self._wrapper.get_experiment_wares():
+            self._listener.start_experiment_ware()
+            for key, value in xp_ware.items():
+                self._listener.log_data(key, value)
+            self._listener.end_experiment_ware()
+
+    def _load_input_set(self) -> None:
+        """
+        Loads the description of the inputs used in the campaign.
+        """
+        for input_set in self._wrapper.get_input_set():
+            self._listener.start_input_set()
+            self._listener.log_data(INPUT_SET_NAME, input_set.get_name())
+            fmt = InputSetFormat.value_of(input_set.get_type())
+            file_name_meta = FileNameMetaConfiguration(input_set.get_file_name_meta())
+            reader = create_input_set_reader(fmt, input_set.get_extensions(), file_name_meta)
+            reader(self._listener, input_set.get_files())
+            self._listener.end_input_set()
+
+    def _load_mapping(self) -> None:
+        """
+        Loads the mapping allowing to retrieve the data wanted by Scalpel from
+        the experiment files.
+        """
+        for key, value in self._wrapper.get_mapping().items():
+            self._listener.add_key_mapping(key, value)
+
+    def _load_default_values(self) -> None:
+        """
+        Loads the default values allowing to fix missing values from the
+        experiments of the campaign.
+        """
+        for key, value in self._wrapper.get_default_values():
+            self._listener.add_default_value(key, value)
+
+    def get_campaign_path(self) -> List[str]:
+        """
+        Gives the path of the files containing all the data about the campaign.
+        These files may be either regular files or directories.
+
+        :return: The path to the main files of the campaign.
+        """
+        self._path = self._wrapper.get_campaign_path()
+        return self._path
+
+    def get_format(self) -> CampaignFormat:
+        """
+        Gives the format of the campaign to parse.
+
+        :return: The format of the campaign to parse.
+
+        :raises ValueError: If the format is unspecified and could not be guessed.
+        """
+        # If the user has specified a format, we use it.
+        fmt = self._wrapper.get_format()
+        if fmt is not None:
+            self._format = CampaignFormat.value_of(fmt)
+            return self._format
+
+        # Otherwise, we try to guess the format.
+        self._format = self._guess_format()
+        if self._format is None:
+            raise ValueError('Could not infer campaign format')
+        return self._format
+
+    def _guess_format(self) -> Optional[CampaignFormat]:
+        """
+        Guesses the format of the campaign to parse.
+
+        :return: The guessed format of the campaign, or None if it could not be guessed.
+        """
+        if path.isdir(self._path[0]):
+            return self._guess_directory_format()
+        if path.exists(self._path[0]):
+            return self._guess_regular_format()
+        return None
+
+    def _guess_directory_format(self) -> Optional[CampaignFormat]:
+        """
+        Guesses the format of the campaign to parse when stored in a directory.
+
+        :return: The format of the campaign, guessed from the deepness of the
+                 file hierarchy rooted at the first main file of this campaign.
+        """
+        for _, dirs, _ in walk(self._path[0]):
+            if dirs:
+                return CampaignFormat.EXPERIMENT_DIRECTORY
+        return CampaignFormat.SINGLE_EXPERIMENT_LOG_FILE
+
+    def _guess_regular_format(self) -> Optional[CampaignFormat]:
+        """
+        Guesses the format of the campaign to parse when stored in a regular file.
+
+        :return: The format of the campaign, guessed from the extension of its first
+                 main file, or None if it could not be guessed.
+        """
+        ext = splitext(self._path[0])[1]
+        return CampaignFormat.value_of(ext[1:])
+
+    def get_csv_configuration(self) -> Optional[CsvConfiguration]:
+        """
+        Gives the CSV configuration describing the CSV format used by
+        the files of the campaign to parse.
+
+        :return: The CSV configuration of the files of the campaign.
+                 The result is None if the files are not CSV files.
+        """
+        if not self._format.is_csv() and not self._format.is_reverse_csv():
+            # The campaign is not in a CSV format, so there is no configuration.
+            return None
+
+        return CsvConfiguration(has_header=self.has_header(),
+                                quote_char=self.get_quote_char(),
+                                separator=self.get_separator(),
+                                title_separator=self.get_title_separator())
+
+    def get_separator(self) -> str:
+        """
+        Gives the separator used to distinguish different fields in the files to parse.
+
+        :return: The separator that is used (if specified).
+        """
+        sep = self._wrapper.get_separator()
+        if sep is not None:
+            return sep
+        if self._format == CampaignFormat.CSV2:
+            return ';'
+        if self._format == CampaignFormat.TSV:
+            return '\t'
+        return ','
+
+    def get_title_separator(self) -> str:
+        """
+        Gives the separator used to distinguish different elements in the titles of
+        the files to parse.
+
+        :return: The title separator that is used.
+        """
+        sep = self._wrapper.get_title_separator()
+        if sep is None:
+            return '.'
+        return sep
+
+    def get_custom_parser(self) -> Optional[Type]:
+        """
+        Gives the custom parser to use to parse the campaign.
+
+        :return: The parser for the campaign (if specified).
+
+        :raises ValueError: If the specified parser is not a valid type.
+        """
+        parser_class = self._wrapper.get_custom_parser()
+        return ScalpelConfigurationLoader._load_class(parser_class)
+
+    def get_is_success(self) -> AbstractExpression:
+        """
+        Gives the expression to use to validate an experiment as a success.
+
+        :return: The expression to use to determine whether an experiment is successful.
+        """
+        expr = self._wrapper.get_is_success()
+        return create_filter(expr)
+
+    def get_file_name_meta(self) -> FileNameMetaConfiguration:
+        """
+        Gives the description of the metadata to extract from the name of the
+        files of the campaign.
+
+        :return: The configuration for extracting metadata.
+        """
+        return FileNameMetaConfiguration(self._wrapper.get_file_name_meta())
+
+    def get_log_datas(self) -> Dict[Optional[str], List[LogData]]:
+        """
+        Gives the description of the log-data to extract from raw campaign files.
+
+        :return: The log-data describing how to extract relevant data.
+        """
+        log_data = defaultdict(list)
+        for data in self._wrapper.get_raw_data():
+            file = data.get_file()
+            pattern = data.get_simplified_pattern()
+            regex = data.get_regex_pattern()
+            exact = data.is_exact()
+            names, groups = zip(*data.get_groups())
+            log_data[file].append(LogData(names, compile_any(pattern, regex, exact, *groups)))
+        return log_data
+
+    def get_data_files(self) -> Dict[str, DataFile]:
+        """
+        Gives the description of the data-files from which to extract campaign data.
+
+        :return: The data-files of the campaign.
+        """
+        data_files = {}
+        for data_file in self._wrapper.get_data_files():
+            name = data_file.get_name()
+            prefix = data_file.has_name_as_prefix()
+
+            fmt = data_file.get_format()
+            if fmt is None:
+                output_fmt = OutputFormat.guess_format(name)
+            else:
+                output_fmt = OutputFormat.value_of(fmt)
+
+            config = None
+            if output_fmt.is_csv():
+                sep = ScalpelConfigurationLoader._guess_data_file_separator(data_file, output_fmt)
+                config = CsvConfiguration(has_header=data_file.has_header(),
+                                          quote_char=data_file.get_quote_char(),
+                                          separator=sep)
+
+            parser = data_file.get_custom_parser()
+            data_files[name] = DataFile(name, prefix, output_fmt, config, parser)
+        return data_files
+
+    @staticmethod
+    def _guess_data_file_separator(data_file: IDataFileConfigurationWrapper,
+                                   fmt: OutputFormat) -> str:
+        """
+        Guesses the separator for a CSV data-file.
+
+        :param data_file: The data-file to guess the separator of.
+        :param fmt: The format of the data-file.
+
+        :return: The guessed separator of the data-file.
+        """
+        sep = data_file.get_separator()
+        if sep is not None:
+            return sep
+        if fmt == OutputFormat.CSV2:
+            return ';'
+        if fmt == OutputFormat.TSV:
+            return '\t'
+        return ','
+
+    @staticmethod
+    def _load_class(class_name: Optional[str]) -> Optional[Type]:
+        """
+        Loads a class from its name.
+
+        :param class_name: The name of the class to load.
+
+        :return: The loaded class.
+
+        :raises ValueError: If the class cannot be loaded.
+        """
+        # Checking if there is a class to load.
+        if class_name is None:
+            return None
+
+        # Looking for the class.
+        class_object = locate(class_name)
+        if isinstance(class_object, type):
+            return class_object
+
+        # The class could not be found.
+        raise ValueError(f'Could not find class "{class_name}"')
+
+    def __getattr__(self, item: str) -> Any:
+        """
+        Delegates the access to attributes to the wrapper.
+
+        :param item: The name of the attribute to access to.
+
+        :return: The accessed attribute.
+        """
+        return getattr(self._wrapper, item)
 
 
 class ScalpelConfiguration:
     """
-    The ScalpelConfiguration describes both the context of the campaign and the
-    relevant values to retrieve from this campaign.
+    The ScalpelConfiguration describes how relevant values may be retrieved from the
+    files of a campaign.
     """
 
-    def __init__(self, fmt: Optional[CampaignFormat], csv_configuration: CsvConfiguration, main_file: str,
-                 data_files: Optional[Dict[str, DataFile]],
-                 log_datas: Optional[Dict[str, List[LogData]]],
-                 custom_parser: Optional[str], file_name_meta: FileNameMetaConfiguration,
-                 is_success, follow_symlinks) -> None:
+    def __init__(self, loader: ScalpelConfigurationLoader) -> None:
         """
         Creates a new ScalpelConfiguration.
 
-        :param fmt: The format in which the results of the campaign are stored.
-                    If None, the format will be guessed on a best effort basis.
-        :param main_file: The path of the main file containing data about the
-                          campaign.
-        :param data_files: The names of the files to be considered for each experiment
-                           (wildcards are allowed).
-        :param log_datas: The description of the data to extract from the different
-                          files of the campaign.
-        :param custom_parser: The (completely specified) class of the parser to use to
-                              parse the campaign.
+        :param loader: The loader from which to load the configuration.
         """
-        assert file_name_meta is not None
-        self._format = fmt
-        self._csv_configuration = csv_configuration
-        self._main_file = main_file
-        self._data_files = data_files
-        self._log_datas = log_datas
-        self._custom_parser = custom_parser
-        self._file_name_meta = file_name_meta
-        self._is_success = is_success
-        self._followlinks = follow_symlinks
+        self._path = loader.get_campaign_path()
+        self._format = loader.get_format()
+        self._csv_configuration = loader.get_csv_configuration()
+        self._follow_symlinks = loader.get_follow_symlinks()
+        self._custom_parser = loader.get_custom_parser()
+        self._is_success = loader.get_is_success()
+        self._file_name_meta = loader.get_file_name_meta()
+        self._log_datas = loader.get_log_datas()
+        self._data_files = loader.get_data_files()
 
-    def get_main_file(self) -> str:
+    def get_path(self) -> List[str]:
         """
-        Gives the main file of the campaign, which contains all the data
-        about the campaign.
+        Gives the list of the paths of main files of the campaign, from which
+        to start extracting relevant values.
 
-        :return: The path of the main file of the campaign.
+        :return: The paths of the main files of the campaign.
         """
-        return self._main_file
+        return self._path
 
     def get_format(self) -> CampaignFormat:
         """
         Gives the format of the campaign to parse.
 
         :return: The format of the campaign.
-
-        :raises: A ValueError is raised if the format was not specified and
-                 guessing the format of the campaign has failed.
         """
         return self._format
 
-    def get_csv_configuration(self):
+    def get_csv_configuration(self) -> Optional[CsvConfiguration]:
+        """
+        Gives the CSV configuration describing the CSV format used by
+        the files of the campaign to parse.
+
+        :return: The CSV configuration of the files of the campaign.
+                 The result is None when the files are not CSV files.
+        """
         return self._csv_configuration
 
-    def is_to_be_parsed(self, file: str) -> bool:
+    def get_follow_symlinks(self):
         """
-        CHecks whether the given file must be parsed by Scalpel.
+        Checks whether symbolic links should be followed when exploring a file hierarchy.
 
-        :param file: The name of the file to check (not its path).
+        :return: Whether symlinks should be followed.
+        """
+        return self._follow_symlinks
+
+    def get_custom_parser(self) -> Optional[Type]:
+        """
+        Gives the custom parser to use to parse the campaign.
+
+        :return: The class of the parser for the campaign (if specified).
+        """
+        return self._custom_parser
+
+    def get_is_success(self) -> AbstractExpression:
+        """
+        Gives the expression to use to validate an experiment as a success.
+
+        :return: The expression to use to determine whether an experiment is successful.
+        """
+        return self._is_success
+
+    def get_file_name_meta(self) -> FileNameMetaConfiguration:
+        """
+        Gives the configuration for the metadata to extract from the name of the
+        files of the campaign.
+
+        :return: The configuration of the metadata.
+        """
+        return self._file_name_meta
+
+    def is_to_be_parsed(self, filename: str) -> bool:
+        """
+        Checks whether the given file must be parsed by Scalpel.
+
+        :param filename: The name of the file to check.
 
         :return: Whether the file must be parsed.
         """
-        if self._log_datas is not None:
-            if any(fnmatch(file, data_file) for data_file in self._log_datas.keys()):
-                return True
+        if any(fnmatch(filename, data_file) for data_file in self._log_datas):
+            return True
 
-        if self._data_files is not None:
-            if any(fnmatch(file, data_file) for data_file in self._data_files):
-                return True
+        if any(fnmatch(filename, data_file) for data_file in self._data_files):
+            return True
 
         return False
-
-    def get_files(self) -> Iterable[str]:
-        """
-        Gives the files that must be parsed to retrieve the data to consider
-        about the campaign.
-
-        :return: The names of the files to parse.
-        """
-        if self._log_datas is None:
-            return [self._main_file]
-        return self._log_datas.keys()
 
     def get_data_in(self, filename: str) -> List[LogData]:
         """
@@ -229,1411 +550,20 @@ class ScalpelConfiguration:
             return self._log_datas[None]
 
         all_datas = []
-        for k, v in self._log_datas.items():
-            if fnmatch(filename, k):
-                all_datas.extend(v)
+        for file, log_data in self._log_datas.items():
+            if fnmatch(filename, file):
+                all_datas.extend(log_data)
         return all_datas
 
-    def get_custom_parser(self) -> Optional[str]:
+    def get_data_file(self, name: str) -> Optional[DataFile]:
         """
-        Gives the (completely specified) class of a custom parser to use.
+        Gives the data-file whose name matches the given one.
 
-        :return: The class of the custom parser to use, if any.
+        :param name: The name of the data-file to look for.
+
+        :return: The data-file with the given name, or None if no such data-file exist.
         """
-        return self._custom_parser
-
-    def get_file_name_meta(self) -> FileNameMetaConfiguration:
-        return self._file_name_meta
-
-    def get_is_success(self):
-        return self._is_success
-
-    def get_is_consistent(self):
-        pass
-
-    def follow_symlinks(self):
-        return self._followlinks
-
-    def get_output_format(self, file: str) -> Tuple[OutputFormat, Any]:
-        fmt = OutputFormat.guess_format(file)
-        if fmt == OutputFormat.CSV:
-            return fmt, CsvConfiguration()
-        if fmt == OutputFormat.CSV2:
-            return fmt, CsvConfiguration(';')
-        if fmt == OutputFormat.TSV:
-            return fmt, CsvConfiguration('\t')
-        return fmt, None
-
-    def get_data_file(self, name):
         for file, data_file in self._data_files.items():
             if fnmatch(name, file):
                 return data_file
         return None
-
-
-class ConfigurationIterator:
-    """
-    The ConfigurationIterator allows to iterate over a specific part of
-    Scalpel's configuration.
-    """
-
-    def has_next(self) -> bool:
-        """
-        Checks whether there is a next configuration element.
-
-        :return: If there is a next configuration element.
-        """
-        raise NotImplementedError('Method "has_next()" is abstract!')
-
-    def next(self) -> None:
-        """
-        Moves to the next configuration element.
-        By default, this method does nothing.
-        """
-        pass
-
-
-class EmptyConfigurationIterator(ConfigurationIterator):
-    """
-    The EmptyConfigurationIterator is the parent class for all ConfigurationIterator
-    that do not contain any element.
-    """
-
-    def has_next(self) -> bool:
-        """
-        Checks whether there is a next configuration element.
-
-        :return: If there is a next configuration element.
-        """
-        return False
-
-
-class ListConfigurationIterator(ConfigurationIterator):
-    """
-    The ListConfigurationIterator adapts a classical iterable to a
-    ConfigurationIterator.
-    """
-
-    def __init__(self, adaptee: Iterable):
-        """
-        Creates a new ListConfigurationIterator.
-
-        :param adaptee: The iterable element to adapt.
-        """
-        self._adaptee = list(adaptee)
-        self._index = 0
-
-    def has_next(self) -> bool:
-        """
-        Checks whether there is a next configuration element.
-
-        :return: If there is a next configuration element.
-        """
-        return self._index < len(self._adaptee)
-
-    def current(self) -> Any:
-        """
-        Checks whether there is a next configuration element.
-
-        :return: The current configuration element.
-        """
-        return self._adaptee[self._index]
-
-    def next(self):
-        """
-        Moves to the next configuration element.
-
-        By default, this method does nothing.
-        """
-        self._index += 1
-
-
-class MappingConfiguration(ConfigurationIterator, ABC):
-    """
-    The MappingConfiguration defines the property of the mapping configuration.
-    """
-
-    def get_scalpel_key(self) -> str:
-        """
-        Gives the key expected by Scalpel for the current element.
-
-        :return: The key expected by Scalpel.
-        """
-        raise NotImplementedError('Method "get_scalpel_key()" is abstract!')
-
-    def get_campaign_key(self) -> Union[str, List[str]]:
-        """
-        Gives the actual key(s) appearing in the campaign for the current element.
-
-        :return: The actual key of the campaign.
-        """
-        raise NotImplementedError('Method "get_campaign_key()" is abstract!')
-
-
-class EmptyMappingConfiguration(EmptyConfigurationIterator, MappingConfiguration):
-    """
-    The EmptyMappingConfiguration is a MappingConfiguration with no element.
-    """
-
-    def get_scalpel_key(self) -> str:
-        """
-        Gives the key expected by Scalpel for the current element.
-
-        :return: The key expected by Scalpel.
-        """
-        raise ValueError('Empty mapping configuration!')
-
-    def get_campaign_key(self) -> Union[str, List[str]]:
-        """
-        Gives the actual key(s) appearing in the campaign for the current element.
-
-        :return: The actual key of the campaign.
-        """
-        raise ValueError('Empty mapping configuration!')
-
-
-class DictionaryMappingConfiguration(ListConfigurationIterator, MappingConfiguration):
-    """
-    The DictionaryMappingConfiguration allows to extract a MappingConfiguration from a dictionary.
-    """
-
-    def __init__(self, mapping: Dict[str, Union[str, List[str]]]):
-        """
-        Creates a new DictionaryMappingConfiguration.
-
-        :param mapping: The dictionary containing the configuration.
-        """
-        super().__init__(mapping.keys())
-        self._mapping = mapping
-
-    def get_scalpel_key(self) -> str:
-        """
-        Gives the key expected by Scalpel for the current element.
-
-        :return: The key expected by Scalpel.
-        """
-        return self.current()
-
-    def get_campaign_key(self) -> Union[str, List[str]]:
-        """
-        Gives the actual key(s) appearing in the campaign for the current element.
-
-        :return: The actual key of the campaign.
-        """
-        return self._mapping[self.current()]
-
-
-class RawDataConfiguration(ConfigurationIterator, ABC):
-    """
-    The MappingConfiguration defines the property of the raw data configuration.
-    """
-
-    def get_name(self) -> Union[str, List[str]]:
-        """
-        Gives the name of the current raw data.
-
-        :return: The name of the raw data.
-        """
-        raise NotImplementedError('Method "get_campaign_key()" is abstract!')
-
-    def get_file(self) -> str:
-        """
-        Gives the file from which to retrieve the current raw data.
-
-        :return: The file containing the raw data.
-        """
-        raise NotImplementedError('Method "get_file()" is abstract!')
-
-    def get_simplified_pattern(self) -> Optional[str]:
-        """
-        Gives the simplified pattern identifying the current raw data.
-
-        :return: The simplified pattern for the raw data, if any.
-        """
-        raise NotImplementedError('Method "get_simplified_pattern()" is abstract!')
-
-    def get_regex_pattern(self) -> Optional[str]:
-        """
-        Gives the regular expression identifying the current raw data.
-
-        :return: The regular expression for the raw data, if any.
-        """
-        raise NotImplementedError('Method "get_regex_pattern()" is abstract!')
-
-    def get_regex_group(self) -> Optional[Tuple[int]]:
-        """
-        Gives the group identifying the current raw data in the regular expression.
-
-        :return: The group in the regular expression, if any.
-        """
-        raise NotImplementedError('Method "get_regex_group()" is abstract!')
-
-    def is_exact(self):
-        raise NotImplementedError('Method "get_exact()" is abstract!')
-
-    def get_compiled_pattern(self) -> AbstractUserDefinedPattern:
-        """
-        Gives the compiled pattern identifying the current raw data.
-
-        :return: The compiled pattern.
-
-        :raises ValueError: A ValueError is raised if no simplified pattern nor
-                            regular expression was specified for the raw data.
-        """
-        # First, we look for a named pattern.
-        simplified_pattern = self.get_simplified_pattern()
-        exact = self.is_exact()
-        groups = self.get_regex_group()
-        if simplified_pattern is not None:
-            try:
-                return self._compile_named_pattern(simplified_pattern, exact, groups)
-            except ValueError:
-                return self._compile_regex(simplified_pattern, exact, groups)
-
-        # There is no named pattern: trying a regular expression.
-        regex = self.get_regex_pattern()
-        if regex is not None:
-            try:
-                return self._compile_regex(regex, exact, groups)
-            except ValueError:
-                return self._compile_named_pattern(regex, exact, groups)
-
-        # The description of the data is missing!
-        raise ValueError('A pattern or regex is missing!')
-
-    def _compile_named_pattern(self, pattern, exact, groups):
-        if groups is None:
-            return compile_named_pattern(pattern, exact)
-        return compile_all_named_patterns(pattern, exact, *groups)
-
-    def _compile_regex(self, regex, exact, groups):
-        if groups is None:
-            return compile_regex(regex, exact)
-        return compile_all_regexes(regex, exact, *groups)
-
-
-class EmptyRawDataConfiguration(EmptyConfigurationIterator, RawDataConfiguration):
-    """
-    The EmptyRawDataConfiguration is a RawDataConfiguration with no element.
-    """
-
-    def is_exact(self):
-        raise ValueError('Empty raw data configuration!')
-
-    def get_name(self) -> str:
-        """
-        Gives the name of the current raw data.
-
-        :return: The name of the raw data.
-        """
-        raise ValueError('Empty raw data configuration!')
-
-    def get_file(self) -> str:
-        """
-        Gives the file from which to retrieve the current raw data.
-
-        :return: The file containing the raw data.
-        """
-        raise ValueError('Empty raw data configuration!')
-
-    def get_simplified_pattern(self) -> Optional[str]:
-        """
-        Gives the simplified pattern identifying the current raw data.
-
-        :return: The simplified pattern for the raw data, if any.
-        """
-        raise ValueError('Empty raw data configuration!')
-
-    def get_regex_pattern(self) -> Optional[str]:
-        """
-        Gives the regular expression identifying the current raw data.
-
-        :return: The regular expression for the raw data, if any.
-        """
-        raise ValueError('Empty raw data configuration!')
-
-    def get_regex_group(self) -> Optional[int]:
-        """
-        Gives the group identifying the current raw data in the regular expression.
-
-        :return: The group in the regular expression, if any.
-        """
-        raise ValueError('Empty raw data configuration!')
-
-
-class DictionaryRawDataConfiguration(ListConfigurationIterator, RawDataConfiguration):
-    """
-    The DictionaryRawDataConfiguration allows to extract a RawDataConfiguration from a
-    list of dictionaries.
-    """
-
-    def is_exact(self):
-        exact = self.current().get('exact')
-        if exact is not None:
-            return exact
-        return False
-
-    def get_name(self) -> Union[str, List[str]]:
-        """
-        Gives the name of the current raw data.
-
-        :return: The name of the raw data.
-        """
-        return self.current().get('log-data')
-
-    def get_file(self) -> str:
-        """
-        Gives the file from which to retrieve the current raw data.
-
-        :return: The file containing the raw data.
-        """
-        return self.current().get('file')
-
-    def get_simplified_pattern(self) -> Optional[str]:
-        """
-        Gives the simplified pattern identifying the current raw data.
-
-        :return: The simplified pattern for the raw data, if any.
-        """
-        return self.current().get('pattern')
-
-    def get_regex_pattern(self) -> Optional[str]:
-        """
-        Gives the regular expression identifying the current raw data.
-
-        :return: The regular expression for the raw data, if any.
-        """
-        return self.current().get('regex')
-
-    def get_regex_group(self) -> Optional[Tuple[int]]:
-        """
-        Gives the group identifying the current raw data in the regular expression.
-
-        :return: The group in the regular expression, if any.
-        """
-        groups = self.current().get('groups')
-        if groups is not None:
-            return tuple(groups)
-        return None
-
-
-class DictionaryConfiguration:
-    def __init__(self, dic):
-        self._dict = dic
-
-    def get(self, key: str):
-        return self._dict.get(key)
-
-
-class FileNameMetaConfiguration:
-    """
-    The MappingConfiguration defines the property of the raw data configuration.
-    """
-
-    def get_simplified_pattern(self) -> Optional[str]:
-        """
-        Gives the simplified pattern identifying the current filename.
-
-        :return: The simplified pattern for the raw data, if any.
-        """
-        raise NotImplementedError('Method "get_simplified_pattern()" is abstract!')
-
-    def is_exact(self):
-        raise NotImplementedError('Method "is_exact()" is abstract!')
-
-    def get_regex_pattern(self) -> Optional[str]:
-        """
-        Gives the regular expression identifying the current filename.
-
-        :return: The regular expression for the raw data, if any.
-        """
-        raise NotImplementedError('Method "get_regex_pattern()" is abstract!')
-
-    def get_groups(self) -> Iterable[Tuple[str, int]]:
-        raise NotImplementedError('Method "get_groups()" is abstract!')
-
-    def get_log_data(self) -> LogData:
-        """
-        Gives the compiled pattern identifying the current raw data.
-
-        :return: The compiled pattern.
-
-        :raises ValueError: A ValueError is raised if no simplified pattern nor
-                            regular expression was specified for the raw data.
-        """
-        # First, we look for a named pattern.
-        names = []
-        groups = []
-        for key, value in self.get_groups():
-            names.append(key)
-            groups.append(value)
-
-        pattern = None
-        simplified_pattern = self.get_simplified_pattern()
-        if simplified_pattern is not None:
-            try:
-                pattern = compile_all_named_patterns(simplified_pattern, self.is_exact(), *groups)
-            except ValueError:
-                pattern = compile_all_regexes(simplified_pattern, self.is_exact(), *groups)
-
-        if pattern is None:
-            regex = self.get_regex_pattern()
-            if regex is not None:
-                try:
-                    pattern = compile_all_regexes(regex, self.is_exact(), *groups)
-                except ValueError:
-                    pattern = compile_all_named_patterns(regex, self.is_exact(), *groups)
-
-        # The description of the data is missing!
-        if pattern is None:
-            raise ValueError('A pattern or regex is missing!')
-
-        return LogData(names, pattern)
-
-    def extract_from(self, file: str) -> Dict[str, str]:
-        log_data = self.get_log_data()
-        extracted_data = log_data.extract_value_from(file)
-        file_name_data = {}
-        if extracted_data is not None:
-            for name, value in zip(log_data.get_names(), extracted_data):
-                file_name_data[name] = value
-        return file_name_data
-
-
-class EmptyFileNameMetaConfiguration(FileNameMetaConfiguration):
-    """
-    The EmptyFileNameMetaConfiguration is a RawDataConfiguration with no element.
-    """
-
-    def is_exact(self):
-        raise ValueError('Empty raw data configuration!')
-
-    def get_simplified_pattern(self) -> Optional[str]:
-        """
-        Gives the simplified pattern identifying the current raw data.
-
-        :return: The simplified pattern for the raw data, if any.
-        """
-        raise ValueError('Empty raw data configuration!')
-
-    def get_regex_pattern(self) -> Optional[str]:
-        """
-        Gives the regular expression identifying the current raw data.
-
-        :return: The regular expression for the raw data, if any.
-        """
-        raise ValueError('Empty raw data configuration!')
-
-    def get_groups(self) -> Iterable[Tuple[str, int]]:
-        raise ValueError('Empty raw data configuration!')
-
-    def get_experiment_ware_group(self) -> Optional[int]:
-        raise ValueError('Empty raw data configuration!')
-
-    def get_log_data(self) -> LogData:
-        return LogData([], NullUserDefinedPattern())
-
-
-class DictionaryFileNameMetaConfiguration(FileNameMetaConfiguration, DictionaryConfiguration):
-
-    def is_exact(self):
-        exact = self.get('exact')
-        if exact is not None:
-            return exact
-        return False
-
-    def get_simplified_pattern(self) -> Optional[str]:
-        return self.get('pattern')
-
-    def get_regex_pattern(self) -> Optional[str]:
-        return self.get('regex')
-
-    def get_groups(self) -> Iterable[Tuple[str, int]]:
-        groups = self.get('groups')
-        if groups is None:
-            return []
-        return groups.items()
-
-
-class IScalpelConfigurationBuilder(metaclass=ABCMeta):
-    @abstractmethod
-    def _get_mapping(self):
-        """
-        Gives the mapping configuration object allowing to retrieve the data
-        expected by Scalpel from the experiment files.
-
-        :return: The configuration for the mapping.
-        """
-        pass
-
-    @abstractmethod
-    def read_mapping(self):
-        """
-        Reads the mapping allowing to retrieve the data wanted by Scalpel from
-        the experiment files.
-        """
-        pass
-
-    @abstractmethod
-    def read_metadata(self):
-        """
-        Reads the description of the campaign to parse.
-        """
-        pass
-
-    @abstractmethod
-    def read_setup(self):
-        """
-        Reads the description of the experimental setup.
-        """
-        pass
-
-    @abstractmethod
-    def build(self):
-        """
-        Builds the configuration of Scalpel, as specified by the user.
-
-        :return: The built configuration.
-        """
-        pass
-
-    @abstractmethod
-    def _get_campaign_name(self):
-        """
-        Gives the name of the campaign being considered.
-
-        :return: The name of the campaign.
-        """
-        pass
-
-    @abstractmethod
-    def _get_campaign_date(self):
-        """
-        Gives the date of the campaign being considered.
-
-        :return: The date of the campaign.
-        """
-        pass
-
-    @abstractmethod
-    def _get_os_description(self):
-        """
-        Gives the description of the operating system on which the campaign has
-        been executed.
-
-        :return: The description of the OS.
-        """
-        pass
-
-    @abstractmethod
-    def _get_cpu_description(self):
-        """
-        Gives the description of the CPU of the machine(s) on which the campaign
-        has been executed.
-
-        :return: The description of the CPU.
-        """
-        pass
-
-    @abstractmethod
-    def _get_total_memory(self):
-        """
-        Gives the total amount of memory available on the machine(s) on which the
-        campaign has been executed.
-
-        :return: The total amount of memory.
-        """
-        pass
-
-    @abstractmethod
-    def _get_time_out(self):
-        """
-        Gives the time limit set to the experiments in this campaign.
-
-        :return: The configured time limit.
-        """
-        pass
-
-    @abstractmethod
-    def _get_memory_out(self):
-        """
-        Gives the memory limit set to the experiments in this campaign.
-
-        :return: The set configured limit.
-        """
-        pass
-
-    @abstractmethod
-    def read_experiment_wares(self):
-        """
-        Reads the experiment-wares that are considered in the campaign being
-        parsed by Scalpel.
-        """
-        pass
-
-    @abstractmethod
-    def read_input_set(self):
-        """
-        Reads the input set considered in the campaign being parsed by Scalpel.
-        """
-        pass
-
-    @abstractmethod
-    def read_source(self):
-        """
-        Reads the description of the source from which the campaign is to
-        be parsed.
-        """
-        pass
-
-    @abstractmethod
-    def _get_campaign_path(self):
-        """
-        Gives the path of the file containing all the data about the campaign.
-        This file may be either a regular file or a directory.
-
-        :return: The path to the main file of the campaign.
-        """
-        pass
-
-    @abstractmethod
-    def _get_format(self):
-        """
-        Gives the format of the campaign to parse.
-        If not specified, the format is guessed on a best effort basis.
-
-        :return: The format of the campaign to parse, if any.
-        """
-        pass
-
-    @abstractmethod
-    def _guess_directory_format(self):
-        """
-        Guesses the format of the campaign to parse when stored in a directory.
-
-        :return: The format of the campaign, guessed from the deepness of the
-                 file hierarchy rooted at the main file of this campaign.
-        """
-        pass
-
-    @abstractmethod
-    def _guess_regular_format(self):
-        """
-        Guesses the format of the campaign to parse when stored in a regular file.
-
-        :return: The format of the campaign, guessed from the extension of its
-                 main file, or None if it could not be guessed.
-        """
-        pass
-
-    @abstractmethod
-    def _guess_format(self):
-        """
-        Guesses the format of the campaign to parse.
-
-        :return: The guessed format of the campaign, or None if it could
-                 not be guessed.
-        """
-        pass
-
-    @abstractmethod
-    def read_csv_configuration(self):
-        pass
-
-    @abstractmethod
-    def _has_header(self):
-        """
-        Checks whether the input file to parse has a header.
-
-        :return: If the input file to parse has a header.
-        """
-        pass
-
-    @abstractmethod
-    def _quote_char(self):
-        """
-        :return: Return the quote char
-        """
-        pass
-
-    @abstractmethod
-    def _separator(self):
-        """
-        :return: Return the separator
-        """
-        pass
-
-    @abstractmethod
-    def _title_separator(self):
-        pass
-
-    @abstractmethod
-    def _get_custom_parser(self):
-        """
-        Gives the (completely specified) class of the custom parser to use to parse
-        the campaign, if any.
-
-        :return: The class of the parser to use
-        """
-        pass
-
-    @abstractmethod
-    def _get_data_files(self):
-        """
-        Gives the output files to consider for each experiment, which must be in
-        a format that Scalpel natively recognizes (JSON, CSV, etc.).
-        Such files are only meaningful when the campaign is stored in a "deep"
-        file hierarchy.
-
-        :return: The raw data configuration.
-        """
-        pass
-
-    @abstractmethod
-    def read_data(self):
-        """
-        Reads the files from which Scalpel will extract relevant data for the
-        analysis.
-        Such files are only meaningful when the campaign is stored in a
-        directory.
-        """
-        pass
-
-    @abstractmethod
-    def _get_file_name_meta(self):
-        pass
-
-    @abstractmethod
-    def _get_raw_data(self):
-        """
-        Gives the raw data configuration, which describes how to extract data
-        from the log files of the experiment-wares.
-        Such data is only meaningful when the campaign is stored in a
-        directory.
-
-        :return: The raw data configuration.
-        """
-        pass
-
-    @abstractmethod
-    def _get_is_success(self):
-        pass
-
-    @abstractmethod
-    def _log_data(self, key, value):
-        """
-        Notifies the listener about data that has been read.
-
-        :param key: The key identifying the read data.
-        :param value: The value that has been read.
-        """
-        pass
-
-
-class ScalpelConfigurationBuilder(IScalpelConfigurationBuilder):
-    """
-    The ScalpelConfigurationBuilder allows to build Scalpel's configuration.
-    """
-
-    def __init__(self, listener: CampaignParserListener) -> None:
-        """
-        Creates a new ScalpelConfigurationBuilder.
-
-        :param listener: The listener to set up and notify while parsing the
-                         configuration file.
-        """
-        self._listener = listener
-        self._main_file = None
-        self._format = None
-        self._csv_configuration = None
-        self._data_files = None
-        self._log_datas = defaultdict(list)
-        self._custom_parser = None
-        self._is_success = None
-        self._followlinks = False
-        self._file_name_meta = EmptyFileNameMetaConfiguration()
-
-    def build(self) -> ScalpelConfiguration:
-        """
-        Builds the configuration of Scalpel, as specified by the user.
-
-        :return: The built configuration.
-        """
-        self._listener.start_campaign()
-        self.read_mapping()
-        self.read_metadata()
-        self.read_setup()
-        self.read_experiment_wares()
-        self.read_input_set()
-        self.read_source()
-        self.read_data()
-        return ScalpelConfiguration(self._format, self._csv_configuration, self._main_file,
-                                    self._data_files, self._log_datas,
-                                    self._custom_parser, self._file_name_meta,
-                                    self._is_success, self._followlinks)
-
-    def read_mapping(self) -> None:
-        """
-        Reads the mapping allowing to retrieve the data wanted by Scalpel from
-        the experiment files.
-        """
-        mapping = self._get_mapping()
-        while mapping.has_next():
-            scalpel_key = mapping.get_scalpel_key()
-            campaign_key = mapping.get_campaign_key()
-            self._listener.add_key_mapping(scalpel_key, campaign_key)
-            mapping.next()
-
-    def _get_mapping(self) -> MappingConfiguration:
-        """
-        Gives the mapping configuration object allowing to retrieve the data
-        expected by Scalpel from the experiment files.
-
-        :return: The configuration for the mapping.
-        """
-        raise NotImplementedError('Method "_get_mapping()" is abstract!')
-
-    def read_metadata(self) -> None:
-        """
-        Reads the description of the campaign to parse.
-        """
-        self._listener.log_metadata(CAMPAIGN_NAME, self._get_campaign_name())
-        self._listener.log_metadata(CAMPAIGN_DATE, self._get_campaign_date())
-
-    def _get_campaign_name(self) -> Optional[str]:
-        """
-        Gives the name of the campaign being considered.
-
-        :return: The name of the campaign.
-        """
-        raise NotImplementedError('Method "_get_campaign_name()" is abstract!')
-
-    def _get_campaign_date(self) -> Optional[str]:
-        """
-        Gives the date of the campaign being considered.
-
-        :return: The date of the campaign.
-        """
-        raise NotImplementedError('Method "_get_campaign_date()" is abstract!')
-
-    def read_setup(self) -> None:
-        """
-        Reads the description of the experimental setup.
-        """
-        self._listener.log_metadata(CAMPAIGN_OS, self._get_os_description())
-        self._listener.log_metadata(CAMPAIGN_CPU, self._get_cpu_description())
-        self._listener.log_metadata(CAMPAIGN_MEMORY, self._get_total_memory())
-        self._listener.log_metadata(CAMPAIGN_TIMEOUT, self._get_time_out())
-        self._listener.log_metadata(CAMPAIGN_MEMOUT, self._get_memory_out())
-
-    def _get_os_description(self) -> Optional[str]:
-        """
-        Gives the description of the operating system on which the campaign has
-        been executed.
-
-        :return: The description of the OS.
-        """
-        raise NotImplementedError('Method "_get_os_description()" is abstract!')
-
-    def _get_cpu_description(self) -> Optional[str]:
-        """
-        Gives the description of the CPU of the machine(s) on which the campaign
-        has been executed.
-
-        :return: The description of the CPU.
-        """
-        raise NotImplementedError('Method "_get_cpu_description()" is abstract!')
-
-    def _get_total_memory(self) -> Optional[str]:
-        """
-        Gives the total amount of memory available on the machine(s) on which the
-        campaign has been executed.
-
-        :return: The total amount of memory.
-        """
-        raise NotImplementedError('Method "_get_total_memory()" is abstract!')
-
-    def _get_time_out(self) -> Optional[str]:
-        """
-        Gives the time limit set to the experiments in this campaign.
-
-        :return: The configured time limit.
-        """
-        raise NotImplementedError('Method "_get_time_out()" is abstract!')
-
-    def _get_memory_out(self) -> Optional[str]:
-        """
-        Gives the memory limit set to the experiments in this campaign.
-
-        :return: The set configured limit.
-        """
-        raise NotImplementedError('Method "_get_memory_out()" is abstract!')
-
-    def read_experiment_wares(self) -> None:
-        """
-        Reads the experiment-wares that are considered in the campaign being
-        parsed by Scalpel.
-        """
-        raise NotImplementedError('Method "read_experiment_wares()" is abstract!')
-
-    def read_input_set(self) -> None:
-        """
-        Reads the input set considered in the campaign being parsed by Scalpel.
-        """
-        raise NotImplementedError('Method "read_input_data()" is abstract!')
-
-    def read_source(self) -> None:
-        """
-        Reads the description of the source from which the campaign is to
-        be parsed.
-        """
-        self._main_file = self._get_campaign_path()
-        self._format = self._guess_format()
-        self._format = self._get_format()
-        self._custom_parser = self._get_custom_parser()
-        self._is_success = self._get_is_success()
-        self._followlinks = self._get_followlinks()
-        self.read_csv_configuration()
-
-    def _get_is_success(self):
-        raise NotImplementedError('Method "_get_is_success()" is abstract!')
-
-    def _get_campaign_path(self) -> Iterable[str]:
-        """
-        Gives the path of the file containing all the data about the campaign.
-        This file may be either a regular file or a directory.
-
-        :return: The path to the main file of the campaign.
-        """
-        raise NotImplementedError('Method "_get_campaign_path()" is abstract!')
-
-    def _get_format(self) -> Optional[CampaignFormat]:
-        """
-        Gives the format of the campaign to parse.
-        If not specified, the format is guessed on a best effort basis.
-
-        :return: The format of the campaign to parse, if any.
-        """
-        raise NotImplementedError('Method "_get_format()" is abstract!')
-
-    def _guess_format(self) -> Optional[CampaignFormat]:
-        """
-        Guesses the format of the campaign to parse.
-
-        :return: The guessed format of the campaign, or None if it could
-                 not be guessed.
-        """
-        if path.isdir(self._main_file[0]):
-            return self._guess_directory_format()
-        if path.exists(self._main_file[0]):
-            return self._guess_regular_format()
-        return None
-
-    def _guess_directory_format(self) -> Optional[CampaignFormat]:
-        """
-        Guesses the format of the campaign to parse when stored in a directory.
-
-        :return: The format of the campaign, guessed from the deepness of the
-                 file hierarchy rooted at the main file of this campaign.
-        """
-        for _, dirs, _ in walk(self._main_file[0]):
-            if dirs:
-                return CampaignFormat.EXPERIMENT_DIRECTORY
-        return CampaignFormat.SINGLE_EXPERIMENT_LOG_FILE
-
-    def _guess_regular_format(self) -> Optional[CampaignFormat]:
-        """
-        Guesses the format of the campaign to parse when stored in a regular file.
-
-        :return: The format of the campaign, guessed from the extension of its
-                 main file, or None if it could not be guessed.
-        """
-        try:
-            index = self._main_file[0].rindex('.')
-            return CampaignFormat.value_of(self._main_file[0][index + 1:])
-        except ValueError:
-            return None
-
-    def read_csv_configuration(self):
-        self._csv_configuration = CsvConfiguration(self._separator(), self._quote_char(), self._has_header(), self._title_separator())
-
-    def _has_header(self) -> bool:
-        """
-        Checks whether the input file to parse has a header.
-
-        :return: If the input file to parse has a header.
-        """
-        raise NotImplementedError('Method "_has_header()" is abstract!')
-
-    def _quote_char(self) -> str:
-        """
-        :return: Return the quote char
-        """
-        raise NotImplementedError('Method "_quote_char()" is abstract!')
-
-    def _separator(self) -> str:
-        """
-        :return: Return the separator
-        """
-        raise NotImplementedError('Method "_separator()" is abstract!')
-
-    def _title_separator(self) -> str:
-        """
-        :return: Return the separator
-        """
-        raise NotImplementedError('Method "_separator()" is abstract!')
-
-    def _get_custom_parser(self) -> Optional[str]:
-        """
-        Gives the (completely specified) class of the custom parser to use to parse
-        the campaign, if any.
-
-        :return: The class of the parser to use
-        """
-        raise NotImplementedError('Method "_get_custom_parser()" is abstract!')
-
-    def read_data(self) -> None:
-        """
-        Reads the files from which Scalpel will extract relevant data for the
-        analysis.
-        Such files are only meaningful when the campaign is stored in a
-        directory.
-        """
-        raw_data = self._get_raw_data()
-        self._file_name_meta = self._get_file_name_meta()
-        while raw_data.has_next():
-            file = raw_data.get_file()
-            name = raw_data.get_name()
-            pattern = raw_data.get_compiled_pattern()
-            self._log_datas[file].append(LogData(name, pattern))
-            raw_data.next()
-
-        self._data_files = {}
-        for data_file in self._get_data_files():
-            if isinstance(data_file, str):
-                self._data_files[data_file] = create_data_file(data_file)
-            else:
-                name = data_file['name']
-                name_as_prefix = data_file.get('name-as-prefix')
-                name_as_prefix = False if name_as_prefix is None else name_as_prefix
-                header = data_file.get('has-header')
-                header = True if header is None else header
-                quote_char = data_file.get('quote-char')
-                separator = data_file.get('separator')
-                title_separator = data_file.get('title-separator')
-                parser = data_file.get('parser')
-                fmt_tmp = data_file.get('format')
-                fmt = None if fmt_tmp is None else OutputFormat.value_of(fmt_tmp)
-                if separator is None:
-                    if fmt == OutputFormat.CSV2:
-                        separator = ';'
-                    elif fmt == OutputFormat.TSV:
-                        separator = '\t'
-                    else:
-                        separator = ','
-                csv_config = CsvConfiguration(separator, quote_char, header, title_separator)
-                self._data_files[name] = create_data_file(name, name_as_prefix, fmt, csv_config, parser)
-
-    def _get_file_name_meta(self) -> FileNameMetaConfiguration:
-        raise NotImplementedError('Method "_get_file_name_meta()" is abstract!')
-
-    def _get_raw_data(self) -> RawDataConfiguration:
-        """
-        Gives the raw data configuration, which describes how to extract data
-        from the log files of the experiment-wares.
-        Such data is only meaningful when the campaign is stored in a
-        directory.
-
-        :return: The raw data configuration.
-        """
-        raise NotImplementedError('Method "_get_raw_data()" is abstract!')
-
-    def _get_data_files(self) -> Iterable:
-        """
-        Gives the output files to consider for each experiment, which must be in
-        a format that Scalpel natively recognizes (JSON, CSV, etc.).
-        Such files are only meaningful when the campaign is stored in a "deep"
-        file hierarchy.
-
-        :return: The raw data configuration.
-        """
-        raise NotImplementedError('Method "_get_data_files()" is abstract!')
-
-    def _log_data(self, key: str, value: Optional[str]) -> None:
-        """
-        Notifies the listener about data that has been read.
-
-        :param key: The key identifying the read data.
-        :param value: The value that has been read.
-        """
-        if value is not None:
-            self._listener.log_data(key, value)
-
-    def _get_followlinks(self):
-        raise NotImplementedError('Method "_get_followlinks()" is abstract!')
-
-
-class DictionaryScalpelConfigurationBuilder(ScalpelConfigurationBuilder):
-    """
-    The DictionaryScalpelConfigurationBuilder builds Scalpel's configuration
-    from a dictionary describing this configuration.
-    Such a configuration is most likely obtained from a YAML file.
-    """
-
-    def __init__(self, dict_config: dict, listener) -> None:
-        super().__init__(listener)
-        self._dict_config = dict_config
-
-    def _get_mapping(self) -> MappingConfiguration:
-        """
-        Gives the mapping configuration object allowing to retrieve the data
-        expected by Scalpel from the experiment files.
-
-        :return: The configuration for the mapping.
-        """
-        mapping = self._get('data').get('mapping')
-        return EmptyMappingConfiguration() if mapping is None else DictionaryMappingConfiguration(mapping)
-
-    def _get_campaign_name(self) -> str:
-        """
-        Gives the name of the campaign being considered.
-
-        :return: The name of the campaign.
-        """
-        return self._dict_config.get('name')
-
-    def _get_campaign_date(self) -> str:
-        """
-        Gives the date of the campaign being considered.
-
-        :return: The date of the campaign.
-        """
-        return self._dict_config.get('date')
-
-    def _get_os_description(self) -> str:
-        """
-        Gives the description of the operating system on which the campaign has been executed.
-
-        :return: The description of the OS.
-        """
-        return self._get('setup').get('os')
-
-    def _get_cpu_description(self) -> str:
-        """
-        Gives the description of the CPU of the machine(s) on which the campaign
-        has been executed.
-
-        :return: The description of the CPU.
-        """
-        return self._get('setup').get('cpu')
-
-    def _get_total_memory(self) -> str:
-        """
-        Gives the total amount of memory available on the machine(s) on which the
-        campaign has been executed.
-
-        :return: The total amount of memory.
-        """
-        return self._get('setup').get('ram')
-
-    def _get_time_out(self) -> str:
-        """
-        Gives the time limit set to the experiments in this campaign.
-
-        :return: The set time limit.
-        """
-        return str(self._get('setup').get('timeout'))
-
-    def _get_memory_out(self) -> str:
-        """
-        Gives the memory limit set to the experiments in this campaign.
-
-        :return: The set memory limit.
-        """
-        return str(self._get('setup').get('memout'))
-
-    def read_experiment_wares(self) -> None:
-        """
-        Reads the experiment-wares that are considered in the campaign being
-        parsed by Scalpel.
-        """
-        experiment_wares = self._dict_config.get('experiment-wares')
-        if not experiment_wares:
-            return
-        elif isinstance(experiment_wares[0], str):
-            for xp_ware in experiment_wares:
-                self._listener.start_experiment_ware()
-                self._listener.log_data(XP_WARE_NAME, xp_ware)
-                self._listener.end_experiment_ware()
-        elif isinstance(experiment_wares[0], dict):
-            for xp_ware in experiment_wares:
-                self._listener.start_experiment_ware()
-                for key, value in xp_ware.items():
-                    self._listener.log_data(key, value)
-                self._listener.end_experiment_ware()
-
-    def read_input_set(self) -> None:
-        """
-        Reads the input set considered in the campaign being parsed by Scalpel.
-        """
-
-        input_set = self._dict_config.get('input-set')
-        if input_set is None:
-            return
-        self._listener.start_input_set()
-        fmt = InputSetFormat.value_of(input_set['type'])
-        name = input_set['name']
-        self._listener.log_data(INPUT_SET_NAME, name)
-        paths = DictionaryScalpelConfigurationBuilder._as_list(input_set['files'])
-        groups = self._get('input-set').get('file-name-meta')
-        file_name_meta = EmptyFileNameMetaConfiguration() if groups is None else DictionaryFileNameMetaConfiguration(groups)
-        extensions = self._get('input-set').get('extensions')
-        create_input_set_reader(fmt, extensions, file_name_meta)(self._listener, paths)
-        self._listener.end_input_set()
-
-    def _get_campaign_path(self) -> Iterable[str]:
-        """
-        Gives the path of the file containing all the data about the campaign.
-        This file may be either a regular file or a directory.
-
-        :return: The path to the main file of the campaign.
-        """
-        campaign_path = self._get('source').get('path')
-        if campaign_path is None:
-            raise ValueError
-        if isinstance(campaign_path, list):
-            return campaign_path
-        return [campaign_path]
-
-    def _get_format(self) -> Optional[CampaignFormat]:
-        """
-        Gives the format of the campaign to parse.
-        If not specified, the format is guessed on a best effort basis.
-
-        :return: The format of the campaign to parse, if any.
-        """
-        fmt = self._get('source').get('format')
-        if fmt is None:
-            return self._format
-        return CampaignFormat.value_of(fmt)
-
-    def _has_header(self) -> bool:
-        """
-        Checks whether the input file to parse has a header.
-
-        :return: If the input file to parse has a header.
-        """
-        has_header = self._get('source').get('has-header')
-        return has_header is None or has_header
-
-    def _quote_char(self) -> str:
-        """
-        :return: Return the quote char
-        """
-        return self._get('source').get('quote-char')
-
-    def _get_followlinks(self):
-        return self._get('source').get('follow-symlinks') or False
-
-    def _separator(self) -> str:
-        """
-        :return: Return the separator
-        """
-        sep = self._get('source').get('separator')
-        if sep is not None:
-            return sep
-        if self._format == CampaignFormat.CSV2:
-            return ';'
-        if self._format == CampaignFormat.TSV:
-            return '\t'
-        return ','
-
-    def _title_separator(self) -> str:
-        sep = self._get('source').get('title-separator')
-        if sep is not None:
-            return sep
-        return '.'
-
-
-    def _get_is_success(self):
-        expr = self._get('source').get('is-success')
-        if expr is None:
-            return None
-        return create_filter(expr)
-
-    def _get_custom_parser(self) -> Optional[str]:
-        """
-        Gives the (completely specified) class of the custom parser to use to parse
-        the campaign, if any.
-
-        :return: The class of the parser to use
-        """
-        return self._get('source').get('parser')
-
-    def _get_file_name_meta(self) -> FileNameMetaConfiguration:
-        file_name_meta = self._get('data').get('file-name-meta')
-        if file_name_meta is None:
-            return EmptyFileNameMetaConfiguration()
-        return DictionaryFileNameMetaConfiguration(file_name_meta)
-
-    def _get_raw_data(self) -> RawDataConfiguration:
-        """
-        Gives the raw data configuration, which describes how to extract data
-        from the log files of the experiment-wares.
-        Such data is only meaningful when the campaign is stored in a
-        directory.
-
-        :return: The raw data configuration.
-        """
-        data = self._get('data').get('raw-data')
-        data_list = DictionaryScalpelConfigurationBuilder._as_list(data)
-        return DictionaryRawDataConfiguration(data_list)
-
-    def _get_data_files(self) -> Iterable:
-        """
-        Gives the output files to consider for each experiment, which must be in
-        a format that Scalpel natively recognizes (JSON, CSV, etc.).
-        Such files are only meaningful when the campaign is stored in a "deep"
-        file hierarchy.
-
-        :return: The raw data configuration.
-        """
-        files = self._get('data').get('data-files')
-        return DictionaryScalpelConfigurationBuilder._as_list(files)
-
-    def _get(self, key: str) -> dict:
-        """
-        Gives the dictionary containing the configuration for the specified key.
-
-        :return: The configuration for the specified key, or an empty dictionary
-                 if the configuration is not specified.
-        """
-        config = self._dict_config.get(key)
-        return {} if config is None else config
-
-    @staticmethod
-    def _as_list(obj: Any) -> list:
-        if obj is None:
-            return []
-
-        elif isinstance(obj, list):
-            return obj
-
-        else:
-            return [obj]
-
-
-def read_configuration(yaml_file: str, listener: CampaignParserListener) -> ScalpelConfiguration:
-    """
-    Loads Scalpel's configuration from the given YAML file.
-
-    :param yaml_file: The path of the file to load the configuration from.
-    :param listener: The listener to notify about the context of the campaign
-                     while reading the configuration.
-
-    :return: The read configuration.
-    """
-    with open(yaml_file, 'r') as yaml_stream:
-        yaml = load_yaml(yaml_stream)
-        builder = DictionaryScalpelConfigurationBuilder(yaml, listener)
-        return builder.build()

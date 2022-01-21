@@ -32,7 +32,6 @@ from __future__ import annotations
 from metrics.core.builder.attribute_manager import AttributeManager, AttributeManagerSet
 from metrics.core.builder.typing_strategy import TypingStrategyEnum
 from metrics.core.model import *
-from metrics.core.constants import *
 
 
 class ValueManager:
@@ -44,7 +43,8 @@ class ValueManager:
     def __init__(self, attribute_manager: AttributeManager):
         """
         Creates a new ValueManager.
-        @param attribute_manager: The attribute manager that permits to verify the value of this ValueManager.
+        @param attribute_manager: The attribute manager that permits to verify the value of this
+        ValueManager.
         """
         self._elt = list()
         self._attribute_manager = attribute_manager
@@ -87,7 +87,8 @@ class ModelBuilder:
         """
         Create a new ModelBuilder.
         @param model: is the model that is build when build() is called.
-        @param attribute_manager_set: is the set of attribute managers that will manage value of each model attributes.
+        @param attribute_manager_set: is the set of attribute managers that will manage value of
+        each model attributes.
         """
         self._log_data = dict()
         for attr in attribute_manager_set.attribute_managers:
@@ -98,7 +99,8 @@ class ModelBuilder:
     def __setitem__(self, key: str, value: Any) -> None:
         """
         Permits to add a new value to an existing or not item.
-        If it is not existing, it creates a new attribute manager in the attribute set manager and use it.
+        If it is not existing, it creates a new attribute manager in the attribute set manager and
+        use it.
         @param key: key of the item.
         @param value: value to add to the item.
         """
@@ -129,8 +131,8 @@ class ModelBuilder:
 
 class CampaignBuilder(ModelBuilder):
     """
-    A campaign builder is the global builder containing all what we need to create a campaign and their children
-    attributes.
+    A campaign builder is the global builder containing all what we need to create a campaign and
+    their children attributes.
     """
 
     def __init__(self):
@@ -158,7 +160,9 @@ class CampaignBuilder(ModelBuilder):
         It gives to its constructor the experiment attribute set.
         @return: the created experiment builder.
         """
-        experiment = self[CAMPAIGN_EXPERIMENTS] = ExperimentBuilder(self._attribute_manager_sets.xp_attr_set)
+        experiment = self[CAMPAIGN_EXPERIMENTS] = ExperimentBuilder(
+            self._attribute_manager_sets.xp_attr_set
+        )
         return experiment
 
     def add_input_set_builder(self) -> InputSetBuilder:
@@ -167,15 +171,21 @@ class CampaignBuilder(ModelBuilder):
         It gives to its constructor the input set attribute set.
         @return: the created input set builder.
         """
-        input_set = self[CAMPAIGN_INPUT_SET] = InputSetBuilder(self._attribute_manager_sets.input_set_attr_set,
-                                                        self._attribute_manager_sets.input_attr_set)
+        input_set = self[CAMPAIGN_INPUT_SET] = InputSetBuilder(
+            self._attribute_manager_sets.input_set_attr_set,
+            self._attribute_manager_sets.input_attr_set
+        )
         return input_set
 
     def has_experiment_ware_with_name(self, param):
-        return not self._attribute_manager_sets.xp_ware_attr_set.get_attribute_manager(XP_WARE_NAME).is_unique(param)
+        return not self._attribute_manager_sets.xp_ware_attr_set.get_attribute_manager(
+            XP_WARE_NAME
+        ).is_unique(param)
 
     def has_input_with_name(self, param):
-        return not self._attribute_manager_sets.input_attr_set.get_attribute_manager(INPUT_NAME).is_unique(param)
+        return not self._attribute_manager_sets.input_attr_set.get_attribute_manager(
+            INPUT_NAME
+        ).is_unique(param)
 
 
 class ExperimentWareBuilder(ModelBuilder):
@@ -186,7 +196,8 @@ class ExperimentWareBuilder(ModelBuilder):
     def __init__(self, attribute_manager_set: AttributeManagerSet):
         """
         Creates an experimentware builder.
-        @param attribute_manager_set: the attribute manager set that will manage values of attributes.
+        @param attribute_manager_set: the attribute manager set that will manage values of
+        attributes.
         """
         super().__init__(ExperimentWare, attribute_manager_set)
 
@@ -199,7 +210,8 @@ class ExperimentBuilder(ModelBuilder):
     def __init__(self, attribute_manager_set: AttributeManagerSet):
         """
         Creates an experiment builder.
-        @param attribute_manager_set: the attribute manager set that will manage values of attributes.
+        @param attribute_manager_set: the attribute manager set that will manage values of
+        attributes.
         """
         super().__init__(Experiment, attribute_manager_set)
 
@@ -209,10 +221,12 @@ class InputSetBuilder(ModelBuilder):
     An input set builder manage the building of an input set model.
     """
 
-    def __init__(self, attribute_manager_set: AttributeManagerSet, input_attribute_set: AttributeManagerSet):
+    def __init__(self, attribute_manager_set: AttributeManagerSet,
+                 input_attribute_set: AttributeManagerSet):
         """
         Creates an input set builder.
-        @param attribute_manager_set: the attribute manager set that will manage values of attributes.
+        @param attribute_manager_set: the attribute manager set that will manage values of
+        attributes.
         @param input_attribute_set: the input attribute set needed for each future create input.
         """
         super().__init__(InputSet, attribute_manager_set)
@@ -239,7 +253,8 @@ class InputBuilder(ModelBuilder):
     def __init__(self, attribute_manager_set: AttributeManagerSet):
         """
         Creates an input builder.
-        @param attribute_manager_set: the attribute manager set that will manage values of attributes.
+        @param attribute_manager_set: the attribute manager set that will manage values of
+        attributes.
         """
         super().__init__(Input, attribute_manager_set)
 
@@ -251,7 +266,8 @@ class AttributeManagerSets:
 
     def __init__(self):
         """
-        Creates an AttributeManagerSets object that instantiates the attribute manager set for each model builder
+        Creates an AttributeManagerSets object that instantiates the attribute manager set
+        for each model builder
         """
         self._input_attr_set = AttributeManagerSet()
         self._input_set_attr_set = AttributeManagerSet()
@@ -266,63 +282,102 @@ class AttributeManagerSets:
         self._init_experiment_builder_attribute_set()
 
     def _init_campaign_builder_attribute_set(self):
-        self._campaign_attr_set.add_attribute_manager_for_typing(name=CAMPAIGN_NAME,
-                                                                 ordered_typing=[TypingStrategyEnum.STRING],
-                                                                 is_list=False, empty=False,
-                                                                 nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_typing(name=CAMPAIGN_TIMEOUT,
-                                                                 ordered_typing=[TypingStrategyEnum.FLOAT],
-                                                                 is_list=False, empty=False,
-                                                                 nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_typing(name=CAMPAIGN_MEMOUT,
-                                                                 ordered_typing=[TypingStrategyEnum.FLOAT],
-                                                                 is_list=False, empty=False,
-                                                                 nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_builder(name=CAMPAIGN_XP_WARES,
-                                                                  builder_type=ExperimentWareBuilder,
-                                                                  is_list=True, empty=False,
-                                                                  nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_builder(name=CAMPAIGN_INPUT_SET, builder_type=InputSetBuilder,
-                                                                  is_list=False,
-                                                                  empty=False,
-                                                                  nullable=False)
-        self._campaign_attr_set.add_attribute_manager_for_builder(name=CAMPAIGN_EXPERIMENTS, builder_type=ExperimentBuilder,
-                                                                  is_list=True,
-                                                                  empty=False,
-                                                                  nullable=False)
+        self._campaign_attr_set.add_attribute_manager_for_typing(
+            name=CAMPAIGN_NAME,
+            ordered_typing=[TypingStrategyEnum.STRING],
+            is_list=False, empty=False,
+            nullable=False
+        )
+        self._campaign_attr_set.add_attribute_manager_for_typing(
+            name=CAMPAIGN_TIMEOUT,
+            ordered_typing=[TypingStrategyEnum.FLOAT],
+            is_list=False, empty=False,
+            nullable=False
+        )
+        self._campaign_attr_set.add_attribute_manager_for_typing(
+            name=CAMPAIGN_MEMOUT,
+            ordered_typing=[TypingStrategyEnum.FLOAT],
+            is_list=False, empty=False,
+            nullable=False
+        )
+        self._campaign_attr_set.add_attribute_manager_for_builder(
+            name=CAMPAIGN_XP_WARES,
+            builder_type=ExperimentWareBuilder,
+            is_list=True, empty=False,
+            nullable=False
+        )
+        self._campaign_attr_set.add_attribute_manager_for_builder(
+            name=CAMPAIGN_INPUT_SET,
+            builder_type=InputSetBuilder,
+            is_list=False,
+            empty=False,
+            nullable=False
+        )
+        self._campaign_attr_set.add_attribute_manager_for_builder(
+            name=CAMPAIGN_EXPERIMENTS,
+            builder_type=ExperimentBuilder,
+            is_list=True,
+            empty=False,
+            nullable=False
+        )
 
     def _init_input_set_builder_attribute_set(self):
-        self._input_set_attr_set.add_attribute_manager_for_typing(name=INPUT_SET_NAME,
-                                                                  ordered_typing=[TypingStrategyEnum.STRING],
-                                                                  is_list=False, empty=False,
-                                                                  nullable=False)
-        self._input_set_attr_set.add_attribute_manager_for_builder(name=INPUT_SET_INPUTS, builder_type=InputBuilder,
-                                                                   is_list=True,
-                                                                   empty=False,
-                                                                   nullable=False)
+        self._input_set_attr_set.add_attribute_manager_for_typing(
+            name=INPUT_SET_NAME,
+            ordered_typing=[TypingStrategyEnum.STRING],
+            is_list=False,
+            empty=False,
+            nullable=False
+        )
+        self._input_set_attr_set.add_attribute_manager_for_builder(
+            name=INPUT_SET_INPUTS,
+            builder_type=InputBuilder,
+            is_list=True,
+            empty=False,
+            nullable=False
+        )
 
     def _init_input_builder_attribute_set(self):
-        self._input_attr_set.add_attribute_manager_for_typing(name=INPUT_NAME, ordered_typing=[TypingStrategyEnum.STRING],
-                                                              is_list=False, empty=False,
-                                                              nullable=False, unique=True)
+        self._input_attr_set.add_attribute_manager_for_typing(
+            name=INPUT_NAME,
+            ordered_typing=[TypingStrategyEnum.STRING],
+            is_list=False,
+            empty=False,
+            nullable=False,
+            unique=True
+        )
 
     def _init_experiment_ware_builder_attribute_set(self):
-        self._xp_ware_attr_set.add_attribute_manager_for_typing(name=XP_WARE_NAME, ordered_typing=[TypingStrategyEnum.STRING],
-                                                                is_list=False, empty=False,
-                                                                nullable=False, unique=True)
+        self._xp_ware_attr_set.add_attribute_manager_for_typing(
+            name=XP_WARE_NAME,
+            ordered_typing=[TypingStrategyEnum.STRING],
+            is_list=False,
+            empty=False,
+            nullable=False,
+            unique=True
+        )
 
     def _init_experiment_builder_attribute_set(self):
-        self._xp_attr_set.add_attribute_manager_for_typing(name=EXPERIMENT_INPUT, ordered_typing=[TypingStrategyEnum.STRING],
-                                                           is_list=False,
-                                                           empty=False,
-                                                           nullable=False)
-        self._xp_attr_set.add_attribute_manager_for_typing(name=EXPERIMENT_XP_WARE,
-                                                           ordered_typing=[TypingStrategyEnum.STRING],
-                                                           is_list=False, empty=False,
-                                                           nullable=False)
-        self._xp_attr_set.add_attribute_manager_for_typing(name=EXPERIMENT_CPU_TIME, ordered_typing=[TypingStrategyEnum.FLOAT],
-                                                           is_list=False, empty=False,
-                                                           nullable=False)
+        self._xp_attr_set.add_attribute_manager_for_typing(
+            name=EXPERIMENT_INPUT,
+            ordered_typing=[TypingStrategyEnum.STRING],
+            is_list=False,
+            empty=False,
+            nullable=False
+        )
+        self._xp_attr_set.add_attribute_manager_for_typing(
+            name=EXPERIMENT_XP_WARE,
+            ordered_typing=[TypingStrategyEnum.STRING],
+            is_list=False, empty=False,
+            nullable=False
+        )
+        self._xp_attr_set.add_attribute_manager_for_typing(
+            name=EXPERIMENT_CPU_TIME,
+            ordered_typing=[TypingStrategyEnum.FLOAT],
+            is_list=False,
+            empty=False,
+            nullable=False
+        )
 
     @property
     def input_attr_set(self):

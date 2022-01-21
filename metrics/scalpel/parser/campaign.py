@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -15,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -25,8 +25,8 @@
 
 
 """
-This module provides various classes for parsing different types of files
-containing the results of a campaign, so as to build its representation.
+This module provides various classes for parsing different types of files containing
+the results of a campaign, to build the representation of this campaign.
 """
 
 
@@ -34,26 +34,26 @@ from __future__ import annotations
 
 from collections import defaultdict
 from glob import glob
-from os import path, scandir, walk
+from os import path, walk
 from os.path import basename, splitext
-from typing import Any, Dict, List, TextIO, Generator, Tuple, Optional
+from typing import Any, Dict, Generator, List, Optional, TextIO, Tuple
+
+from metrics.scalpel.parser.output import CampaignOutputParser
+from metrics.scalpel.parser.output import CsvCampaignOutputParser
+from metrics.scalpel.parser.output import JsonCampaignOutputParser, XmlCampaignOutputParser
+from metrics.scalpel.parser.output import RawCampaignOutputParser
 
 from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE
-from metrics.scalpel.config import ScalpelConfiguration
-from metrics.scalpel.config.config import FileNameMetaConfiguration, CsvConfiguration
-from metrics.scalpel.config.format import OutputFormat
-from metrics.scalpel.listener import CampaignParserListener
-from metrics.scalpel.parser.output import CampaignOutputParser, \
-    CsvCampaignOutputParser, JsonCampaignOutputParser, XmlCampaignOutputParser, \
-    RawCampaignOutputParser
-from metrics.scalpel.parser.utils import CsvReader
+
+from metrics.scalpel import CampaignParserListener
+from metrics.scalpel.config import FileNameMetaConfiguration, OutputFormat, ScalpelConfiguration
+from metrics.scalpel.utils import CsvConfiguration, CsvReader
 
 
 class CampaignParserListenerNotifier:
     """
-    The CampaignParserListenerNotifier is utility class allowing to easily
-    notify a CampaignParserListener about parsing events, whatever how parsing
-    is achieved.
+    The CampaignParserListenerNotifier is "trait" class allowing to easily notify
+    a CampaignParserListener about parsing events, whatever how parsing is achieved.
     """
 
     def __init__(self, listener: CampaignParserListener,
@@ -62,9 +62,8 @@ class CampaignParserListenerNotifier:
         Creates a new CampaignParserListenerNotifier.
 
         :param listener: The listener to notify while parsing.
-        :param file_name_meta: The configuration object describing how to
-                               extract metadata from the path of the
-                               parsed files.
+        :param file_name_meta: The configuration object describing how to extract
+                               metadata from the path of the parsed files.
         """
         self._listener = listener
         self._file_name_meta = file_name_meta
@@ -139,7 +138,7 @@ class FileCampaignParser(CampaignParserListenerNotifier, CampaignParser):
         :param file_path: The path of the file to read.
         """
         self.update_file_name_data(file_path)
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             self.parse_stream(file)
         self.reset_file_name_data()
 
@@ -164,9 +163,8 @@ class CsvCampaignParser(FileCampaignParser):
         Creates a new CsvCampaignParser.
 
         :param listener: The listener to notify while parsing.
-        :param file_name_meta: The configuration object describing how to
-                               extract metadata from the path of the file to
-                               parse.
+        :param file_name_meta: The configuration object describing how to extract
+                               metadata from the path of the parsed file.
         :param csv_configuration: The configuration for the CSV reader.
         """
         super().__init__(listener, file_name_meta)
@@ -188,7 +186,7 @@ class CsvCampaignParser(FileCampaignParser):
 
         :param stream: The stream to read.
 
-        :return: The header of the CSV stream
+        :return: The header of the CSV stream.
         """
         self._reader = CsvReader(stream, self._csv_configuration, self._row_filter)
         return self._reader.read_header()
@@ -207,8 +205,7 @@ class CsvCampaignParser(FileCampaignParser):
 
     def _row_filter(self, row: List[str]) -> bool:
         """
-        Checks whether the given row is relevant for the purpose of the
-        campaign.
+        Checks whether the given row is relevant for the purpose of the campaign.
 
         :param row: The row to check.
 
@@ -220,19 +217,18 @@ class CsvCampaignParser(FileCampaignParser):
 class ReverseCsvCampaignParser(CsvCampaignParser):
     """
     The ReverseCsvCampaignParser is a parser that allows to parse a CSV file
-    in which each line corresponds to an input, and the column to the values
+    in which each line corresponds to an input, and the columns to the values
     collected for different experiment-wares on the corresponding input.
     """
 
     def __init__(self, listener: CampaignParserListener, file_name_meta: FileNameMetaConfiguration,
                  csv_configuration: CsvConfiguration) -> None:
         """
-        Creates a new CsvCampaignParser.
+        Creates a new ReverseCsvCampaignParser.
 
         :param listener: The listener to notify while parsing.
-        :param file_name_meta: The configuration object describing how to
-                               extract metadata from the path of the file to
-                               parse.
+        :param file_name_meta: The configuration object describing how to extract
+                               metadata from the path of the parsed file.
         :param csv_configuration: The configuration for the CSV reader.
         """
         super().__init__(listener, file_name_meta, csv_configuration)
@@ -247,17 +243,20 @@ class ReverseCsvCampaignParser(CsvCampaignParser):
 
         :param stream: The stream to read.
 
-        :return: The header of the CSV stream
+        :return: The data available in the CSV stream.
         """
-        header = super().parse_header(stream)
+        header = []
 
         # Extracting the experiment-wares and the statistics to collect.
-        for key in header:
-            if key not in self._input_mapping:
-                splitted_key = key.split(self._csv_configuration.get_title_separator(), 1)
-                self._experiment_wares.add(splitted_key[0])
-                self._data_names.add('' if len(splitted_key) == 1 else splitted_key[1])
+        for key in super().parse_header(stream):
+            if key in self._input_mapping:
+                header.append(key)
+            else:
+                split_key = key.split(self._csv_configuration.get_title_separator(), 1)
+                self._experiment_wares.add(split_key[0])
+                self._data_names.add('' if len(split_key) == 1 else split_key[1])
 
+        header.extend(self._data_names)
         return header
 
     def parse_content(self) -> None:
@@ -267,7 +266,7 @@ class ReverseCsvCampaignParser(CsvCampaignParser):
         invoking this method.
         """
         for line in self._reader.read_content():
-            line_data = {key: value for key, value in line}
+            line_data = dict(line)
             input_data = self._extract_input_data(line_data)
             for xp_ware in self._experiment_wares:
                 self.start_experiment()
@@ -283,24 +282,28 @@ class ReverseCsvCampaignParser(CsvCampaignParser):
         :return: The data corresponding to the input.
         """
         if len(self._input_mapping) == 1 and self._input_mapping[0] not in line:
+            # There is no data about the input in the line.
             self._current_input += 1
             return {EXPERIMENT_INPUT: f'unknown input #{self._current_input}'}
+
+        # Collecting the data about the input.
         return {key: line[key] for key in self._input_mapping}
 
-    def _log_experiment(self, experiment_ware: str, input_data: Dict[str, str], line: Dict[str, str]) -> None:
+    def _log_experiment(self, experiment_ware: str, input_data: Dict[str, str],
+                        line: Dict[str, str]) -> None:
         """
         Logs data about an experiment.
 
         :param experiment_ware: The experiment-ware used for the experiment.
         :param input_data: The data about the input used for the experiment.
-        :param line: The data about the experiment.
+        :param line: All the data about the experiment.
         """
+        # Logging the name of the experiment-ware.
+        self.log_data(EXPERIMENT_XP_WARE, experiment_ware)
+
         # Logging data about the input.
         for key, value in input_data.items():
             self.log_data(key, value)
-
-        # Logging the name of the experiment-ware.
-        self.log_data(EXPERIMENT_XP_WARE, experiment_ware)
 
         # Logging statistics about the experiment.
         for data in self._data_names:
@@ -322,16 +325,14 @@ class EvaluationCampaignParser(CsvCampaignParser):
         Creates a new EvaluationCampaignParser.
 
         :param listener: The listener to notify while parsing.
-        :param file_name_meta: The configuration object describing how to
-                               extract metadata from the path of the file to
-                               parse.
+        :param file_name_meta: The configuration object describing how to extract
+                               metadata from the path of the file to parse.
         """
-        super().__init__(listener, file_name_meta, CsvConfiguration('|'))
+        super().__init__(listener, file_name_meta, CsvConfiguration(separator='|'))
 
     def _row_filter(self, row: List[str]) -> bool:
         """
-        Checks whether the given row is relevant for the purpose of the
-        campaign.
+        Checks whether the given row is relevant for the purpose of the campaign.
 
         :param row: The row to check.
 
@@ -352,22 +353,22 @@ class DirectoryCampaignParser(CampaignParser):
         """
         Creates a new DirectoryCampaignParser.
 
-        :param file_exploration_strategy: The strategy to apply to interpret the
-                                          file hierarchy in terms of experiment
-                                          outputs.
+        :param configuration: The configuration describing the campaign to parse.
+        :param file_exploration_strategy: The strategy to apply to interpret the file
+                                          hierarchy in terms of experiment outputs.
         """
-        self._file_exploration_strategy = file_exploration_strategy
         self._configuration = configuration
+        self._file_exploration_strategy = file_exploration_strategy
         self._directories = None
 
-    def parse_file(self, root: str) -> None:
+    def parse_file(self, file_path: str) -> None:
         """
         Explores the file hierarchy rooted at the given directory.
 
-        :param root: The root directory of the file hierarchy to explore.
+        :param file_path: The root directory of the file hierarchy to explore.
         """
         self._directories = defaultdict(list)
-        self._find_relevant_files(root)
+        self._find_relevant_files(file_path)
         self._parse_relevant_files()
 
     def _find_relevant_files(self, root: str):
@@ -384,6 +385,8 @@ class DirectoryCampaignParser(CampaignParser):
     def _extract_relevant_file(self, file_path: str) -> Tuple[Optional[str], Optional[str]]:
         """
         Extracts a relevant file from the given path.
+        To this end, all possible relative paths are compared to those described in the
+        configuration to check whether the file is to be parsed.
 
         :param file_path: The path of the file to extract a file from.
 
@@ -391,18 +394,17 @@ class DirectoryCampaignParser(CampaignParser):
                  relevant file inside this directory, or (None, None) if the file is not
                  relevant.
         """
-        split_path = file_path.split(path.sep)
-        for i in range(len(split_path) - 1, -1, -1):
-            directory = path.join(split_path[0], *split_path[1:i]) if i > 0 else "."
-            file = path.join(split_path[i], *split_path[i+1:]) if i < len(split_path) - 1 else split_path[i]
+        split = file_path.split(path.sep)
+        for i in range(len(split) - 1, -1, -1):
+            directory = path.join(split[0], *split[1:i]) if i > 0 else "."
+            file = path.join(split[i], *split[i+1:]) if i < len(split) - 1 else split[i]
             if self._configuration.is_to_be_parsed(file):
                 return directory, file
         return None, None
 
     def _parse_relevant_files(self) -> None:
         """
-        Parses the relevant files that have been found in the file hierarchy of the
-        campaign.
+        Parses the relevant files that have been found in the file hierarchy of the campaign.
         """
         for directory, files in self._directories.items():
             self._file_exploration_strategy.enter_directory(directory)
@@ -411,18 +413,17 @@ class DirectoryCampaignParser(CampaignParser):
                 self._file_exploration_strategy.parse_file(file_path, file)
             self._file_exploration_strategy.exit_directory(directory)
 
-    def _find(self, directory: str) -> Generator[str]:
+    def _find(self, root: str) -> Generator[str]:
         """
-        Finds all regular files in the file hierarchy whose root is the given
-        directory.
+        Finds all regular files in the file hierarchy rooted at the given directory.
 
-        :param directory: The root directory of the file hierarchy to explore.
+        :param root: The root directory of the file hierarchy to explore.
 
         :return: A generator of the regular files in the hierarchy.
         """
-        for root, _, files in walk(directory, followlinks=self._configuration.follow_symlinks()):
+        for folder, _, files in walk(root, followlinks=self._configuration.get_follow_symlinks()):
             for file in files:
-                yield path.join(root, file)
+                yield path.join(folder, file)
 
 
 class FileExplorationStrategy(CampaignParserListenerNotifier):
@@ -431,7 +432,8 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
     allow to interpret a file hierarchy in terms of experiment outputs.
     """
 
-    def __init__(self, listener: CampaignParserListener, configuration: ScalpelConfiguration) -> None:
+    def __init__(self, listener: CampaignParserListener,
+                 configuration: ScalpelConfiguration) -> None:
         """
         Creates a new FileExplorationStrategy.
 
@@ -441,6 +443,13 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
         super().__init__(listener, configuration.get_file_name_meta())
         self._configuration = configuration
 
+    def end_experiment(self) -> None:
+        """
+        Notifies the listener that the current experiment has been fully parsed.
+        """
+        super().end_experiment()
+        super().reset_file_name_data()
+
     def enter_directory(self, directory: str) -> None:
         """
         Notifies this strategy that a directory is entered.
@@ -448,7 +457,6 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
 
         :param directory: The directory that is entered.
         """
-        pass
 
     def parse_file(self, file_path: str, file_name: str) -> None:
         """
@@ -466,7 +474,6 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
 
         :param directory: The directory that is exited.
         """
-        pass
 
     def _extract_from_file(self, file_path: str, file_name: str):
         """
@@ -494,26 +501,32 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
 
         # By default, a raw parser is used.
         if data_file is None:
-            return RawCampaignOutputParser(self._configuration, self._listener, file_path, False)
+            return RawCampaignOutputParser(self._listener, file_path, file_name,
+                                           False, self._configuration)
 
         # Looking for a user-implemented parser.
-        parser = data_file.get_parser()
+        parser = data_file.get_custom_parser()
         if parser is not None:
-            return parser(self._configuration, self._listener, file_path, file_name)
+            return parser(self._listener, self._configuration, file_path, file_name)
 
-        # Using the most appropriate parser, based on the format.
+        # Using the most appropriate parser, based on the format of the file.
         fmt = data_file.get_format()
 
-        if fmt in (OutputFormat.CSV, OutputFormat.CSV2, OutputFormat.TSV):
-            return CsvCampaignOutputParser(self._listener, file_path, data_file.has_name_as_prefix(), data_file.get_configuration())
+        if fmt.is_csv():
+            return CsvCampaignOutputParser(self._listener, file_path, file_name,
+                                           data_file.has_name_as_prefix(),
+                                           data_file.get_csv_configuration())
 
         if fmt == OutputFormat.JSON:
-            return JsonCampaignOutputParser(self._listener, file_path, data_file.has_name_as_prefix())
+            return JsonCampaignOutputParser(self._listener, file_path, file_name,
+                                            data_file.has_name_as_prefix())
 
         if fmt == OutputFormat.XML:
-            return XmlCampaignOutputParser(self._listener, file_path, data_file.has_name_as_prefix())
+            return XmlCampaignOutputParser(self._listener, file_path, file_name,
+                                           data_file.has_name_as_prefix())
 
-        return RawCampaignOutputParser(self._configuration, self._listener, file_path, data_file.has_name_as_prefix())
+        return RawCampaignOutputParser(self._listener, file_path, file_name,
+                                       data_file.has_name_as_prefix(), self._configuration)
 
 
 class SingleFileExplorationStrategy(FileExplorationStrategy):
@@ -530,7 +543,7 @@ class SingleFileExplorationStrategy(FileExplorationStrategy):
         :param file_name: The name of the file to parse.
         """
         if self._configuration.is_to_be_parsed(file_name):
-            self._listener.start_experiment()
+            self.start_experiment()
             self._extract_from_file(file_path, file_name)
             self.end_experiment()
 
@@ -542,7 +555,8 @@ class NameBasedFileExplorationStrategy(FileExplorationStrategy):
     distinct extensions.
     """
 
-    def __init__(self, listener: CampaignParserListener, configuration: ScalpelConfiguration) -> None:
+    def __init__(self, listener: CampaignParserListener,
+                 configuration: ScalpelConfiguration) -> None:
         """
         Creates a new NameBasedFileExplorationStrategy.
 
@@ -571,7 +585,8 @@ class NameBasedFileExplorationStrategy(FileExplorationStrategy):
         :param file_name: The name of the file to parse.
         """
         if self._configuration.is_to_be_parsed(file_name):
-            self._file_names.add(NameBasedFileExplorationStrategy._file_name_without_extension(file_name))
+            name = NameBasedFileExplorationStrategy._file_name_without_extension(file_name)
+            self._file_names.add(name)
 
     def exit_directory(self, directory: str) -> None:
         """
@@ -604,7 +619,8 @@ class AllFilesExplorationStrategy(FileExplorationStrategy):
     a given directory contain the data for the same experiment.
     """
 
-    def __init__(self, listener: CampaignParserListener, configuration: ScalpelConfiguration) -> None:
+    def __init__(self, listener: CampaignParserListener,
+                 configuration: ScalpelConfiguration) -> None:
         """
         Creates a new AllFilesExplorationStrategy.
 
@@ -626,7 +642,7 @@ class AllFilesExplorationStrategy(FileExplorationStrategy):
             return
 
         if not self._in_experiment:
-            # The experiment starts only now to avoid to count empty or
+            # The experiment starts only now to avoid considering empty or
             # intermediate directories as experiments.
             self.start_experiment()
             self._in_experiment = True

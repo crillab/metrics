@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -15,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -30,12 +30,14 @@ campaign from different formats.
 """
 
 
-from os import path, sep, walk
-from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Union
+from os import path, walk
+from typing import Any, Callable, Dict, Generator, Iterable, List
+
+from metrics.scalpel.config.format import InputSetFormat
 
 from metrics.core.constants import INPUT_NAME
-from metrics.scalpel.config.format import InputSetFormat
-from metrics.scalpel.listener import CampaignParserListener
+
+from metrics.scalpel import CampaignParserListener
 
 
 class InputSetReader:
@@ -87,31 +89,32 @@ class ListInputSetReader(InputSetReader):
     representing the inputs of this input set.
     """
 
-    def __init__(self, listener: CampaignParserListener,
-                 input_set: List[Dict[str, Any]], extensions, file_name_meta) -> None:
+    def __init__(self, listener: CampaignParserListener, input_set: List[Dict[str, Any]],
+                 extensions: List[str], file_name_meta: 'FileNameMetaConfiguration') -> None:
         """
         Creates a new ListInputSetReader.
 
         :param listener: The listener to notify about the read input set.
-        :param input_set: The description of the input set, as a list of inputs
-                          (dictionaries).
+        :param input_set: The description of the input set, as a list of inputs (dictionaries).
+        :param extensions: The list of the extensions of the inputs.
+        :param file_name_meta: The configuration for extracting metadata from filenames.
         """
         super().__init__(listener)
         self._input_set = input_set
         self._file_name_meta = file_name_meta
         self._extensions = extensions
 
-    def read(self):
+    def read(self) -> None:
         """
         Reads the description of the different inputs of the input set.
         """
         for input_description in self._input_set:
-            self._start_input()
             file = input_description[INPUT_NAME]
             if self._is_ignored(file):
                 continue
-            for k, v in self._file_name_meta.extract_from(file).items():
-                self._log_data(k, v)
+            self._start_input()
+            for key, value in self._file_name_meta.extract_from(file).items():
+                self._log_data(key, value)
             for key, value in input_description.items():
                 self._log_data(key, value)
             self._end_input()
@@ -124,7 +127,7 @@ class ListInputSetReader(InputSetReader):
 
         :return: If the file is ignored.
         """
-        if self._extensions is None:
+        if not self._extensions:
             # All files are considered.
             return False
 
@@ -142,22 +145,14 @@ class FileListInputSetReader(InputSetReader):
     """
 
     def __init__(self, listener: CampaignParserListener, files: Iterable[str],
-                 extensions, file_name_meta):
+                 extensions: List[str], file_name_meta: 'FileNameMetaConfiguration') -> None:
         """
         Creates a new FileListInputSetReader.
 
         :param listener: The listener to notify about the read input set.
         :param files: The files contained in the input set.
-        :param family: The family of the inputs to read.
-                       If a string is given, its value is used as the name of
-                       the family.
-                       If an integer is given, its value is used as a position
-                       in the path of the files.
-                       If None is given, no family is considered for the read inputs.
-        :param name: The position in the path of the files that identify the name
-                     of an input.
-        :param extensions: The list of the extensions of the files to be considered as
-                           input files.
+        :param extensions: The list of the extensions of the inputs.
+        :param file_name_meta: The configuration for extracting metadata from filenames.
         """
         super().__init__(listener)
         self._file_list = files
@@ -169,9 +164,7 @@ class FileListInputSetReader(InputSetReader):
         Reads the files of the input set, and extracts their description.
         """
         for file in self._file_list:
-            self._start_input()
             self._extract_data(file.strip())
-            self._end_input()
 
     def _extract_data(self, file: str) -> None:
         """
@@ -183,11 +176,13 @@ class FileListInputSetReader(InputSetReader):
             return
 
         # Considering the file.
+        self._start_input()
         self._log_data(INPUT_NAME, file)
 
         # Retrieving the name of the input.
-        for k, v in self._file_name_meta.extract_from(file).items():
-            self._log_data(k, v)
+        for key, value in self._file_name_meta.extract_from(file).items():
+            self._log_data(key, value)
+        self._end_input()
 
     def _is_ignored(self, file: str) -> bool:
         """
@@ -197,7 +192,7 @@ class FileListInputSetReader(InputSetReader):
 
         :return: If the file is ignored.
         """
-        if self._extensions is None:
+        if not self._extensions:
             # All files are considered.
             return False
 
@@ -215,22 +210,14 @@ class HierarchyInputSetReader:
     """
 
     def __init__(self, listener: CampaignParserListener, root_dir: str,
-                 extensions, file_name_meta):
+                 extensions: List[str], file_name_meta: 'FileNameMetaConfiguration') -> None:
         """
         Creates a new HierarchyInputSetReader.
 
         :param listener: The listener to notify about the read input set.
         :param root_dir: The root directory of the file hierarchy to explore.
-        :param family: The family of the inputs to read.
-                       If a string is given, its value is used as the name of
-                       the family.
-                       If an integer is given, its value is used as a position
-                       in the path of the files.
-                       If None is given, no family is considered for the read inputs.
-        :param name: The position in the path of the files that identify the name
-                     of an input.
-        :param extensions: The list of the extensions of the files to be considered as
-                           input files.
+        :param extensions: The list of the extensions of the inputs.
+        :param file_name_meta: The configuration for extracting metadata from filenames.
         """
         self._listener = listener
         self._root_dir = root_dir
@@ -256,11 +243,15 @@ class HierarchyInputSetReader:
                 yield path.join(directory, file)
 
 
-def create_input_set_reader(fmt: InputSetFormat, extensions, file_name_meta) -> Callable[[CampaignParserListener, Any], None]:
+def create_input_set_reader(fmt: InputSetFormat, extensions: List[str],
+                            file_name_meta: 'FileNameMetaConfiguration') \
+        -> Callable[[CampaignParserListener, Any], None]:
     """
     Creates a reader for an input-set in the given format.
 
     :param fmt: The format of the input-set to read.
+    :param extensions: The list of the extensions of the inputs.
+    :param file_name_meta: The configuration for extracting metadata from filenames.
 
     :return: The function to use to read the input-set.
     """
@@ -276,25 +267,31 @@ def create_input_set_reader(fmt: InputSetFormat, extensions, file_name_meta) -> 
     return lambda l, s: _str_reader(HierarchyInputSetReader, l, s[0], extensions, file_name_meta)
 
 
-def _str_reader(factory: Callable, listener: CampaignParserListener, source: Any, extensions, file_name_meta) -> None:
+def _str_reader(factory: Callable, listener: CampaignParserListener, source: Any,
+                extensions: List[str], file_name_meta: 'FileNameMetaConfiguration') -> None:
     """
     Reads an input-set from a list containing the description of the inputs.
 
     :param factory: The function to call to create the appropriate reader.
     :param listener: The listener to notify while reading.
     :param source: The source from which to read the input.
+    :param extensions: The list of the extensions of the inputs.
+    :param file_name_meta: The configuration for extracting metadata from filenames.
     """
     reader = factory(listener, source, extensions, file_name_meta)
     reader.read()
 
 
-def _file_reader(listener: CampaignParserListener, source: Any, extensions, file_name_meta):
+def _file_reader(listener: CampaignParserListener, source: Any,
+                 extensions: List[str], file_name_meta: 'FileNameMetaConfiguration') -> None:
     """
     Reads an input-set from a file containing the list of the inputs to consider.
 
     :param listener: The listener to notify while reading.
     :param source: The source from which to read the input.
+    :param extensions: The list of the extensions of the inputs.
+    :param file_name_meta: The configuration for extracting metadata from filenames.
     """
-    with open(source, 'r') as file:
+    with open(source, 'r', encoding='utf-8') as file:
         reader = FileListInputSetReader(listener, file, extensions, file_name_meta)
         reader.read()

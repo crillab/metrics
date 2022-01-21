@@ -2,7 +2,7 @@ import re
 import unittest
 
 from metrics.core.constants import *
-from metrics.wallet import Analysis, find_best_cpu_time_input, import_analysis_from_file
+from metrics.wallet import find_best_cpu_time_input, import_analysis_from_file, DecisionAnalysis
 
 
 class NormalAnalysisManipulationTestCase(unittest.TestCase):
@@ -11,7 +11,7 @@ class NormalAnalysisManipulationTestCase(unittest.TestCase):
         inconsistent_returns = {'ERR WRONGCERT', 'ERR UNSAT'}
         successful_returns = {'SAT', 'UNSAT'}
 
-        self.analysis = Analysis(
+        self.analysis = DecisionAnalysis(
             input_file='data/xcsp19/full_analysis/config/metrics_scalpel_full_paths.yml'
         )
 

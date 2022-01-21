@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -15,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -26,20 +26,18 @@
 
 """
 This module provides various classes for parsing different types of files
-containing the output of experiment-wares produced during a campaign, so as to
+containing the output of experiment-wares produced during a campaign, to
 extract the data they contain.
 """
 
 
 from json import load as load_json
-from os import path
 from typing import Any, Optional, TextIO
 from xml.etree.ElementTree import Element, parse as load_xml
 
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration
-from metrics.scalpel.parser.utils import CsvReader
-from metrics.scalpel.config.config import CsvConfiguration
+from metrics.scalpel.utils import CsvConfiguration, CsvReader
 
 
 class CampaignOutputParser:
@@ -48,24 +46,27 @@ class CampaignOutputParser:
     read the output files produced by an experiment-ware during an experiment.
     """
 
-    def __init__(self, listener: CampaignParserListener, file: str, name_as_prefix: bool) -> None:
+    def __init__(self, listener: CampaignParserListener, file_path: str, file_name: str,
+                 name_as_prefix: bool) -> None:
         """
         Creates a new CampaignOutputParser.
 
         :param listener: The listener to notify while parsing.
-        :param file: The path of the file to parse.
-        :param name_as_prefix: Whether the name of the file must be used as prefix for the read data.
+        :param file_path: The path of the file to parse.
+        :param file_name: The name of the file to parse.
+        :param name_as_prefix: Whether the name of the file must be used as a prefix for
+                               identifying the read data.
         """
         self._listener = listener
-        self._file = file
-        self._file_name = path.basename(file)
+        self._file_path = file_path
+        self._file_name = file_name
         self._name_as_prefix = name_as_prefix
 
     def parse(self) -> None:
         """
         Parses the associated file.
         """
-        with open(self._file, 'r') as stream:
+        with open(self._file_path, 'r', encoding='utf-8') as stream:
             self._internal_parse(stream)
 
     def _internal_parse(self, stream: TextIO) -> None:
@@ -95,17 +96,20 @@ class CsvCampaignOutputParser(CampaignOutputParser):
     produced by an experiment-ware during an experiment.
     """
 
-    def __init__(self, listener: CampaignParserListener, file: str, name_as_prefix: bool,
-                 configuration: CsvConfiguration = CsvConfiguration()) -> None:
+    def __init__(self, listener: CampaignParserListener, file_path: str, file_name: str,
+                 name_as_prefix: bool, config: CsvConfiguration = CsvConfiguration()) -> None:
         """
         Creates a new CsvCampaignOutputParser.
 
         :param listener: The listener to notify while parsing.
-        :param file: The path of the file to parse.
-        :param configuration: The configuration of the CSV file to parse.
+        :param file_path: The path of the file to parse.
+        :param file_name: The name of the file to parse.
+        :param name_as_prefix: Whether the name of the file must be used as a prefix for
+                               identifying the read data.
+        :param config: The configuration to apply when parsing the CSV file.
         """
-        super().__init__(listener, file, name_as_prefix)
-        self._configuration = configuration
+        super().__init__(listener, file_path, file_name, name_as_prefix)
+        self._configuration = config
 
     def _internal_parse(self, stream: TextIO) -> None:
         """
@@ -121,8 +125,8 @@ class CsvCampaignOutputParser(CampaignOutputParser):
 
 class MarkupCampaignOutputParser(CampaignOutputParser):
     """
-    The MarkupCampaignOutputParser is the parent class of the parsers
-    that parse campaign outputs written using a markup language.
+    The MarkupCampaignOutputParser is the parent class of the parsers that parse
+    campaign outputs written using some markup(-like) language.
     """
 
     def _internal_parse(self, stream: TextIO) -> None:
@@ -182,22 +186,22 @@ class JsonCampaignOutputParser(MarkupCampaignOutputParser):
         """
         return load_json(stream)
 
-    def _decode(self, json: Any, prefix: Optional[str] = None) -> None:
+    def _decode(self, obj: Any, prefix: Optional[str] = None) -> None:
         """
         Decodes an object wrapping the content of a JSON stream to extract
         campaign data.
 
-        :param json: The object to decode.
+        :param obj: The object to decode.
         :param prefix: The prefix for the fields in the object.
         """
-        if isinstance(json, list):
-            self._decode_array(json, prefix)
+        if isinstance(obj, list):
+            self._decode_array(obj, prefix)
 
-        elif isinstance(json, dict):
-            self._decode_object(json, prefix)
+        elif isinstance(obj, dict):
+            self._decode_object(obj, prefix)
 
         else:
-            self.log_data(prefix, json)
+            self.log_data(prefix, obj)
 
     def _decode_array(self, array: list, field: Optional[str]) -> None:
         """
@@ -219,8 +223,8 @@ class JsonCampaignOutputParser(MarkupCampaignOutputParser):
         :param prefix: The prefix for the fields in the JSON object.
         """
         for key, value in obj.items():
-            new_prefix = MarkupCampaignOutputParser._create_prefix(prefix, key)
-            self._decode(value, new_prefix)
+            field = MarkupCampaignOutputParser._create_prefix(prefix, key)
+            self._decode(value, field)
 
 
 class XmlCampaignOutputParser(MarkupCampaignOutputParser):
@@ -239,23 +243,23 @@ class XmlCampaignOutputParser(MarkupCampaignOutputParser):
         """
         return load_xml(stream).getroot()
 
-    def _decode(self, xml: Element, prefix: Optional[str] = None) -> None:
+    def _decode(self, obj: Element, prefix: Optional[str] = None) -> None:
         """
         Decodes an object wrapping the content of an XML stream to extract
         campaign data.
 
-        :param xml: The object to decode.
+        :param obj: The object to decode.
         :param prefix: The prefix for the fields in the object.
         """
-        name = MarkupCampaignOutputParser._create_prefix(prefix, xml.tag)
+        name = MarkupCampaignOutputParser._create_prefix(prefix, obj.tag)
 
-        if xml.text:
-            self.log_data(name, xml.text)
+        if obj.text and obj.text.strip():
+            self.log_data(name, obj.text.strip())
 
-        for key, value in xml.attrib.items():
+        for key, value in obj.attrib.items():
             self.log_data(MarkupCampaignOutputParser._create_prefix(name, key), value)
 
-        for child in xml:
+        for child in obj:
             self._decode(child, name)
 
 
@@ -265,18 +269,19 @@ class RawCampaignOutputParser(CampaignOutputParser):
     experiment-ware.
     """
 
-    def __init__(self, configuration: ScalpelConfiguration,
-                 listener: CampaignParserListener,
-                 file_path: str, name_as_prefix: bool) -> None:
+    def __init__(self, listener: CampaignParserListener, file_path: str, file_name: str,
+                 name_as_prefix: bool, configuration: ScalpelConfiguration) -> None:
         """
         Creates a new RawCampaignOutputParser.
 
-        :param configuration: The configuration describing how to extract
-               data from the output file.
         :param listener: The listener to notify while parsing.
         :param file_path: The path of the file to parse.
+        :param file_name: The name of the file to parse.
+        :param name_as_prefix: Whether the name of the file must be used as a prefix for
+                               identifying the read data.
+        :param configuration: The configuration describing how to extract data from the output file.
         """
-        super().__init__(listener, file_path, name_as_prefix)
+        super().__init__(listener, file_path, file_name, name_as_prefix)
         self._configuration = configuration
 
     def _internal_parse(self, stream: TextIO) -> None:
@@ -299,7 +304,7 @@ class RawCampaignOutputParser(CampaignOutputParser):
             names = log_data.get_names()
             values = log_data.extract_value_from(line)
 
-            # If there were no data in the line, there is nothing to do.
+            # If there was no data in the line, there is nothing to do.
             if not values:
                 continue
 
@@ -308,7 +313,6 @@ class RawCampaignOutputParser(CampaignOutputParser):
                 for name, value in zip(names, values):
                     self.log_data(name, value)
             else:
-                assert len(names) == 1 and len(values) > 1
                 name = names[0]
                 for index, value in enumerate(values):
                     self.log_data(f'{name}{index}', value)

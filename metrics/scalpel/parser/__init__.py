@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -15,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -25,19 +25,25 @@
 
 
 """
-This package provides the modules allowing to parse files so as to retrieve
-the experimental data collected during a campaign.
+This package provides the modules allowing to parse files to retrieve the
+experimental data collected during a campaign.
 """
 
 
-from pydoc import locate
+from metrics.scalpel.parser.campaign import CampaignParser
+from metrics.scalpel.parser.campaign import CsvCampaignParser, ReverseCsvCampaignParser
+from metrics.scalpel.parser.campaign import EvaluationCampaignParser
+from metrics.scalpel.parser.campaign import DirectoryCampaignParser
+from metrics.scalpel.parser.campaign import AllFilesExplorationStrategy, \
+    NameBasedFileExplorationStrategy, SingleFileExplorationStrategy
 
 from metrics.scalpel import CampaignParserListener
+
 from metrics.scalpel.config import CampaignFormat, ScalpelConfiguration
-from metrics.scalpel.parser.campaign import *
 
 
-def create_parser(configuration: ScalpelConfiguration, listener: CampaignParserListener) -> CampaignParser:
+def create_parser(configuration: ScalpelConfiguration,
+                  listener: CampaignParserListener) -> CampaignParser:
     """
     Creates the most appropriate parser to use to parse the campaign described
     in the given configuration.
@@ -46,31 +52,36 @@ def create_parser(configuration: ScalpelConfiguration, listener: CampaignParserL
     :param listener: The listener to notify while parsing.
 
     :return: The parser to use to parse the campaign.
+
+    :raises ValueError: If an appropriate parser could not be instantiated.
     """
-    # If the user has written their own parser, this parser is used.
+    # If the user has written their own parser, this parser is instantiated.
     custom_parser = configuration.get_custom_parser()
     if custom_parser is not None:
-        return locate(custom_parser)(configuration, listener)
+        return custom_parser(listener, configuration)
 
     # Otherwise, a default parser is chosen w.r.t. the campaign's format.
-    campaign_format = configuration.get_format()
-
-    if campaign_format in (CampaignFormat.CSV, CampaignFormat.CSV2, CampaignFormat.TSV):
-        return CsvCampaignParser(listener, configuration.get_file_name_meta(), configuration.get_csv_configuration())
-
-    if campaign_format in (CampaignFormat.REVERSE_CSV, CampaignFormat.REVERSE_CSV2, CampaignFormat.REVERSE_TSV):
-        return ReverseCsvCampaignParser(listener, configuration.get_file_name_meta(), configuration.get_csv_configuration())
-
-    if campaign_format == CampaignFormat.EVALUATION:
+    if configuration.get_format() == CampaignFormat.EVALUATION:
         return EvaluationCampaignParser(listener, configuration.get_file_name_meta())
 
-    if campaign_format == CampaignFormat.SINGLE_EXPERIMENT_LOG_FILE:
-        return DirectoryCampaignParser(configuration, SingleFileExplorationStrategy(listener, configuration))
+    if configuration.get_format().is_csv():
+        return CsvCampaignParser(listener, configuration.get_file_name_meta(),
+                                 configuration.get_csv_configuration())
 
-    if campaign_format == CampaignFormat.MULTIPLE_EXPERIMENT_LOG_FILES:
-        return DirectoryCampaignParser(configuration, NameBasedFileExplorationStrategy(listener, configuration))
+    if configuration.get_format().is_reverse_csv():
+        return ReverseCsvCampaignParser(listener, configuration.get_file_name_meta(),
+                                        configuration.get_csv_configuration())
 
-    if campaign_format == CampaignFormat.EXPERIMENT_DIRECTORY:
-        return DirectoryCampaignParser(configuration, AllFilesExplorationStrategy(listener, configuration))
+    if configuration.get_format() == CampaignFormat.SINGLE_EXPERIMENT_LOG_FILE:
+        return DirectoryCampaignParser(configuration,
+                                       SingleFileExplorationStrategy(listener, configuration))
 
-    raise ValueError(f'Unrecognized input format: {campaign_format}')
+    if configuration.get_format() == CampaignFormat.MULTIPLE_EXPERIMENT_LOG_FILES:
+        return DirectoryCampaignParser(configuration,
+                                       NameBasedFileExplorationStrategy(listener, configuration))
+
+    if configuration.get_format() == CampaignFormat.EXPERIMENT_DIRECTORY:
+        return DirectoryCampaignParser(configuration,
+                                       AllFilesExplorationStrategy(listener, configuration))
+
+    raise ValueError(f'Unrecognized campaign format: {configuration.get_format()}')

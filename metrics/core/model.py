@@ -74,7 +74,8 @@ class ExperimentWare(Model):
 
     def __init__(self, attributes: dict) -> None:
         """
-        Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
+        Set the obligatory values directly in the constructor and gives the rest to the parent
+        constructor.
         @param attributes: dictionnary of attribute to add in this model
         """
         self.name = attributes.pop(XP_WARE_NAME)
@@ -88,7 +89,8 @@ class Campaign(Model):
 
     def __init__(self, attributes: dict) -> None:
         """
-        Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
+        Set the obligatory values directly in the constructor and gives the rest to the parent
+        constructor.
         @param attributes: dictionnary of attribute to add in this model
         """
         self.name = attributes.pop(CAMPAIGN_NAME)
@@ -124,7 +126,8 @@ class Experiment(Model):
 
     def __init__(self, attributes: dict) -> None:
         """
-        Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
+        Set the obligatory values directly in the constructor and gives the rest to the parent
+        constructor.
         @param attributes: dictionnary of attribute to add in this model
         """
         self.input = attributes.pop(EXPERIMENT_INPUT)
@@ -140,7 +143,8 @@ class Input(Model):
 
     def __init__(self, attributes: dict) -> None:
         """
-        Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
+        Set the obligatory values directly in the constructor and gives the rest to the parent
+        constructor.
         @param attributes: dictionary of attribute to add in this model
         """
         self.name = attributes.pop(INPUT_NAME)
@@ -154,7 +158,8 @@ class InputSet(Model):
 
     def __init__(self, attributes: dict) -> None:
         """
-        Set the obligatory values directly in the constructor and gives the rest to the parent constructor.
+        Set the obligatory values directly in the constructor and gives the rest to the parent
+        constructor.
         @param attributes: dictionnary of attribute to add in this model
         """
         self.name = attributes.pop(INPUT_SET_NAME)

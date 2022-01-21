@@ -34,8 +34,10 @@ from metrics.core.builder.typing_strategy import TypingStrategy, TypingStrategyE
 
 class AttributeManager:
     """
-    AttributeManager is an abstract object to manage a specific attribute through many instantiations of a same object.
-    It permits to verify if the attribute respect all the constraints and also to build or parse it at the end.
+    AttributeManager is an abstract object to manage a specific attribute through many
+    instantiations of a same object.
+    It permits to verify if the attribute respect all the constraints and also to build or parse it
+    at the end.
     """
 
     def __init__(self, name: str, is_list: bool, empty: bool, nullable: bool):
@@ -101,7 +103,8 @@ class AttributeManager:
 
 class AttributeManagerForBuilder(AttributeManager):
     """
-    AttributeManager specialised for builder attributes (e.g. InputSetBuilder has an attribute which is a list of InputBuilder).
+    AttributeManager specialised for builder attributes (e.g. InputSetBuilder has an attribute
+    which is a list of InputBuilder).
     """
 
     def __init__(self, name: str, builder_type: type, is_list: bool, empty: bool, nullable: bool):
@@ -118,7 +121,8 @@ class AttributeManagerForBuilder(AttributeManager):
 
     def verify(self, obj: Any) -> None:
         """
-        Verify the type of the object (that must corresponds to the builder type given at construction).
+        Verify the type of the object (that must corresponds to the builder type given at
+        construction).
         @param obj: object to test.
         """
         if not isinstance(obj, self._builder_type):
@@ -135,15 +139,18 @@ class AttributeManagerForBuilder(AttributeManager):
 
 class AttributeManagerForTyping(AttributeManager):
     """
-    AttributeManagerForTyping permits to manage an attribute trying to parse it with TypingStrategies given.
-    AttributeManagerForTyping makes attention to give the same typing to all attributes where this attribute manager is associated.
+    AttributeManagerForTyping permits to manage an attribute trying to parse it with
+    TypingStrategies given.
+    AttributeManagerForTyping makes attention to give the same typing to all attributes where this
+    attribute manager is associated.
     """
 
     def __init__(self, name: str, ordered_typing: List[TypingStrategy], is_list: bool, empty: bool, nullable: bool, unique: bool):
         """
         Creates a new AttributeManager for Builder.
         @param name: the attribute name of the object where this attribute manager is used.
-        @param ordered_typing: a list of typing to test/verify and apply when parsing. It is ordered by preference.
+        @param ordered_typing: a list of typing to test/verify and apply when parsing. It is
+        ordered by preference.
         @param is_list: True if the attribute need to be a list.
         @param empty: True if this attribute could be empty.
         @param nullable: True if this attribute could equal to None.
@@ -159,7 +166,9 @@ class AttributeManagerForTyping(AttributeManager):
 
     def _verify_unique(self, obj: Any):
         if not self.is_unique(obj):
-            raise ValueError(f'{obj} value appearing twice in the item {self._name} (unique constraint).')
+            raise ValueError(
+                f'{obj} value appearing twice in the item {self._name} (unique constraint).'
+            )
         if self._set_of_verified_values is not None:
             self._set_of_verified_values.add(obj)
 
@@ -182,11 +191,13 @@ class AttributeManagerForTyping(AttributeManager):
                 return
             self._ordered_typing.pop(0)
 
-        raise TypeError(f'{self._name} has no matching type in {self._initial_ordered_typing} (last unmatching value: "{obj}").')
+        raise TypeError(f'{self._name} has no matching type in '
+                        f'{self._initial_ordered_typing} (last unmatching value: "{obj}").')
 
     def parse(self, obj: Any) -> Any:
         """
-        Parses the attribute with the most preferred typing strategy and in accordance with all values tested with attribute manager.
+        Parses the attribute with the most preferred typing strategy and in accordance with all
+        values tested with attribute manager.
         @param obj: object to be parsed.
         @return: parsed object.
         """
@@ -219,12 +230,14 @@ class AttributeManagerSet:
     def get_attribute_manager(self, name):
         return self._attribute_managers_by_name[name]
 
-    def add_attribute_manager_for_typing(self, name: str, ordered_typing: List[TypingStrategy], is_list: bool = False,
+    def add_attribute_manager_for_typing(self, name: str, ordered_typing: List[TypingStrategy],
+                                         is_list: bool = False,
                                          empty: bool = True,
                                          nullable: bool = True,
                                          unique: bool = False):
         """
-        Adds an attribute manager to a given attribute with the order of the different wanted typing in order of
+        Adds an attribute manager to a given attribute with the order of the different wanted typing
+        in order of
         preference.
         @param name: name of the managed attribute.
         @param ordered_typing: list of ordered typing by preference.
@@ -238,11 +251,12 @@ class AttributeManagerSet:
         self._attribute_managers_by_name[name] = attr
         return attr
 
-    def add_attribute_manager_for_typing_finder(self, name: str, is_list: bool = False, empty: bool = True,
+    def add_attribute_manager_for_typing_finder(self, name: str, is_list: bool = False,
+                                                empty: bool = True,
                                                 nullable: bool = True):
         """
-        Adds an attribute manager to a given attribute with the order of the different typing in order of
-        preference. This list is fixed with this order: integer -> float -> Any.
+        Adds an attribute manager to a given attribute with the order of the different typing in
+        order of preference. This list is fixed with this order: integer -> float -> Any.
         @param name: name of the managed attribute.
         @param is_list: True if the attribute need to be a list.
         @param empty: True if this attribute could be empty.
@@ -255,7 +269,8 @@ class AttributeManagerSet:
             TypingStrategyEnum.ANY,
         ], is_list, empty, nullable)
 
-    def add_attribute_manager_for_builder(self, name: str, builder_type: type, is_list: bool = False, empty: bool = True,
+    def add_attribute_manager_for_builder(self, name: str, builder_type: type,
+                                          is_list: bool = False, empty: bool = True,
                                           nullable: bool = True):
         """
         Adds an attribute manager to a given builder attribute.

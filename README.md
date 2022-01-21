@@ -10,7 +10,7 @@
 ## Authors 
 
 - Thibault Falque - Exakis Nelite
-- [Romain Wallon - LIX (Laboratoire d'Informatique de l'X), École Polytechnique, Chaire X-Uber)](https://www.lix.polytechnique.fr/~wallon/en) 
+- [Romain Wallon - CRIL, Univ Artois & CNRS](https://www.cril.univ-artois.fr/~wallon/en) 
 - [Hugues Wattez - CRIL, Univ Artois & CNRS](https://www.cril.univ-artois.fr/~wattez)
 
 ## Why Metrics? 

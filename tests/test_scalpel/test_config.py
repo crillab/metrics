@@ -25,15 +25,3 @@ class TestReadConfiguration(TestCase):
 
         self.assertEqual(' ', configuration.get_csv_configuration().get_separator())
         self.assertIsNone(configuration.get_csv_configuration().get_quote_char())
-
-    def test_flat_dir(self) -> None:
-        parser_listener = CampaignParserListener()
-        configuration = read_configuration(
-            os.path.join(self._example_dir, 'flat-dir/input/config.yml'),
-            parser_listener)
-        file_name_meta = configuration.get_file_name_meta()
-        groups = {k: v for k, v in file_name_meta.get_groups()}
-        self.assertEqual(2, len(groups))
-        self.assertEqual(2, groups.get('experiment_ware'))
-        self.assertEqual(1, groups.get('input'))
-        self.assertEqual('ProblemFile-(.*)_(bs[012]{1})_(.*)', file_name_meta.get_regex_pattern())

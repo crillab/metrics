@@ -16,25 +16,23 @@ source:
 data:
   raw-data:
     - log-data: experiment_ware
-      file: "*stdout"
+      file: "output/stdout"
       regex: "c launch: .*? [^ ]+/(.*?) "
     - log-data: input
-      file: "*stdout"
+      file: "output/stdout"
       regex: "c launch: .+/(.*?).xml.lzma "
     - log-data: cpu_time
-      file: "*statistics.out"
+      file: "statistics.out"
       pattern: "CPUTIME={real}"
     - log-data: best_bound
       file: "execution.out"
       pattern: "s {word}"
     - log-data: status
-      file: "*execution.out"
+      file: "execution.out"
       pattern: "d {word} EXPLORATION"
     - log-data:
-        - timestamp
-        - bound
       file: "execution.out"
       pattern: "o {integer} {real}"
       groups:
-        - 1
-        - 2
+        timestamps: 2
+        bound: 1

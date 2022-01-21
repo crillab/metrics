@@ -32,7 +32,7 @@ Unit tests for the "filters" module from Scalpel.
 from typing import Any, Dict
 from unittest import TestCase
 
-from metrics.scalpel.config.filters import create_filter
+from metrics.scalpel.utils.filters import create_filter
 
 
 class AbstractTestFilter(TestCase):
@@ -287,6 +287,3 @@ class TestCreateFilterFailures(TestCase):
         self.assertRaises(ValueError, lambda: create_filter("$cpu_time <= 1000.0"))
         self.assertRaises(ValueError, lambda: create_filter("'${cpu_time' <= 1000.0"))
         self.assertRaises(ValueError, lambda: create_filter("200 <= 1000.0"))
-
-    def test_incorrect_variable_format(self):
-        self.assertRaises(ValueError, lambda: create_filter("'${cpu_time' <= 1000.0"))

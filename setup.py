@@ -63,7 +63,6 @@ setup(
         'metrics.scalpel.config',
         'metrics.scalpel.parser',
         'metrics.wallet',
-        'metrics.studio.web',
         'metrics'
     ],
 
@@ -81,10 +80,9 @@ setup(
     test_suite='nose.collector',
     tests_require=['nose'],
 
-    scripts=[
-        'bin/metrics-cli',
-        'bin/metrics-scalpel',
-    ],
+    # scripts=[
+    #     'bin/metrics-scalpel',
+    # ],
 
     classifiers=[
         'Programming Language :: Python :: 3.7',

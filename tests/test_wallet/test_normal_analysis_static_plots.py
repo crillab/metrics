@@ -4,7 +4,7 @@ import unittest
 from autograph.core.enumstyle import LineType, Position, FontWeight
 
 from metrics.core.constants import *
-from metrics.wallet import Analysis, find_best_cpu_time_input, import_analysis_from_file
+from metrics.wallet import BasicAnalysis, find_best_cpu_time_input, import_analysis_from_file, DecisionAnalysis
 
 
 class NormalAnalysisPlotsTestCase(unittest.TestCase):
@@ -13,7 +13,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
         inconsistent_returns = {'ERR WRONGCERT', 'ERR UNSAT'}
         successful_returns = {'SAT', 'UNSAT'}
 
-        self.analysis = Analysis(
+        self.analysis = DecisionAnalysis(
             input_file='data/xcsp19/full_analysis/config/metrics_scalpel_full_paths.yml'
         )
 
@@ -277,7 +277,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
 
         new_analysis = self.analysis.add_variable(
             new_var='family',
-            function=lambda x: family_re.match(x['input']).group(1)
+            function=lambda x: family_re.match(x['input']).group(1).replace('_', '\_')
         )
 
         new_analysis = new_analysis.keep_experiment_wares({

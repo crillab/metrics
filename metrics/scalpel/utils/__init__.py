@@ -1,8 +1,11 @@
 ###############################################################################
 #                                                                             #
-#  Metrics - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Scalpel - A Metrics Module                                                 #
+#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
+#  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
+#  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
+#                                                                             #
 #                                                                             #
 #  This program is free software: you can redistribute it and/or modify it    #
 #  under the terms of the GNU Lesser General Public License as published by   #
@@ -12,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -20,24 +23,17 @@
 #                                                                             #
 ###############################################################################
 
-__all__ = [
-    '__title__',
-    '__summary__',
-    '__uri__',
-    '__version__',
-    '__author__',
-    '__email__',
-    '__license__',
-    '__copyright__',
-]
 
-__title__ = 'metrics'
-__summary__ = 'rEproducible sofTware peRformance analysIs in perfeCt Simplicity'
-__keywords__ = 'reproducible software performance analysis'
-__uri__ = 'https://github.com/crillab/metrics'
-__version__ = '1.1'
-__author__ = 'Thibault Falque, Romain Wallon, Hugues Wattez'
-__email__ = 'thibault.falque@exakis-nelite.com, wallon@cril.fr, wattez@cril.fr'
+"""
+This package provides utility classes designed to make easier the parsing
+of campaign data inside Scalpel.
+"""
 
-__license__ = 'LGPLv3+'
-__copyright__ = '2019-2020 - Univ Artois & CNRS, Exakis Nelite'
+from metrics.scalpel.utils.csvutils import CsvConfiguration, CsvReader
+
+from metrics.scalpel.utils.filters import AbstractExpression
+from metrics.scalpel.utils.filters import create_filter
+
+from metrics.scalpel.utils.pattern import AbstractUserDefinedPattern, NullUserDefinedPattern
+from metrics.scalpel.utils.pattern import LogData
+from metrics.scalpel.utils.pattern import compile_any

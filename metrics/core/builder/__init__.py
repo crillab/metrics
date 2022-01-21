@@ -22,6 +22,5 @@
 #  If not, see <https://www.gnu.org/licenses/>.                               #
 #                                                                             #
 ###############################################################################
-import jsonpickle
 
 from metrics.core.builder.builder import CampaignBuilder
