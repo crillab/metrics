@@ -49,8 +49,17 @@ def requirements() -> List[str]:
 
     :return: The dependencies of Metrics.
     """
-    with open('requirements.txt') as file:
-        return [line.rstrip() for line in file]
+    return [
+        'crillab-autograph',
+        'dash-bootstrap-components',
+        'deprecated',
+        'jsonpickle',
+        'myst-parser',
+        'pandas',
+        'pyparsing',
+        'tenacity',
+        'pyyaml',
+    ]
 
 
 setup(

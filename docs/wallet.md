@@ -752,7 +752,7 @@ To make an optimality analysis, the user needs to parse and get back some needed
 - the usual `input`, `experiment_ware`, `cpu_time`, `timeout` columns
 - the additional columns:
     - `bound_list` is the list of all found bounds during an experiment
-    - `bound_list` is the corresponding timestamp of each bound of bound_list
+    - `timestamp_list` is the corresponding timestamp of each bound of bound_list
     - `objective` is equal to `min` for minization problem else `max`
     - `status` informs the final status of the experiment (`COMPLETE` or `INCOMPLETE`)
     - `best_bound` is the final found bound before the end of the resolution

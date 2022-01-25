@@ -79,7 +79,7 @@ def export_data_frame(data_frame, output=None, commas_for_number=False, dollars_
                     buf=file,
                     escape=False,
                     index_names=False,
-                    #bold_rows=True,
+                    # bold_rows=True,
                     **kwargs
                 )
         elif ext == 'csv':
@@ -224,7 +224,7 @@ class BasicAnalysis:
         self._data_frame[USER_SUCCESS_COL] = self._data_frame.apply(is_success, axis=1)
         self._check_global_success()
 
-    def check_missing_experiments(self, inputs: List[str]=None, experiment_wares: List[str]=None):
+    def check_missing_experiments(self, inputs: List[str] = None, experiment_wares: List[str] = None):
         """
         Check missing experiments
         @param inputs: the entire list of inputs (complete the missing ones)
@@ -629,11 +629,12 @@ def _make_list(l):
     return [l]
 
 
-def default_explode(df, samp):
+def default_explode(df, samp, objective):
     d = df.iloc[0].to_dict()
     times = _make_list(d.pop('timestamp_list'))
     bounds = _make_list(d.pop('bound_list'))
-    if d.pop('objective') == 'min':
+
+    if objective(d.pop('objective',None)):
         bounds = [-x for x in bounds]
 
     if len(bounds) != len(times):
@@ -790,7 +791,7 @@ class OptiAnalysis(BasicAnalysis):
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 basic_analysis: BasicAnalysis = None, func=default_explode, samp=None):
+                 basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min'):
         """
         Conctructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
@@ -801,24 +802,26 @@ class OptiAnalysis(BasicAnalysis):
         @param func: the function that permits to explode the current experiments
         (a default one is given)
         @param samp: the sampling times to apply on the exploding function
+        @param objective a lambda to find the objective direction
         """
         if input_file is not None or basic_analysis is not None:
             super().__init__(
                 input_file,
                 None if basic_analysis is None else basic_analysis.data_frame
             )
-            self._explode_experiments(func, samp)
+            self._explode_experiments(func, samp, objective)
         elif data_frame is not None:
             self._data_frame = data_frame
         else:
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
 
-    def _explode_experiments(self, func, samp=None):
+    def _explode_experiments(self, func, samp, objective):
         self.apply_on_groupby(
             by=[EXPERIMENT_INPUT, EXPERIMENT_XP_WARE],
             func=lambda df: func(
                 df,
-                [self.data_frame.timeout.max()] if samp is None else samp
+                [self.data_frame.timeout.max()] if samp is None else samp,
+                objective
             ),
             inplace=True
         )
@@ -875,11 +878,11 @@ def _contribution_agg(sli: pd.DataFrame):
 
     if first[SUCCESS_COL]:
         return pd.Series([
-                first[EXPERIMENT_XP_WARE],
-                first[EXPERIMENT_CPU_TIME],
-                not second[SUCCESS_COL],
-                second[EXPERIMENT_CPU_TIME] if second[SUCCESS_COL] else 1000000
-            ],
+            first[EXPERIMENT_XP_WARE],
+            first[EXPERIMENT_CPU_TIME],
+            not second[SUCCESS_COL],
+            second[EXPERIMENT_CPU_TIME] if second[SUCCESS_COL] else 1000000
+        ],
             index=index
         )
 
