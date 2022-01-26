@@ -634,7 +634,7 @@ def default_explode(df, samp, objective):
     times = _make_list(d.pop('timestamp_list'))
     bounds = _make_list(d.pop('bound_list'))
 
-    if objective(d.pop('objective',None)):
+    if objective(d.pop('objective', None)):
         bounds = [-x for x in bounds]
 
     if len(bounds) != len(times):
@@ -643,7 +643,7 @@ def default_explode(df, samp, objective):
     l = []
     i = 0
     for j in range(len(bounds)):
-        while times[j] > samp[i]:
+        while i < len(samp) and times[j] > samp[i]:
             d2 = d.copy()
             d2['status'] = d2['status'] if d2['cpu_time'] < samp[i] else 'INCOMPLETE'
             d2['success'] = d2['status'] == 'COMPLETE'

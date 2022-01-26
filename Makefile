@@ -17,7 +17,7 @@ DOCKER_ORGANIZATION = thibaultfalque
 
 # The version of the package to build.
 
-VERSION = 1.1
+VERSION = 1.1.2
 
 
 # The directory of the unit tests for the package to build.
