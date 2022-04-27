@@ -202,7 +202,7 @@ class ScalpelConfigurationLoader:
         Loads the default values allowing to fix missing values from the
         experiments of the campaign.
         """
-        for key, value in self._wrapper.get_default_values():
+        for key, value in self._wrapper.get_default_values().items():
             self._listener.add_default_value(key, value)
 
     def get_campaign_path(self) -> List[str]:
