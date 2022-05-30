@@ -226,7 +226,7 @@ Finally, we present a last and generic method to make a subset of inputs:
 ```python
 analysis.filter_inputs(
     function=<lambda>,
-    how=<all|any>
+    how=<"all"|"any">
 )
 ```
 
