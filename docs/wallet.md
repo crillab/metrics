@@ -862,7 +862,7 @@ analysis.opti_line_plot(
 
     # Legend parameters
     legend_location=Position.RIGHT,
-    legend_offset=Nopne,
+    legend_offset=None,
     ncol_legend=1,
 
     # Style mapping
