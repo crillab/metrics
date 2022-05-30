@@ -793,7 +793,7 @@ class OptiAnalysis(BasicAnalysis):
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
                  basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min'):
         """
-        Conctructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
+        Constructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
         build an OptiAnalysis.
         @param input_file: the yaml file to extract data
