@@ -793,7 +793,7 @@ class OptiAnalysis(BasicAnalysis):
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
                  basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min'):
         """
-        Conctructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
+        Constructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
         build an OptiAnalysis.
         @param input_file: the yaml file to extract data
@@ -938,7 +938,7 @@ def _make_box_plot_df(analysis, box_by, box_col):
 class DecisionAnalysis(BasicAnalysis):
     """
     A Decision Analysis is an analysis with the constraint of having the cartesian product of
-    experiment-wares and inputs and additionnal informations:
+    experiment-wares and inputs and additional information:
 
     - the success status of the experiment
     - the cpu time for producing this success status
@@ -947,7 +947,7 @@ class DecisionAnalysis(BasicAnalysis):
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
                  basic_analysis: BasicAnalysis = None):
         """
-        Conctructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
+        Constructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
         build a DecisionAnalysis.
         @param input_file: the yaml file to extract data
@@ -967,7 +967,7 @@ class DecisionAnalysis(BasicAnalysis):
 
     def stat_table(self, par=[1, 2, 10], **kwargs):
         """
-        The statictic table allows to show a global overview of the results: number of solved
+        The statistic table allows to show a global overview of the results: number of solved
         inputs, time, etc.
         @param par: corresponds to the different values we want to give to the PARx column(s);
         @param kwargs: kwargs are given to the 'export_data_frame(...)' function

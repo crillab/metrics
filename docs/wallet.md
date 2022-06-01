@@ -226,7 +226,7 @@ Finally, we present a last and generic method to make a subset of inputs:
 ```python
 analysis.filter_inputs(
     function=<lambda>,
-    how=<all|any>
+    how=<"all"|"any">
 )
 ```
 
@@ -759,7 +759,7 @@ To make an optimality analysis, the user needs to parse and get back some needed
 
 ### Create an `OptiAnalysis`
 
-Once the previous needed data are well filled out in the yaml file (an example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/config/metrics_scalpel.yml)), we can build a first optimality campaign as follows:
+Once the previous needed data are well filled out in the yaml file (an example [here](https://gitlab.com/productions-hwattez/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/config/metrics_scalpel.yml)), we can build a first optimality campaign as follows:
 
 ```python
 samp = [1,10,100,1000]
@@ -778,7 +778,7 @@ Once constructed, the `analysis` object has this next data-frame in memory:
 We can observe that the same couple (input, experiment-ware) appears many times -- for each sampling asked by the user, visible through the timeout column.
 Each tuple composed of a specific (input, experiment-ware, timeout) is composed of the best_bound at this time, the current status and the success column that inform about the actual performances.
 
-> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/1-logs_to_csv.ipynb).
+> A full example [here](https://gitlab.com/productions-hwattez/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/1-logs_to_csv.ipynb).
 
 ### Compute scores
 
@@ -827,7 +827,7 @@ where:
 - `max_b` is the best found bound at the current time of the analysis for a given input
 - `df` is the dataframe of the current analyzed input experiments (from which `min_b` and `max_b` are computed)
 
-> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2-make_agg_analysis.ipynb).
+> A full example [here](https://gitlab.com/productions-hwattez/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2-make_agg_analysis.ipynb).
 >
 > with a preview of created score columns:
 > 
@@ -862,7 +862,7 @@ analysis.opti_line_plot(
 
     # Legend parameters
     legend_location=Position.RIGHT,
-    legend_offset=Nopne,
+    legend_offset=None,
     ncol_legend=1,
 
     # Style mapping
@@ -888,4 +888,4 @@ analysis.opti_line_plot(
 )
 ```
 
-> A full example is given [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2A-plots.ipynb)
+> A full example is given [here](https://gitlab.com/productions-hwattez/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2A-plots.ipynb)
