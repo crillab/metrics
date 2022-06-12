@@ -596,13 +596,13 @@ class BasicAnalysis:
         @return: True if the analysis is well exported, else False.
         """
         if filename is None:
-            return pickle.dumps(self._data_frame, protocol=pickle.HIGHEST_PROTOCOL)
+            return pickle.dumps(self._data_frame, protocol=pickle.DEFAULT_PROTOCOL)
 
         if filename.split('.')[-1] == 'csv':
             return self._data_frame.to_csv(filename, index=False)
         else:
             with open(filename, 'wb') as file:
-                return pickle.dump(self._data_frame, file, protocol=pickle.HIGHEST_PROTOCOL)
+                return pickle.dump(self._data_frame, file, protocol=pickle.DEFAULT_PROTOCOL)
 
     @classmethod
     def import_from_file(cls, filename):
