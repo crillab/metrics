@@ -336,7 +336,7 @@ class BasicAnalysis:
         @param data_frame: the external data_frame to add.
         @return: the merged analysis
         """
-        return self.__class__(data_frame=self._data_frame.append(data_frame, ignore_index=True))
+        return self.__class__(data_frame=pd.concat([self._data_frame, data_frame], ignore_index=True))
 
     def add_virtual_experiment_ware(self, function=find_best_cpu_time_input,
                                     xp_ware_set=None, name='vbew') -> BasicAnalysis:
