@@ -415,7 +415,6 @@ class DirectoryCampaignParser(CampaignParser):
             self._file_exploration_strategy.enter_directory(directory)
             for file in files:
                 file_path = path.join(directory, file)
-                logger.info(f'now extracting data from regular file {file_path}')
                 self._file_exploration_strategy.parse_file(file_path, file)
             self._file_exploration_strategy.exit_directory(directory)
 
@@ -550,6 +549,7 @@ class SingleFileExplorationStrategy(FileExplorationStrategy):
         """
         if self._configuration.is_to_be_parsed(file_name):
             self.start_experiment()
+            logger.debug(f'now extracting data from regular file {file_path}')
             self._extract_from_file(file_path, file_name)
             self.end_experiment()
 
@@ -592,6 +592,7 @@ class NameBasedFileExplorationStrategy(FileExplorationStrategy):
         """
         if self._configuration.is_to_be_parsed(file_name):
             name = NameBasedFileExplorationStrategy._file_name_without_extension(file_name)
+            logger.debug(f'now extracting data from regular file {file_path}')
             self._file_names.add(name)
 
     def exit_directory(self, directory: str) -> None:
@@ -653,6 +654,7 @@ class AllFilesExplorationStrategy(FileExplorationStrategy):
             self.start_experiment()
             self._in_experiment = True
 
+        logger.debug(f'now extracting data from regular file {file_path}')
         self._extract_from_file(file_path, file_name)
 
     def exit_directory(self, directory: str) -> None:
