@@ -115,7 +115,8 @@ class BasicAnalysis:
     experiment-wares and inputs
     """
 
-    def __init__(self, input_file: str = None, data_frame: DataFrame = None):
+    def __init__(self, input_file: str = None, data_frame: DataFrame = None,
+                 log_level: str = 'ERROR'):
         """
         Creates a basic analysis by using input_file or data_frame
         @param input_file: the yaml file given to scalpel to parse logs
@@ -126,7 +127,7 @@ class BasicAnalysis:
             self.check()
             return
 
-        campaign, config = read_campaign(input_file)
+        campaign, config = read_campaign(input_file, log_level)
 
         self._data_frame = DataFrameBuilder(campaign).build_from_campaign()
         self._data_frame[TIMEOUT_COL] = campaign.timeout
@@ -791,7 +792,8 @@ class OptiAnalysis(BasicAnalysis):
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min'):
+                 basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min',
+                 log_level: str = 'ERROR'):
         """
         Constructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
@@ -807,7 +809,8 @@ class OptiAnalysis(BasicAnalysis):
         if input_file is not None or basic_analysis is not None:
             super().__init__(
                 input_file,
-                None if basic_analysis is None else basic_analysis.data_frame
+                None if basic_analysis is None else basic_analysis.data_frame,
+                log_level
             )
             self._explode_experiments(func, samp, objective)
         elif data_frame is not None:
@@ -945,7 +948,7 @@ class DecisionAnalysis(BasicAnalysis):
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 basic_analysis: BasicAnalysis = None):
+                 basic_analysis: BasicAnalysis = None, log_level: str = 'ERROR'):
         """
         Constructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
@@ -955,7 +958,7 @@ class DecisionAnalysis(BasicAnalysis):
         @param basic_analysis: a BasicAnalysis with the needed columns
         """
         if input_file is not None:
-            super().__init__(input_file, data_frame)
+            super().__init__(input_file, data_frame, log_level)
         elif data_frame is not None:
             self._data_frame = data_frame
         elif basic_analysis is not None:

@@ -42,6 +42,7 @@ from metrics.scalpel.parser.output import CampaignOutputParser
 from metrics.scalpel.parser.output import CsvCampaignOutputParser
 from metrics.scalpel.parser.output import JsonCampaignOutputParser, XmlCampaignOutputParser
 from metrics.scalpel.parser.output import RawCampaignOutputParser
+from metrics.scalpel.utils.logging import logger, timeit
 
 from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE
 
@@ -131,12 +132,14 @@ class FileCampaignParser(CampaignParserListenerNotifier, CampaignParser):
     read the results of a campaign from a (regular) file.
     """
 
+    @timeit
     def parse_file(self, file_path: str) -> None:
         """
         Parses the file at the given path to extract data about the campaign.
 
         :param file_path: The path of the file to read.
         """
+        logger.info(f'now extracting data from regular file {file_path}')
         self.update_file_name_data(file_path)
         with open(file_path, 'r', encoding='utf-8') as file:
             self.parse_stream(file)
@@ -361,12 +364,14 @@ class DirectoryCampaignParser(CampaignParser):
         self._file_exploration_strategy = file_exploration_strategy
         self._directories = None
 
+    @timeit
     def parse_file(self, file_path: str) -> None:
         """
         Explores the file hierarchy rooted at the given directory.
 
         :param file_path: The root directory of the file hierarchy to explore.
         """
+        logger.info(f'now extracting data from directory {file_path}')
         self._directories = defaultdict(list)
         self._find_relevant_files(file_path)
         self._parse_relevant_files()
@@ -410,6 +415,7 @@ class DirectoryCampaignParser(CampaignParser):
             self._file_exploration_strategy.enter_directory(directory)
             for file in files:
                 file_path = path.join(directory, file)
+                logger.info(f'now extracting data from regular file {file_path}')
                 self._file_exploration_strategy.parse_file(file_path, file)
             self._file_exploration_strategy.exit_directory(directory)
 
