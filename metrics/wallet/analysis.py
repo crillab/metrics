@@ -606,16 +606,21 @@ class BasicAnalysis:
                 return pickle.dump(self._data_frame, file, protocol=pickle.DEFAULT_PROTOCOL)
 
     @classmethod
-    def import_from_file(cls, filename):
+    def import_from_file(cls, filename, eval_data: bool = False):
         """
         Import an Analysis from a file.
         @param filename: the filename of a previously exported Analysis.
+        @param eval_data: If data in the read data_frame are to be evaluated using eval.
         @return: the imported Analysis.
         """
         with open(filename, 'rb') as file:
             if filename.split('.')[-1] == 'csv':
-                return cls(data_frame=pd.read_csv(file))
-            return cls(data_frame=pickle.load(file))
+                df = pd.read_csv(file)
+            else:
+                df = pickle.load(file)
+            if eval_data:
+                df = df.applymap(lambda x: eval(str(x)))
+            return cls(data_frame=df)
 
 
 def _is_none_or_nan(x):
