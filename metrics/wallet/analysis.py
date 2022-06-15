@@ -143,6 +143,12 @@ class BasicAnalysis:
             experiment_wares=campaign.get_experiment_ware_names()
         )
 
+    def __setattr__(self, key, value):
+        setattr(self._data_frame, key, value)
+
+    def __getattr__(self, item):
+        getattr(self._data_frame, item)
+
     @property
     @deprecated(version='1.0.4', reason="This function will be removed for the 2.0.0 version")
     def campaign_df(self):
