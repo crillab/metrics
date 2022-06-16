@@ -35,8 +35,10 @@ from __future__ import annotations
 from collections import defaultdict
 from fnmatch import fnmatch
 from os import path, walk
+from os import sep as file_separator
 from os.path import splitext
 from pydoc import locate
+from re import escape
 from typing import Any, Dict, List, Optional, Type
 
 from metrics.scalpel.config.datafile import DataFile
@@ -103,8 +105,16 @@ class FileNameMetaConfiguration:
 
         :return: The compiled log-data.
         """
+        # Retrieving the pattern for the metadata, and fixing path separators.
         pattern = wrapper.get_simplified_pattern()
+        if pattern is not None:
+            pattern = pattern.replace('/', file_separator)
+
+        # Retrieving the regular expression for the metadata, and fixing path separators.
         regex = wrapper.get_regex_pattern()
+        if regex is not None:
+            regex = regex.replace('/', escape(file_separator))
+
         if pattern or regex:
             exact = wrapper.is_exact()
             groups = wrapper.get_groups()
