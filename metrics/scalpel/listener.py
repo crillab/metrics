@@ -430,17 +430,17 @@ class CampaignParserListener:
         :param scalpel_key: The key to commit.
         :param read_values: The values that have been read for the key.
         """
-        if all(v in self._key_mapping.get_sorted_keys(scalpel_key) for v in read_values.keys()):
-            sub_keys = self._key_mapping.get_sorted_keys(scalpel_key)
-            self._state.log_data(self._current_builder, scalpel_key, sub_keys, read_values)
-            self._logged_keys.add(scalpel_key)
-        elif len(read_values.keys()) == 1 and scalpel_key in read_values.keys():
-            self._state.log_data(self._current_builder, scalpel_key, [scalpel_key], read_values)
-            self._logged_keys.add(scalpel_key)
+        if self._key_mapping[scalpel_key][0] == scalpel_key:
+            if len(read_values.keys()) == 1 and scalpel_key in read_values.keys():
+                self._state.log_data(self._current_builder, scalpel_key, [scalpel_key], read_values)
+                self._logged_keys.add(scalpel_key)
+            else:
+                sub_keys = self._key_mapping.get_sorted_keys(scalpel_key)
+                self._state.log_data(self._current_builder, scalpel_key, sub_keys, read_values)
+                self._logged_keys.add(scalpel_key)
         else:
             sub_keys = self._key_mapping.get_sorted_keys(scalpel_key)
-            value = ' '.join(
-                '' if read_values.get(v) is None else read_values.get(v) for v in sub_keys)
+            value = ' '.join('' if read_values.get(v) is None else read_values.get(v) for v in sub_keys)
             self.log_data(scalpel_key, value)
 
     def _commit_pending_keys(self) -> None:
