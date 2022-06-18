@@ -40,15 +40,16 @@ from typing import Any, Dict, Generator, List, Optional, TextIO, Tuple
 
 from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE
 
-from metrics.scalpel import CampaignParserListener
-from metrics.scalpel.config import FileNameMetaConfiguration, OutputFormat, ScalpelConfiguration
-from metrics.scalpel.utils import CsvConfiguration, CsvReader
-from metrics.scalpel.utils import logger, timeit
-
 from metrics.scalpel.parser.output import CampaignOutputParser
 from metrics.scalpel.parser.output import CsvCampaignOutputParser
 from metrics.scalpel.parser.output import JsonCampaignOutputParser, XmlCampaignOutputParser
 from metrics.scalpel.parser.output import RawCampaignOutputParser
+
+from metrics.scalpel import CampaignParserListener
+from metrics.scalpel.config import FileNameMetaConfiguration, OutputFormat, ScalpelConfiguration
+
+from metrics.scalpel.utils import CsvConfiguration, CsvReader
+from metrics.scalpel.utils import logger, timeit
 
 
 class CampaignParserListenerNotifier:
