@@ -32,7 +32,7 @@ This module provides utility classes making easier the parsing of CSV files.
 from csv import reader as load_csv
 from typing import Callable, Iterable, List, Optional, TextIO, Tuple
 
-from metrics.scalpel.utils import logger
+from metrics.scalpel.utils.logging import logger
 
 
 class CsvConfiguration:
