@@ -248,7 +248,7 @@ class ScalpelConfigurationLoader:
         fmt = self._wrapper.get_format()
         if fmt is not None:
             self._format = CampaignFormat.value_of(fmt)
-            logger.debug(f'campaign parsed using the {self._format} strategy')
+            logger.trace(f'campaign parsed using the {self._format} strategy')
             return self._format
 
         # Otherwise, we try to guess the format.
@@ -257,7 +257,7 @@ class ScalpelConfigurationLoader:
             raise ValueError('Could not infer campaign format')
 
         # Returning the guessed format.
-        logger.debug(f'campaign parsed using the {self._format} strategy')
+        logger.trace(f'campaign parsed using the {self._format} strategy')
         return self._format
 
     def _guess_format(self) -> Optional[CampaignFormat]:
