@@ -38,17 +38,17 @@ from os import path, walk
 from os.path import basename, splitext
 from typing import Any, Dict, Generator, List, Optional, TextIO, Tuple
 
-from metrics.scalpel.parser.output import CampaignOutputParser
-from metrics.scalpel.parser.output import CsvCampaignOutputParser
-from metrics.scalpel.parser.output import JsonCampaignOutputParser, XmlCampaignOutputParser
-from metrics.scalpel.parser.output import RawCampaignOutputParser
-from metrics.scalpel.utils.logging import logger, timeit
-
 from metrics.core.constants import EXPERIMENT_CPU_TIME, EXPERIMENT_INPUT, EXPERIMENT_XP_WARE
 
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import FileNameMetaConfiguration, OutputFormat, ScalpelConfiguration
 from metrics.scalpel.utils import CsvConfiguration, CsvReader
+from metrics.scalpel.utils import logger, timeit
+
+from metrics.scalpel.parser.output import CampaignOutputParser
+from metrics.scalpel.parser.output import CsvCampaignOutputParser
+from metrics.scalpel.parser.output import JsonCampaignOutputParser, XmlCampaignOutputParser
+from metrics.scalpel.parser.output import RawCampaignOutputParser
 
 
 class CampaignParserListenerNotifier:
@@ -78,7 +78,9 @@ class CampaignParserListenerNotifier:
         :param file: The file to extract metadata from.
         """
         extracted_data = self._file_name_meta.extract_from(file)
-        self._file_name_data.update(extracted_data)
+        if extracted_data:
+            logger.trace(f'data {extracted_data} extracted from path "{file}"')
+            self._file_name_data.update(extracted_data)
 
     def reset_file_name_data(self) -> None:
         """
@@ -139,7 +141,7 @@ class FileCampaignParser(CampaignParserListenerNotifier, CampaignParser):
 
         :param file_path: The path of the file to read.
         """
-        logger.info(f'now extracting data from regular file {file_path}')
+        logger.info(f'extracting data from regular file "{file_path}"...')
         self.update_file_name_data(file_path)
         with open(file_path, 'r', encoding='utf-8') as file:
             self.parse_stream(file)
@@ -260,6 +262,7 @@ class ReverseCsvCampaignParser(CsvCampaignParser):
                 self._data_names.add('' if len(split_key) == 1 else split_key[1])
 
         header.extend(self._data_names)
+        logger.trace(f'keys {header} adapted from CSV header')
         return header
 
     def parse_content(self) -> None:
@@ -371,7 +374,7 @@ class DirectoryCampaignParser(CampaignParser):
 
         :param file_path: The root directory of the file hierarchy to explore.
         """
-        logger.info(f'now extracting data from directory {file_path}')
+        logger.info(f'extracting data from directory "{file_path}"...')
         self._directories = defaultdict(list)
         self._find_relevant_files(file_path)
         self._parse_relevant_files()
@@ -401,10 +404,12 @@ class DirectoryCampaignParser(CampaignParser):
         """
         split = file_path.split(path.sep)
         for i in range(len(split) - 1, -1, -1):
-            directory = path.join(split[0], *split[1:i]) if i > 0 else "."
+            directory = path.join(split[0], *split[1:i]) if i > 0 else '.'
             file = path.join(split[i], *split[i+1:]) if i < len(split) - 1 else split[i]
             if self._configuration.is_to_be_parsed(file):
+                logger.trace(f'relevant file found at "{file_path}"')
                 return directory, file
+        logger.trace(f'ignored file at "{file_path}"')
         return None, None
 
     def _parse_relevant_files(self) -> None:
@@ -506,30 +511,36 @@ class FileExplorationStrategy(CampaignParserListenerNotifier):
 
         # By default, a raw parser is used.
         if data_file is None:
+            logger.trace(f'raw parser used for "{file_path}"')
             return RawCampaignOutputParser(self._listener, file_path, file_name,
                                            False, self._configuration)
 
         # Looking for a user-implemented parser.
         parser = data_file.get_custom_parser()
         if parser is not None:
+            logger.trace(f'custom parser {parser} used for "{file_path}"')
             return parser(self._listener, self._configuration, file_path, file_name)
 
         # Using the most appropriate parser, based on the format of the file.
         fmt = data_file.get_format()
 
         if fmt.is_csv():
+            logger.trace(f'CSV parser used for "{file_path}"')
             return CsvCampaignOutputParser(self._listener, file_path, file_name,
                                            data_file.has_name_as_prefix(),
                                            data_file.get_csv_configuration())
 
         if fmt == OutputFormat.JSON:
+            logger.trace(f'JSON parser used for "{file_path}"')
             return JsonCampaignOutputParser(self._listener, file_path, file_name,
                                             data_file.has_name_as_prefix())
 
         if fmt == OutputFormat.XML:
+            logger.trace(f'XML parser used for "{file_path}"')
             return XmlCampaignOutputParser(self._listener, file_path, file_name,
                                            data_file.has_name_as_prefix())
 
+        logger.trace(f'raw parser used for "{file_path}"')
         return RawCampaignOutputParser(self._listener, file_path, file_name,
                                        data_file.has_name_as_prefix(), self._configuration)
 
@@ -549,7 +560,7 @@ class SingleFileExplorationStrategy(FileExplorationStrategy):
         """
         if self._configuration.is_to_be_parsed(file_name):
             self.start_experiment()
-            logger.debug(f'now extracting data from regular file {file_path}')
+            logger.debug(f'extracting data from regular file "{file_path}"...')
             self._extract_from_file(file_path, file_name)
             self.end_experiment()
 
@@ -592,7 +603,7 @@ class NameBasedFileExplorationStrategy(FileExplorationStrategy):
         """
         if self._configuration.is_to_be_parsed(file_name):
             name = NameBasedFileExplorationStrategy._file_name_without_extension(file_name)
-            logger.debug(f'now extracting data from regular file {file_path}')
+            logger.trace(f'name "{name}" detected as an experiment identifier')
             self._file_names.add(name)
 
     def exit_directory(self, directory: str) -> None:
@@ -605,6 +616,7 @@ class NameBasedFileExplorationStrategy(FileExplorationStrategy):
         for file_name in self._file_names:
             self._listener.start_experiment()
             for file in glob(f'{path.join(directory, file_name)}.*'):
+                logger.debug(f'extracting data from regular file "{file}"...')
                 self._extract_from_file(file, basename(file))
             self.end_experiment()
 
@@ -646,6 +658,7 @@ class AllFilesExplorationStrategy(FileExplorationStrategy):
         :param file_name: The name of the file to parse.
         """
         if not self._configuration.is_to_be_parsed(file_name):
+            logger.trace(f'ignoring file "{file_path}"')
             return
 
         if not self._in_experiment:
@@ -654,7 +667,7 @@ class AllFilesExplorationStrategy(FileExplorationStrategy):
             self.start_experiment()
             self._in_experiment = True
 
-        logger.debug(f'now extracting data from regular file {file_path}')
+        logger.debug(f'extracting data from regular file "{file_path}"...')
         self._extract_from_file(file_path, file_name)
 
     def exit_directory(self, directory: str) -> None:

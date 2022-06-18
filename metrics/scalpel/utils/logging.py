@@ -25,7 +25,9 @@
 
 
 """
-This module provides logging tools to follow the extraction performed by Scalpel.
+This module provides logging tools to trace the extraction performed by Scalpel,
+mostly for debugging purposes (for instance, to identify why some data is missing
+for a particular experiment).
 """
 
 
@@ -45,7 +47,7 @@ class LevelFilter:
         """
         Creates a new LevelFilter.
 
-        :param level: The maximum logging level that is allowed.
+        :param level: The minimum level for the records to log.
         """
         self.level = level
 
@@ -81,9 +83,9 @@ def timeit(func: Callable) -> Callable:
 
 def configure_logger(level: str) -> None:
     """
-    Configures the logger used by Scalpel.
+    Configures the logger to be used by Scalpel.
 
-    :param level: The maximum logging level that is allowed.
+    :param level: The minimum level for the records to log.
     """
     logger.remove()
     level_filter = LevelFilter(level)

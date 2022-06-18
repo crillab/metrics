@@ -116,11 +116,12 @@ class BasicAnalysis:
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 log_level: str = 'ERROR'):
+                 log_level: str = 'WARNING'):
         """
         Creates a basic analysis by using input_file or data_frame
         @param input_file: the yaml file given to scalpel to parse logs
         @param data_frame: the data_frame used to create the Analysis
+        @param log_level: The minimum level for the events to log while parsing the campaign.
         """
         if data_frame is not None:
             self._data_frame = data_frame
@@ -798,7 +799,7 @@ class OptiAnalysis(BasicAnalysis):
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
                  basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min',
-                 log_level: str = 'ERROR'):
+                 log_level: str = 'WARNING'):
         """
         Constructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
@@ -810,6 +811,7 @@ class OptiAnalysis(BasicAnalysis):
         (a default one is given)
         @param samp: the sampling times to apply on the exploding function
         @param objective a lambda to find the objective direction
+        @param log_level The minimum level for the events to log while parsing the campaign.
         """
         if input_file is not None or basic_analysis is not None:
             super().__init__(
@@ -953,7 +955,7 @@ class DecisionAnalysis(BasicAnalysis):
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 basic_analysis: BasicAnalysis = None, log_level: str = 'ERROR'):
+                 basic_analysis: BasicAnalysis = None, log_level: str = 'WARNING'):
         """
         Constructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
@@ -961,6 +963,7 @@ class DecisionAnalysis(BasicAnalysis):
         @param input_file: the yaml file to extract data
         @param data_frame: a valid dataframe containing the exploded experiments
         @param basic_analysis: a BasicAnalysis with the needed columns
+        @param log_level: The minimum level for the events to log while parsing the campaign.
         """
         if input_file is not None:
             super().__init__(input_file, data_frame, log_level)

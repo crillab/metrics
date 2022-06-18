@@ -31,7 +31,8 @@ This module provides utility classes making easier the parsing of CSV files.
 
 from csv import reader as load_csv
 from typing import Callable, Iterable, List, Optional, TextIO, Tuple
-from warnings import warn
+
+from metrics.scalpel.utils import logger
 
 
 class CsvConfiguration:
@@ -135,6 +136,7 @@ class CsvReader:
         else:
             self._cache = next(self._line_iterator)
             self._keys = [str(i) for i in range(len(self._cache))]
+        logger.trace(f'keys {self._keys} inferred from CSV header')
         return self._keys
 
     def read_content(self) -> Iterable[List[Tuple[str, str]]]:
@@ -148,7 +150,7 @@ class CsvReader:
             if len(line) == len(self._keys):
                 yield zip(self._keys, line)
             else:
-                warn(f'Line #{index} does not match header: {line}')
+                logger.warning(f'ignoring line #{index} which does not match the header: {line}')
 
     def _read_lines(self) -> Iterable[Tuple[int, List[str]]]:
         """

@@ -133,6 +133,14 @@ class NullUserDefinedPattern(AbstractUserDefinedPattern):
         """
         return tuple()
 
+    def __str__(self) -> str:
+        """
+        Gives the string representation of this pattern.
+
+        :return: The string representation of this pattern.
+        """
+        return '<no-pattern>'
+
 
 class UserDefinedPattern(AbstractUserDefinedPattern):
     """
@@ -162,6 +170,14 @@ class UserDefinedPattern(AbstractUserDefinedPattern):
         if match is None:
             return tuple()
         return (match.group(self._group_id),)
+
+    def __str__(self) -> str:
+        """
+        Gives the string representation of this pattern.
+
+        :return: The string representation of this pattern.
+        """
+        return str(self._pattern)
 
 
 class UserDefinedPatterns(AbstractUserDefinedPattern):
@@ -204,6 +220,14 @@ class UserDefinedPatterns(AbstractUserDefinedPattern):
             values.extend(value)
         return tuple(values)
 
+    def __str__(self) -> str:
+        """
+        Gives the string representation of this pattern.
+
+        :return: The string representation of this pattern.
+        """
+        return str(self._patterns)
+
 
 class LogData:
     """
@@ -239,6 +263,14 @@ class LogData:
                  does not appear in the string.
         """
         return self._pattern.search(string)
+
+    def __str__(self) -> str:
+        """
+        Gives the string representation of this log data.
+
+        :return: The string representation of this log data.
+        """
+        return f'{self._names} => {self._pattern}'
 
 
 def _compile_all(string: str, exact_match: bool, group_ids: Tuple[int],

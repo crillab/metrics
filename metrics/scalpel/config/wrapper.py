@@ -426,6 +426,14 @@ class IScalpelConfigurationWrapper:
         """
         raise NotImplementedError('Method "get_default_values()" is abstract!')
 
+    def get_ignored_data(self) -> List[str]:
+        """
+        Gives the data that should be ignored when read by Scalpel.
+
+        :return: The list of the keys identifying the data to ignore.
+        """
+        raise NotImplementedError('Method "get_ignored_data()" is abstract!')
+
     def get_file_name_meta(self) -> IFileNameMetaConfigurationWrapper:
         """
         Gives the description of the metadata to extract from the name of the
@@ -455,6 +463,14 @@ class IScalpelConfigurationWrapper:
         :return: The list of data files.
         """
         raise NotImplementedError('Method "get_data_files()" is abstract!')
+
+    def get_ignored_files(self) -> List[str]:
+        """
+        Gives the files that should not be parsed by Scalpel.
+
+        :return: The files to ignore.
+        """
+        raise NotImplementedError('Method "get_ignored_files()" is abstract!')
 
 
 class DictInputSetWrapper(IInputSetWrapper):
@@ -972,6 +988,15 @@ class DictScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
             return {}
         return default_values
 
+    def get_ignored_data(self) -> List[str]:
+        """
+        Gives the data that should be ignored when read by Scalpel.
+
+        :return: The list of the keys identifying the data to ignore.
+        """
+        ignored_data = self._get_dict('data').get('ignored-data')
+        return _as_list(ignored_data)
+
     def get_file_name_meta(self) -> IFileNameMetaConfigurationWrapper:
         """
         Gives the description of the metadata to extract from the name of the
@@ -1008,6 +1033,15 @@ class DictScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
         given_data_files = self._get_dict('data').get('data-files')
         descriptions = _collect_descriptions('name', given_data_files)
         return [DictDataFileConfigurationWrapper(d) for d in descriptions]
+
+    def get_ignored_files(self) -> List[str]:
+        """
+        Gives the files that should not be parsed by Scalpel.
+
+        :return: The files to ignore.
+        """
+        ignored_files = self._get_dict('data').get('ignored-files')
+        return _as_list(ignored_files)
 
     def _get_dict(self, key: str) -> Dict[str, Any]:
         """
