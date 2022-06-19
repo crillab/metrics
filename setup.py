@@ -53,12 +53,15 @@ def requirements() -> List[str]:
         'crillab-autograph',
         'dash-bootstrap-components',
         'deprecated',
+        'jinja2',
         'jsonpickle',
+        'loguru',
         'myst-parser',
         'pandas',
+        'pyfiglet',
         'pyparsing',
-        'tenacity',
         'pyyaml',
+        'tenacity'
     ]
 
 
@@ -71,6 +74,7 @@ setup(
         'metrics.scalpel',
         'metrics.scalpel.config',
         'metrics.scalpel.parser',
+        'metrics.studio',
         'metrics.wallet',
         'metrics'
     ],
@@ -89,9 +93,9 @@ setup(
     test_suite='nose.collector',
     tests_require=['nose'],
 
-    # scripts=[
-    #     'bin/metrics-scalpel',
-    # ],
+    scripts=[
+        'bin/metrics',
+    ],
 
     classifiers=[
         'Programming Language :: Python :: 3.7',

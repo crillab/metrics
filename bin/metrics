@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+###############################################################################
+#                                                                             #
+#  Metrics - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
+#  Copyright (c) 2019-2022 - Univ Artois & CNRS, Exakis Nelite                #
+#                                                                             #
+#  This program is free software: you can redistribute it and/or modify it    #
+#  under the terms of the GNU Lesser General Public License as published by   #
+#  the Free Software Foundation, either version 3 of the License, or (at your #
+#  option) any later version.                                                 #
+#                                                                             #
+#  This program is distributed in the hope that it will be useful, but        #
+#  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
+#  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
+#  See the GNU Lesser General Public License for more details.                #
+#                                                                             #
+#  You should have received a copy of the GNU Lesser General Public License   #
+#  along with this program.                                                   #
+#  If not, see <https://www.gnu.org/licenses/>.                               #
+#                                                                             #
+###############################################################################
+
+
+"""
+This script automates the analysis of a campaign of experiments with Metrics.
+"""
+
+
+from os import system
+
+from pyfiglet import Figlet
+
+from metrics import __version__ as metrics_version
+from metrics import __copyright__ as metrics_copyright
+
+
+def print_header() -> None:
+    figlet = Figlet(font='slant')
+    print(figlet.renderText('Metrics'))
+
+
+def init():
+    print_header()
+
+
+def git(root_dir: str = '.') -> None:
+    system(f'git init "{root_dir}"')
+
+
+def notebook(root_dir: str = '.') -> None:
+    system(f'jupyter notebook --notebook-dir="{root_dir}"')
+
+
+def display_help():
+    pass
+
+
+def version():
+    print_header()
+    print('Metrics version', metrics_version)
+    print('Copyright (c)', metrics_copyright)
+    print('This program is free software: you can redistribute it and/or modify')
+    print('it under the terms of the GNU Lesser General Public License')
+
+
+def main(args):
+    pass

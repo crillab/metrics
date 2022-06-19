@@ -1,0 +1,61 @@
+name:
+date:
+
+setup:
+  os:
+  cpu:
+  gpu:
+  ram:
+  timeout:
+  memout:
+
+experiment-wares:
+  -
+
+input-set:
+  name:
+  type:
+  family:
+  input-name:
+  extensions:
+    -
+  path-list:
+      -
+
+source:
+  path:
+    -
+  format:
+  has-header:
+  quote-char:
+  separator:
+  title-separator:
+  follow-symlinks:
+  parser:
+  is-success:
+
+data:
+  mapping:
+    experiment_ware:
+    cpu_time:
+    input:
+  default-values:
+    cpu_time:
+  ignored-data:
+    -
+  file-name-meta:
+    pattern:
+    regex:
+    experiment_ware:
+    input:
+    exact:
+  raw-data:
+    - log-data:
+      pattern:
+      regex:
+      group:
+      exact:
+  data-files:
+    -
+  ignored-files:
+    -
