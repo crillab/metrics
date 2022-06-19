@@ -9,7 +9,7 @@ A campaign is basically read using the following:
 
 ```python
 from metrics.scalpel import read_campaign
-my_campaign, my_configuration = read_campaign('path/to/campaign/file')
+my_campaign, my_configuration = read_campaign('path/to/campaign/file', log_level='WARNING')
 ```
 
 Currently, two types of files can be given as input to *Scalpel*:
@@ -26,6 +26,26 @@ returned configuration will thus be `None`).
 In the second case, the following sections give more details on how to write
 a configuration file that describes your campaign (the returned configuration
 will be an object representation of this description).
+
+Additionally, as you can see in the example above, a `log_level` parameter may
+be specified to the function `read_campaign()`.
+This allows to configure the minimum level of the parsing events that should
+be logged.
+Available levels are, from the lowest to the highest:
+
++ `'TRACE'`
++ `'DEBUG'`
++ `'INFO'`
++ `'WARNING'` (this is the default level)
++ `'ERROR'`
+
+Parsing events are regularly logged by *Scalpel* to trace the extraction it
+performs, mostly for debugging purposes.
+For instance, activating a lower logging level may allow to identify why
+some data is missing for a particular experiment.
+However, it should be noted that *Scalpel* may become particularly verbose
+when doing so, which may affect performance.
+This is why this feature should only be activated for debugging purposes.
 
 ## Metadata of the Campaign
 
@@ -496,8 +516,8 @@ data:
 
 In this case, when *Scalpel* reads a file with extension `.out`, it looks
 for a line that matches the specified regular expression, and extracts the
-the `cpu_time` of the experiment from the group `1` (i.e. `(\d+.\d+)`) in
-this regular expression.
+`cpu_time` of the experiment from the group `1` (i.e. `(\d+.\d+)`) in this
+regular expression.
 In this case, the group could be omitted, as the value `1` is the default.
 
 To make easier the description of raw data, *Scalpel* also recognizes
@@ -569,6 +589,15 @@ with `my-xp-ware`, which is thus identified as the `experiment_ware`, while
 the group `2` matches with `my-input`, which is thus identified as the
 `input`.
 
+As file hierarchies are explored through the file system, the paths of the
+files that are encountered during this exploration are system-dependent
+(in particular, the file separator may vary from one system to another).
+*Scalpel* is able to dynamically adapt file separators used in the pattern
+specified as `file-name-meta` to ensure cross-platform compatibility for your
+configuration.
+To make sure that this compatibility is applied, you must always use `/` as
+file separator (even if it is not that of your system).
+
 ### Extracting Data from Common Formats
 
 If your output files use a common format (as JSON, CSV or XML), you do
@@ -614,7 +643,23 @@ The same identifiers are inferred for the following XML output:
 </experiment>
 ```
 
-If needed, you can also configure the parser to use for reading data from such
+By default, all keys stored in a JSON or XML file are extracted by *Scalpel*,
+and stored in the internal representation of the campaign.
+This may be memory consuming, in particular if there are some keys that you
+do not need.
+To discard such keys, you may specify them in the field `ignored-data` in your
+YAML configuration (this may actually be applied to any key defined by
+the campaign).
+For instance, the snippet below allows to discard the list `experiment.value`
+described in the two examples above. 
+
+```yaml
+data:
+  ignored-data:
+    - experiment.value
+```
+
+If needed, you can also configure the parser to use for reading data from
 data-files, as in the following example:
 
 ```yaml
@@ -646,6 +691,19 @@ This parser must extend `CampaignOutputParser`, and its constructor must take
 as input a `CampaignParserListener`, a `ScalpelConfiguration`, the path of the
 file to parse and its name.
 
+Finally, you may face some cases where the wildcards you use for declaring data
+files (or even log-data) are too generic.
+To ignore some files that still match these wildcards, you may specify the
+files to ignore with the field `ignored-files` (wildcards and relative paths are
+supported).
+For example, the snippet below allows to ignore *some* JSON files.
+
+```yaml
+data:
+  ignored-files:
+    - "*ignore*.json"
+```
+
 ### Mapping Data to *Scalpel*'s Expectations
 
 When parsing an experiment, *Scalpel* expects to find the required
@@ -671,6 +729,7 @@ data:
       - options
     cpu_time: runtime
     input: file
+    file: path
 ```
 
 In this example, we have that, for each experiment, the data read as `runtime`
@@ -682,6 +741,13 @@ In this case, the data read as `program` and `options` will be concatenated
 Moreover, if this experiment-ware does not exist yet, an object representation
 of this experiment-ware will be instantiated, using `program` and `options`
 has two additional fields.
+
+Finally, observe that `path` is mapped to `file`, which is itself mapped to
+`input`.
+In this case, a recursive mapping is actually applied on `path`, which will
+be eventually interpreted as `input` while parsing the campaign.
+Recursive mapping is the recommended approach for mapping several identifiers
+to the same key.
 
 > **Remark**
 >
