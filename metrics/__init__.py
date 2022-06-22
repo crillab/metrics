@@ -37,7 +37,7 @@ __keywords__ = 'reproducible software performance analysis'
 __uri__ = 'https://github.com/crillab/metrics'
 __version__ = '1.1.3'
 __author__ = 'Thibault Falque, Romain Wallon, Hugues Wattez'
-__email__ = 'thibault.falque@exakis-nelite.com, wallon@cril.fr, wattez@cril.fr'
+__email__ = 'metrics@cril.fr'
 
 __license__ = 'LGPLv3+'
 __copyright__ = '2019-2022 - Univ Artois & CNRS, Exakis Nelite'

@@ -44,8 +44,7 @@ def readme() -> str:
 
 def requirements() -> List[str]:
     """
-    Reads the requirements file of the project to use its content to determine
-    the dependencies of the package.
+    Gives the list of the dependencies of the package.
 
     :return: The dependencies of Metrics.
     """
@@ -74,7 +73,9 @@ setup(
         'metrics.scalpel',
         'metrics.scalpel.config',
         'metrics.scalpel.parser',
+        'metrics.scalpel.utils',
         'metrics.studio',
+        'metrics.templates',
         'metrics.wallet',
         'metrics'
     ],
@@ -105,6 +106,9 @@ setup(
     ],
     license=metrics.__license__,
 
+    package_data={
+        'metrics.templates': ['gitignore', '*.ipynb', '*.md', '*.txt', '*.yml']
+    },
     include_package_data=True,
     zip_safe=False
 )

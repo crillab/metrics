@@ -1,13 +1,12 @@
-name:
-date:
+name: {{ title }}
+date: {{ date }}
 
 setup:
-  os:
-  cpu:
-  gpu:
-  ram:
-  timeout:
-  memout:
+  os: {{ os }}
+  cpu: {{ cpu }}
+  ram: {{ ram }}
+  timeout: {{ timeout }}
+  memout: {{ memout }}
 
 experiment-wares:
   -
@@ -40,7 +39,7 @@ data:
     cpu_time:
     input:
   default-values:
-    cpu_time:
+    cpu_time: {{ timeout }}
   ignored-data:
     -
   file-name-meta:

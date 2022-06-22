@@ -1,0 +1,6 @@
+# Python environment for the notebooks.
+venv
+.ipynb_checkpoints
+
+# Miscellaneous.
+.DS_Store

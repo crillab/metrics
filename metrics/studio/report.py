@@ -31,9 +31,10 @@ Notebooks templates.
 
 
 import os
-from typing import Any
+from typing import Any, Dict
 
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, PackageLoader
+from jinja2 import select_autoescape
 
 
 class ReportBuilder:
@@ -58,7 +59,15 @@ class ReportBuilder:
         """
         for name in ('config', 'experiment_wares', 'experiments', 'input_set'):
             path = os.path.join(self._root_dir, name)
-            os.mkdir(path)
+            if not os.path.exists(path):
+                os.mkdir(path)
+
+    def git_init(self) -> None:
+        """
+        Initializes a git repository inside the report directory.
+        """
+        os.system(f'git init "{self._root_dir}"')
+        self._write_template('gitignore', '.gitignore')
 
     def add_readme(self):
         """
@@ -118,6 +127,14 @@ class ReportBuilder:
         with open(os.path.join(self._root_dir, output_file), 'w') as file:
             template = self._env.get_template(template_name)
             print(template.render(**self._template_vars), file=file)
+
+    def update_vars(self, variables: Dict[str, Any]) -> None:
+        """
+        Updates the values of some items that should be rendered in a template.
+
+        :param variables: The items to update and their new values.
+        """
+        self._template_vars.update(variables)
 
     def __setitem__(self, key: str, value: Any) -> None:
         """

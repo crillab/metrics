@@ -27,42 +27,179 @@ This script automates the analysis of a campaign of experiments with Metrics.
 """
 
 
+from argparse import ArgumentParser
 from os import system
+from typing import Any, Dict, Tuple
 
 from pyfiglet import Figlet
 
-from metrics import __version__ as metrics_version
-from metrics import __copyright__ as metrics_copyright
+import metrics
+
+from metrics.studio import ReportBuilder
+
+
+#############
+# FUNCTIONS #
+#############
+
+
+def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
+    """
+    Parses the command line arguments.
+
+    :return: The parser for the arguments given to Metrics, and the arguments themselves.
+    """
+    parser = ArgumentParser(prog=metrics.__name__, description=metrics.__summary__, add_help=False)
+
+    # Registering the commands recognized by this script.
+    parser.add_argument('command',
+                        help='the Metrics command to execute',
+                        default='help', choices=['help', 'init', 'notebook', 'version'])
+
+    # Registering the option used to display the help of the program.
+    parser.add_argument('-h', '--help',
+                        help='displays the help of Metrics',
+                        action='store_true')
+
+    # Registering the option used to display the version of the program.
+    parser.add_argument('-v', '--version',
+                        help='shows the version of Metrics being executed',
+                        action='store_true')
+
+    # Registering the option used to switch to the interactive mode.
+    parser.add_argument('-i', '--interactive',
+                        help='switches to the interactive mode',
+                        action='store_true')
+
+    # Registering the option used to specify the root directory for the report.
+    parser.add_argument('-d', '--root-directory',
+                        help='specifies the root directory for the report',
+                        default='.')
+
+    # Registering options about the metadata of the analysis.
+    parser.add_argument('--title', help='the title of the analysis')
+    parser.add_argument('--date', help='the date of the analysis')
+    parser.add_argument('--description', help='the description of the analysis')
+    parser.add_argument('--input-description', help='the description of the input set')
+    parser.add_argument('--xp-ware-description', help='the description of the experiment-wares')
+
+    # Registering options about the environment used for the experiments.
+    parser.add_argument('--cpu', help='the description of the CPU')
+    parser.add_argument('--ram', help='the available RAM')
+    parser.add_argument('--timeout', help='the time limit')
+    parser.add_argument('--memout', help='the memory limit')
+
+    # Registering options for generating documents.
+    parser.add_argument('--requirements', help='flag for adding the requirements file', action='store_true')
+    parser.add_argument('--readme', help='flag for adding a README file', action='store_true')
+    parser.add_argument('--scalpel-config', help='flag for adding the Scalpel configuration file', action='store_true')
+    parser.add_argument('--config-file', help='the name for the Scalpel configuration file', default='scalpel_config')
+    parser.add_argument('--load', help='flag for adding the loading notebook', action='store_true')
+    parser.add_argument('--load-notebook', help='the name for the loading notebook', default='load_experiments')
+    parser.add_argument('--runtime', help='flag for adding the runtime notebook', action='store_true')
+    parser.add_argument('--runtime-notebook', help='the name for the runtime notebook', default='runtime_analysis')
+    parser.add_argument('--optimization', help='flag for adding the optimization notebook', action='store_true')
+    parser.add_argument('--optimization-notebook', help='the name for the optimization notebook', default='optim_analysis')
+
+    # Registering options for initializing a git repository.
+    parser.add_argument('--git', help='flag for initializing a git repository', action='store_true')
+
+    return parser, vars(parser.parse_args())
 
 
 def print_header() -> None:
+    """
+    Displays the header of the program, which shows the name of Metrics with big letters.
+    """
     figlet = Figlet(font='slant')
     print(figlet.renderText('Metrics'))
 
 
-def init():
+def display_help(parser: ArgumentParser):
+    """
+    Displays the help of this script.
+    """
     print_header()
-
-
-def git(root_dir: str = '.') -> None:
-    system(f'git init "{root_dir}"')
-
-
-def notebook(root_dir: str = '.') -> None:
-    system(f'jupyter notebook --notebook-dir="{root_dir}"')
-
-
-def display_help():
-    pass
+    parser.print_help()
 
 
 def version():
+    """
+    Displays the current version of Metrics.
+    """
     print_header()
-    print('Metrics version', metrics_version)
-    print('Copyright (c)', metrics_copyright)
+    print('Metrics version', metrics.__version__)
+    print('Copyright (c)', metrics.__copyright__)
     print('This program is free software: you can redistribute it and/or modify')
-    print('it under the terms of the GNU Lesser General Public License')
+    print('it under the terms of the GNU Lesser General Public License.')
 
 
-def main(args):
-    pass
+def init(arguments: Dict[str, Any]):
+    """
+    Initializes a new report directory.
+    """
+    if arguments['interactive']:
+        # The interactive mode is on: we need to ask the users for details.
+        print_header()
+
+    else:
+        # The interactive mode is off: we get all details from the command line.
+        report = ReportBuilder(arguments['root_directory'])
+        report.update_vars(arguments)
+
+        # Creating the report files.
+        report.create_directories()
+        if arguments['git']:
+            report.git_init()
+        if arguments['readme']:
+            report.add_readme()
+        if arguments['requirements']:
+            report.add_requirements()
+        if arguments['scalpel_config']:
+            report.add_scalpel_config(arguments['config_file'])
+        if arguments['load']:
+            report.add_load_experiments(arguments['load_notebook'])
+        if arguments['runtime']:
+            report.add_runtime_analysis(arguments['runtime_notebook'])
+        if arguments['optimization']:
+            report.add_optim_analysis(arguments['optimization_notebook'])
+
+
+def notebook(root_directory: str = '.') -> None:
+    """
+    Runs Jupyter Notebook inside the root directory of the report.
+
+    :param root_directory: The root directory of the report.
+    """
+    system(f'jupyter notebook --notebook-dir="{root_directory}"')
+
+
+################
+# MAIN PROGRAM #
+################
+
+
+if __name__ == '__main__':
+    # Parsing the command line arguments.
+    argument_parser, args = parse_arguments()
+
+    # If the help is asked, we display it and exit.
+    if args['help']:
+        display_help(argument_parser)
+        exit()
+
+    # If the version is asked, we display it and exit.
+    if args['version']:
+        version()
+        exit()
+
+    # Executing the specified Metrics command.
+    command = args['command']
+    if command == 'help':
+        display_help(argument_parser)
+    elif command == 'init':
+        init(args)
+    elif command == 'notebook':
+        notebook(args['root_directory'])
+    elif command == 'version':
+        version()
