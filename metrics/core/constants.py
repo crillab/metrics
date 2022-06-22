@@ -107,3 +107,6 @@ SCATTER_TITLE = 'Scatter-plot'
 ### Box-Plots
 
 BOX_TITLE = 'Box-plot'
+
+### Bar plot
+BAR_TITLE = 'Bar-plot'
