@@ -836,7 +836,7 @@ class OptiAnalysis(BasicAnalysis):
             self._data_frame = data_frame
         else:
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
-        columns = set(data_frame.columns)
+        columns = set(self._data_frame.columns)
         expected_columns = {EXPERIMENT_OBJECTIVE, EXPERIMENT_STATUS, EXPERIMENT_BOUND_LIST, EXPERIMENT_TIMESTAMP_LIST,
                             EXPERIMENT_CPU_TIME}
         missing = expected_columns - columns
@@ -1002,7 +1002,7 @@ class DecisionAnalysis(BasicAnalysis):
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
 
         # test if the analysis is in conformity
-        columns = set(data_frame.columns)
+        columns = set(self._data_frame.columns)
         expected_columns = {EXPERIMENT_CPU_TIME}
         missing = expected_columns - columns
         if missing:
