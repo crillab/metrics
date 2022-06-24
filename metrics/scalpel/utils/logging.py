@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Scalpel - A Metrics Module                                                 #
-#  Copyright (c) 2019-2021 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2022- Univ Artois & CNRS, Exakis Nelite                 #
 #  -------------------------------------------------------------------------- #
 #  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
 #  sCAlPEL - extraCting dAta of exPeriments from softwarE Logs                #
@@ -25,17 +25,68 @@
 
 
 """
-This package provides utility classes designed to make easier the parsing
-of campaign data inside Scalpel.
+This module provides logging tools to trace the extraction performed by Scalpel,
+mostly for debugging purposes (for instance, to identify why some data is missing
+for a particular experiment).
 """
 
-from metrics.scalpel.utils.csvutils import CsvConfiguration, CsvReader
 
-from metrics.scalpel.utils.filters import AbstractExpression
-from metrics.scalpel.utils.filters import create_filter
+from sys import stderr
+from time import time
+from typing import Callable
 
-from metrics.scalpel.utils.logging import configure_logger, logger, timeit
+from loguru import logger
 
-from metrics.scalpel.utils.pattern import AbstractUserDefinedPattern, NullUserDefinedPattern
-from metrics.scalpel.utils.pattern import LogData
-from metrics.scalpel.utils.pattern import compile_any
+
+class LevelFilter:
+    """
+    The LevelFilter allows deciding whether a record is to be logged.
+    """
+
+    def __init__(self, level: str) -> None:
+        """
+        Creates a new LevelFilter.
+
+        :param level: The minimum level for the records to log.
+        """
+        self.level = level
+
+    def __call__(self, record) -> bool:
+        """
+        Checks whether the given record is to be logged.
+
+        :param record: The record to check.
+
+        :return: Whether the record is to be logged.
+        """
+        level_no = logger.level(self.level).no
+        return record['level'].no >= level_no
+
+
+def timeit(func: Callable) -> Callable:
+    """
+    Wraps a function to measure and log the execution time of this function.
+
+    :param func: The function to wrap.
+
+    :return: The wrapped function.
+    """
+    def wrapped(*args, **kwargs):
+        logger.info(f'entering {func.__name__}')
+        start = time()
+        result = func(*args, **kwargs)
+        end = time()
+        logger.info('exiting {} executed in {:f} seconds', func.__name__, end - start)
+        return result
+    return wrapped
+
+
+def configure_logger(level: str) -> None:
+    """
+    Configures the logger to be used by Scalpel.
+
+    :param level: The minimum level for the records to log.
+    """
+    logger.remove()
+    level_filter = LevelFilter(level)
+    logger.add(stderr, filter=level_filter, level=0)

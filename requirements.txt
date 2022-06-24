@@ -2,6 +2,7 @@ crillab-autograph
 dash-bootstrap-components
 deprecated
 jsonpickle
+loguru
 myst-parser
 pandas
 pyparsing

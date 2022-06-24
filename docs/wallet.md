@@ -33,7 +33,7 @@ Globally, an *Analysis object is composed of five parts:
 * `figures` that permit to draw some tables and plots representing the data
 * `others` that correspond to operations like exporting.
 
-Here, an analysis id divided in three different objects:
+Here, an analysis is divided in three different objects:
 
 * `BasicAnalysis` is an analysis with the only constraint of a complete cartesian product between inputs and experiment-wares
 * `DecisionAnalysis` is an analysis taking into account the time and the success, or not, of each experiment
@@ -52,10 +52,13 @@ A final part focuses on the optimality analysis of the object `OptiAnalysis`.
 To create a new analysis, you only need to import the `DecisionAnalysis` class from *Wallet* module and instantiate a new `DecisionAnalysis` object with the path to the YAML configuration file:
 
 ```python
-from metrics.wallet import BasicAnalysis
+from metrics.wallet import DecisionAnalysis
 
 analysis = DecisionAnalysis(input_file='path/to/xcsp19/YAML/file')
 ```
+
+In the constructor above, it is possible to specify a `log_level` that will
+be passed to *Scalpel* to log parsing events.
 
 The analysis is composed of many variables describing the experiments: 
 * necessary ones: `input`, `experiment_ware`, `cpu_time`, `timeout`
@@ -106,9 +109,9 @@ At any moment, the analysis could be exported to save its state into a file:
 analysis.export('analysis.csv')
 ```
 
-An analysis could be exported as a csv (as a `DataFrame` representation) if the `.csv` extension is precised, else the analysis is exported as a binary object.
+An analysis could be exported as a csv (as a `DataFrame` representation) if the `.csv` extension is used, else the analysis is exported as a binary object.
 
-To import an analysis from a file, the function `import_analysis_from_file` is imported:
+To import an analysis from a file, the function `import_analysis_from_file` may be used:
 
 ```python
 imported_analysis = DecisionAnalysis.import_from_file(filepath)
@@ -226,7 +229,7 @@ Finally, we present a last and generic method to make a subset of inputs:
 ```python
 analysis.filter_inputs(
     function=<lambda>,
-    how=<all|any>
+    how=<"all"|"any">
 )
 ```
 
@@ -759,7 +762,7 @@ To make an optimality analysis, the user needs to parse and get back some needed
 
 ### Create an `OptiAnalysis`
 
-Once the previous needed data are well filled out in the yaml file (an example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/config/metrics_scalpel.yml)), we can build a first optimality campaign as follows:
+Once the previous needed data are well filled out in the yaml file (an example [here](https://gitlab.com/productions-hwattez/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/config/metrics_scalpel.yml)), we can build a first optimality campaign as follows:
 
 ```python
 samp = [1,10,100,1000]
@@ -778,7 +781,7 @@ Once constructed, the `analysis` object has this next data-frame in memory:
 We can observe that the same couple (input, experiment-ware) appears many times -- for each sampling asked by the user, visible through the timeout column.
 Each tuple composed of a specific (input, experiment-ware, timeout) is composed of the best_bound at this time, the current status and the success column that inform about the actual performances.
 
-> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/1-logs_to_csv.ipynb).
+> A full example [here](https://gitlab.com/productions-hwattez/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/1-logs_to_csv.ipynb).
 
 ### Compute scores
 
@@ -827,7 +830,7 @@ where:
 - `max_b` is the best found bound at the current time of the analysis for a given input
 - `df` is the dataframe of the current analyzed input experiments (from which `min_b` and `max_b` are computed)
 
-> A full example [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2-make_agg_analysis.ipynb).
+> A full example [here](https://gitlab.com/productions-hwattez/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2-make_agg_analysis.ipynb).
 >
 > with a preview of created score columns:
 > 
@@ -862,7 +865,7 @@ analysis.opti_line_plot(
 
     # Legend parameters
     legend_location=Position.RIGHT,
-    legend_offset=Nopne,
+    legend_offset=None,
     ncol_legend=1,
 
     # Style mapping
@@ -888,4 +891,4 @@ analysis.opti_line_plot(
 )
 ```
 
-> A full example is given [here](https://gitlab.com/production27/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2A-plots.ipynb)
+> A full example is given [here](https://gitlab.com/productions-hwattez/solveurs-de-contraintes-autonomes/doctorat/experimentations/-/blob/main/Chap7/13_ace/2A-plots.ipynb)

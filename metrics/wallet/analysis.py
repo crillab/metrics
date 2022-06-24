@@ -32,7 +32,7 @@ import pickle
 import warnings
 from typing import List
 
-from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot
+from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot, BarPlot
 
 from pandas import DataFrame
 from itertools import product, combinations
@@ -115,18 +115,20 @@ class BasicAnalysis:
     experiment-wares and inputs
     """
 
-    def __init__(self, input_file: str = None, data_frame: DataFrame = None):
+    def __init__(self, input_file: str = None, data_frame: DataFrame = None,
+                 log_level: str = 'WARNING'):
         """
         Creates a basic analysis by using input_file or data_frame
         @param input_file: the yaml file given to scalpel to parse logs
         @param data_frame: the data_frame used to create the Analysis
+        @param log_level: The minimum level for the events to log while parsing the campaign.
         """
         if data_frame is not None:
             self._data_frame = data_frame
             self.check()
             return
 
-        campaign, config = read_campaign(input_file)
+        campaign, config = read_campaign(input_file, log_level)
 
         self._data_frame = DataFrameBuilder(campaign).build_from_campaign()
         self._data_frame[TIMEOUT_COL] = campaign.timeout
@@ -336,7 +338,7 @@ class BasicAnalysis:
         @param data_frame: the external data_frame to add.
         @return: the merged analysis
         """
-        return self.__class__(data_frame=self._data_frame.append(data_frame, ignore_index=True))
+        return self.__class__(data_frame=pd.concat([self._data_frame, data_frame], ignore_index=True))
 
     def add_virtual_experiment_ware(self, function=find_best_cpu_time_input,
                                     xp_ware_set=None, name='vbew') -> BasicAnalysis:
@@ -608,25 +610,30 @@ class BasicAnalysis:
         @return: True if the analysis is well exported, else False.
         """
         if filename is None:
-            return pickle.dumps(self._data_frame, protocol=pickle.HIGHEST_PROTOCOL)
+            return pickle.dumps(self._data_frame, protocol=pickle.DEFAULT_PROTOCOL)
 
         if filename.split('.')[-1] == 'csv':
             return self._data_frame.to_csv(filename, index=False)
         else:
             with open(filename, 'wb') as file:
-                return pickle.dump(self._data_frame, file, protocol=pickle.HIGHEST_PROTOCOL)
+                return pickle.dump(self._data_frame, file, protocol=pickle.DEFAULT_PROTOCOL)
 
     @classmethod
-    def import_from_file(cls, filename):
+    def import_from_file(cls, filename, eval_data: bool = False):
         """
         Import an Analysis from a file.
         @param filename: the filename of a previously exported Analysis.
+        @param eval_data: If data in the read data_frame are to be evaluated using eval.
         @return: the imported Analysis.
         """
         with open(filename, 'rb') as file:
             if filename.split('.')[-1] == 'csv':
-                return cls(data_frame=pd.read_csv(file))
-            return cls(data_frame=pickle.load(file))
+                df = pd.read_csv(file)
+            else:
+                df = pickle.load(file)
+            if eval_data:
+                df = df.applymap(lambda x: eval(str(x)))
+            return cls(data_frame=df)
 
 
 def _is_none_or_nan(x):
@@ -803,9 +810,10 @@ class OptiAnalysis(BasicAnalysis):
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min'):
+                 basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min',
+                 log_level: str = 'WARNING'):
         """
-        Conctructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
+        Constructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
         build an OptiAnalysis.
         @param input_file: the yaml file to extract data
@@ -815,11 +823,13 @@ class OptiAnalysis(BasicAnalysis):
         (a default one is given)
         @param samp: the sampling times to apply on the exploding function
         @param objective a lambda to find the objective direction
+        @param log_level The minimum level for the events to log while parsing the campaign.
         """
         if input_file is not None or basic_analysis is not None:
             super().__init__(
                 input_file,
-                None if basic_analysis is None else basic_analysis.data_frame
+                None if basic_analysis is None else basic_analysis.data_frame,
+                log_level
             )
             self._explode_experiments(func, samp, objective)
         elif data_frame is not None:
@@ -916,6 +926,15 @@ def _make_cactus_plot_df(analysis, cumulated, cactus_col):
     return df_cactus.cumsum() if cumulated else df_cactus
 
 
+def compute_performance_ratio(df, row):
+    time_vbew = df[(df[EXPERIMENT_INPUT] == row[EXPERIMENT_INPUT]) & (df[EXPERIMENT_XP_WARE] == 'vbew')][
+        EXPERIMENT_CPU_TIME]
+    if len(time_vbew) > 0:
+        return row[EXPERIMENT_CPU_TIME] / \
+               time_vbew.iloc[0]
+    return None
+
+
 def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col=None):
     df = analysis.keep_experiment_wares({xp_ware_x, xp_ware_y}).data_frame
     df = df[df[SUCCESS_COL]]
@@ -950,24 +969,25 @@ def _make_box_plot_df(analysis, box_by, box_col):
 class DecisionAnalysis(BasicAnalysis):
     """
     A Decision Analysis is an analysis with the constraint of having the cartesian product of
-    experiment-wares and inputs and additionnal informations:
+    experiment-wares and inputs and additional information:
 
     - the success status of the experiment
     - the cpu time for producing this success status
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 basic_analysis: BasicAnalysis = None):
+                 basic_analysis: BasicAnalysis = None, log_level: str = 'WARNING'):
         """
-        Conctructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
+        Constructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
         build a DecisionAnalysis.
         @param input_file: the yaml file to extract data
         @param data_frame: a valid dataframe containing the exploded experiments
         @param basic_analysis: a BasicAnalysis with the needed columns
+        @param log_level: The minimum level for the events to log while parsing the campaign.
         """
         if input_file is not None:
-            super().__init__(input_file, data_frame)
+            super().__init__(input_file, data_frame, log_level)
         elif data_frame is not None:
             self._data_frame = data_frame
         elif basic_analysis is not None:
@@ -979,7 +999,7 @@ class DecisionAnalysis(BasicAnalysis):
 
     def stat_table(self, par=[1, 2, 10], **kwargs):
         """
-        The statictic table allows to show a global overview of the results: number of solved
+        The statistic table allows to show a global overview of the results: number of solved
         inputs, time, etc.
         @param par: corresponds to the different values we want to give to the PARx column(s);
         @param kwargs: kwargs are given to the 'export_data_frame(...)' function
@@ -1004,7 +1024,7 @@ class DecisionAnalysis(BasicAnalysis):
             **kwargs
         )
 
-    def contribution_table(self, deltas=[1, 10, 100], **kwargs):
+    def contribution_table(self, deltas=[1, 10, 100], contribution=True, **kwargs):
         """
         The contribution table allows to show the contribution of each experiment-ware: a
         contribution corresponds to
@@ -1024,14 +1044,24 @@ class DecisionAnalysis(BasicAnalysis):
         for delta in deltas:
             sub = contrib_raw[(contrib_raw['second_time'] - contrib_raw.cpu_time) >= delta]
             contrib[f'vbew {delta}s'] = sub.groupby(EXPERIMENT_XP_WARE).cpu_time.count()
-
-        contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
-
+        sort_columns = ['vbew simple']
+        sort_order = [False]
+        if contribution:
+            contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
+            sort_columns.append('contribution')
+            sort_order.append(False)
         return export_data_frame(
-            data_frame=contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'],
-                                                                 ascending=[False, False]),
+            data_frame=contrib.fillna(0).astype(int).sort_values(sort_columns,
+                                                                 ascending=sort_order),
             **kwargs
         )
+
+    def marginal_contribution(self, **kwargs: dict):
+        df = self.contribution_table(contribution=False)
+        df['experiment_ware'] = df.index
+        plot = BarPlot(df, 'experiment_ware', 'vbew simple', **kwargs)
+        plot.save()
+        return plot.show()
 
     def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         """
@@ -1074,6 +1104,14 @@ class DecisionAnalysis(BasicAnalysis):
         plot.save()
 
         return plot.show()
+
+    def performance_profile(self, **kwargs: dict):
+        local_analysis = DecisionAnalysis(basic_analysis=self)
+        local_analysis = local_analysis.add_virtual_experiment_ware()
+        df_solved = local_analysis.data_frame[local_analysis.data_frame[SUCCESS_COL]]
+        local_analysis = local_analysis.add_variable('performance_ratio',
+                                                     lambda row: compute_performance_ratio(df_solved, row))
+        return local_analysis.cdf_plot(cdf_col='performance_ratio', **kwargs)
 
     def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME,
                      **kwargs):

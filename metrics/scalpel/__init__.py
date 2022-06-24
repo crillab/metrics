@@ -41,20 +41,23 @@ from metrics.scalpel.listener import CampaignParserListener
 
 from metrics.scalpel.config import read_configuration, ScalpelConfiguration
 from metrics.scalpel.parser import create_parser
+from metrics.scalpel.utils import configure_logger
 
 
-def read_campaign(input_file: str) -> Tuple[Campaign, Optional[ScalpelConfiguration]]:
+def read_campaign(input_file: str,
+                  log_level: str = 'WARNING') -> Tuple[Campaign, Optional[ScalpelConfiguration]]:
     """
     Reads the data about a campaign based on the given input file.
 
     :param input_file: The input file describing the campaign.
+    :param log_level: The minimum level for the events to log while parsing the campaign.
 
     :return: The read campaign and the configuration of this campaign, if any.
 
     :raises ValueError: If the input file does not have a recognized format.
     """
     if input_file.lower().endswith('.yml') or input_file.lower().endswith('.yaml'):
-        return read_yaml(input_file)
+        return read_yaml(input_file, log_level)
 
     if input_file.lower().endswith('.json'):
         return read_json(input_file), None
@@ -62,16 +65,19 @@ def read_campaign(input_file: str) -> Tuple[Campaign, Optional[ScalpelConfigurat
     raise ValueError(f'Unrecognized campaign format for file "{input_file}"')
 
 
-def read_yaml(yaml_configuration: str) -> Tuple[Campaign, ScalpelConfiguration]:
+def read_yaml(yaml_configuration: str,
+              log_level: str = 'WARNING') -> Tuple[Campaign, ScalpelConfiguration]:
     """
     Reads the data about a campaign following the configuration described in
     the given YAML file.
 
     :param yaml_configuration: The path of the YAML file describing Scalpel's
                                configuration.
+    :param log_level: The minimum level for the events to log while parsing the campaign.
 
     :return: The read campaign and the configuration of this campaign.
     """
+    configure_logger(log_level)
     parser_listener = CampaignParserListener()
     configuration = read_configuration(yaml_configuration, parser_listener)
     campaign_parser = create_parser(configuration, parser_listener)
@@ -92,8 +98,8 @@ def read_json(json_file: str) -> Campaign:
         return load_json(json_campaign.read())
 
 
-def read_object(yaml_configuration: str,
-                campaign: Iterable[Any]) -> Tuple[Campaign, ScalpelConfiguration]:
+def read_object(yaml_configuration: str, campaign: Iterable[Any],
+                log_level: str = 'WARNING') -> Tuple[Campaign, ScalpelConfiguration]:
     """
     Reads the data stored in the given iterable object following the
     configuration described in the given YAML file.
@@ -104,9 +110,11 @@ def read_object(yaml_configuration: str,
                      an experiment, and must define an "items()" method returning a set of
                      key-value pairs (such as dictionaries or rows in a data-frame,
                      for instance).
+    :param log_level: The minimum level for the events to log while parsing the campaign.
 
     :return: The read campaign and the configuration of this campaign.
     """
+    configure_logger(log_level)
     parser_listener = CampaignParserListener()
     configuration = read_configuration(yaml_configuration, parser_listener)
     for experiment in campaign:
