@@ -47,6 +47,11 @@ XP_WARE_NAME = 'name'
 EXPERIMENT_INPUT = 'input'
 EXPERIMENT_XP_WARE = 'experiment_ware'
 EXPERIMENT_CPU_TIME = 'cpu_time'
+EXPERIMENT_BEST_BOUND = 'best_bound'
+EXPERIMENT_TIMESTAMP_LIST = 'timestamp_list'
+EXPERIMENT_BOUND_LIST = 'bound_list'
+EXPERIMENT_OBJECTIVE = 'objective'
+EXPERIMENT_STATUS = 'status'
 
 ## Input constants
 INPUT_NAME = 'name'

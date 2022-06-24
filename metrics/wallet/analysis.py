@@ -637,11 +637,11 @@ def _make_list(l):
 
 
 def default_explode(df, samp, objective):
-    d = df.iloc[0].to_dict()
-    times = _make_list(d.pop('timestamp_list'))
-    bounds = _make_list(d.pop('bound_list'))
+    d: dict = df.iloc[0].to_dict()
+    times = _make_list(d.pop(EXPERIMENT_TIMESTAMP_LIST))
+    bounds = _make_list(d.pop(EXPERIMENT_BOUND_LIST))
 
-    if objective(d.pop('objective', None)):
+    if objective(d.pop(EXPERIMENT_OBJECTIVE, None)):
         bounds = [-x for x in bounds]
 
     if len(bounds) != len(times):
@@ -652,19 +652,19 @@ def default_explode(df, samp, objective):
     for j in range(len(bounds)):
         while i < len(samp) and times[j] > samp[i]:
             d2 = d.copy()
-            d2['status'] = d2['status'] if d2['cpu_time'] < samp[i] else 'INCOMPLETE'
-            d2['success'] = d2['status'] == 'COMPLETE'
-            d2['cpu_time'] = times[j - 1] if j - 1 >= 0 else samp[i]
-            d2['timeout'] = samp[i]
-            d2['best_bound'] = bounds[j - 1] if j - 1 >= 0 else None
+            d2[EXPERIMENT_STATUS] = d2[EXPERIMENT_STATUS] if d2[EXPERIMENT_CPU_TIME] < samp[i] else 'INCOMPLETE'
+            d2[SUCCESS_COL] = d2[EXPERIMENT_STATUS] == 'COMPLETE'
+            d2[EXPERIMENT_CPU_TIME] = times[j - 1] if j - 1 >= 0 else samp[i]
+            d2[TIMEOUT_COL] = samp[i]
+            d2[EXPERIMENT_BEST_BOUND] = bounds[j - 1] if j - 1 >= 0 else None
             l.append(d2)
             i += 1
 
     for j in range(i, len(samp)):
         d2 = d.copy()
-        d2['cpu_time'] = times[-1] if len(times) > 0 else samp[j]
-        d2['timeout'] = samp[j]
-        d2['best_bound'] = bounds[-1] if len(times) > 0 else None
+        d2[EXPERIMENT_CPU_TIME] = times[-1] if len(times) > 0 else samp[j]
+        d2[TIMEOUT_COL] = samp[j]
+        d2[EXPERIMENT_BEST_BOUND] = bounds[-1] if len(times) > 0 else None
         l.append(d2)
 
     return pd.DataFrame(l)
@@ -824,6 +824,12 @@ class OptiAnalysis(BasicAnalysis):
             self._data_frame = data_frame
         else:
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
+        columns = set(data_frame.columns)
+        expected_columns = {EXPERIMENT_OBJECTIVE, EXPERIMENT_STATUS, EXPERIMENT_BOUND_LIST, EXPERIMENT_TIMESTAMP_LIST,
+                            EXPERIMENT_CPU_TIME}
+        missing = expected_columns - columns
+        if missing:
+            raise ValueError(f'Some columns are missing: {missing}')
 
     def _explode_experiments(self, func, samp, objective):
         self.apply_on_groupby(
@@ -914,8 +920,8 @@ def _make_cactus_plot_df(analysis, cumulated, cactus_col):
     return df_cactus.cumsum() if cumulated else df_cactus
 
 
-def compute_performance_ratio(df, row):
-    time_vbew = df[(df[EXPERIMENT_INPUT] == row[EXPERIMENT_INPUT]) & (df[EXPERIMENT_XP_WARE] == 'vbew')][
+def _compute_performance_ratio(df, row, vbew_name):
+    time_vbew = df[(df[EXPERIMENT_INPUT] == row[EXPERIMENT_INPUT]) & (df[EXPERIMENT_XP_WARE] == vbew_name)][
         EXPERIMENT_CPU_TIME]
     if len(time_vbew) > 0:
         return row[EXPERIMENT_CPU_TIME] / \
@@ -983,7 +989,12 @@ class DecisionAnalysis(BasicAnalysis):
         else:
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
 
-        # test if the naalysis is in conformity
+        # test if the analysis is in conformity
+        columns = set(data_frame.columns)
+        expected_columns = {EXPERIMENT_CPU_TIME}
+        missing = expected_columns - columns
+        if missing:
+            raise ValueError(f'Some columns are missing: {missing}')
 
     def stat_table(self, par=[1, 2, 10], **kwargs):
         """
@@ -1093,12 +1104,10 @@ class DecisionAnalysis(BasicAnalysis):
 
         return plot.show()
 
-    def performance_profile(self, **kwargs: dict):
-        local_analysis = DecisionAnalysis(basic_analysis=self)
-        local_analysis = local_analysis.add_virtual_experiment_ware()
-        df_solved = local_analysis.data_frame[local_analysis.data_frame[SUCCESS_COL]]
-        local_analysis = local_analysis.add_variable('performance_ratio',
-                                                     lambda row: compute_performance_ratio(df_solved, row))
+    def performance_profile(self, vbew_name, **kwargs: dict):
+        df_solved = self.data_frame[self.data_frame[SUCCESS_COL]]
+        local_analysis = self.add_variable('performance_ratio',
+                                           lambda row: _compute_performance_ratio(df_solved, row, vbew_name))
         return local_analysis.cdf_plot(cdf_col='performance_ratio', **kwargs)
 
     def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME,
