@@ -35,7 +35,7 @@ from typing import List
 from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot, BarPlot
 
 from pandas import DataFrame
-from itertools import product
+from itertools import product, combinations
 import pandas as pd
 from deprecated import deprecated
 from types import SimpleNamespace
@@ -508,6 +508,18 @@ class BasicAnalysis:
         return [
             self.keep_experiment_wares([xpw[i], j]) for i in range(len(xpw) - 1) for j in
             xpw[i + 1:]
+        ]
+
+    def all_xp_ware_combination_analysis(self) -> List[BasicAnalysis]:
+        """
+
+        @return: all the analysis combinations (of each combination of experiment-wares)
+        """
+
+        return [
+            self.keep_experiment_wares(xpws)
+            for i in range(2, len(self.experiment_wares) + 1)
+            for xpws in combinations(self.experiment_wares, i)
         ]
 
     def all_xp_ware_pair_analysis(self) -> List[BasicAnalysis]:
