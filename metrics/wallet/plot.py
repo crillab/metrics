@@ -245,9 +245,9 @@ class BoxPlot(Plot):
                  title=BOX_TITLE,
                  x_axis_name=None,
                  y_axis_name=None,
-                 #legend_location=Position.RIGHT,
-                 #legend_offset=(0, 0),
-                 #ncol_legend=1,
+                 # legend_location=Position.RIGHT,
+                 # legend_offset=(0, 0),
+                 # ncol_legend=1,
                  **kwargs
                  ):
         super().__init__(**kwargs)
@@ -260,4 +260,31 @@ class BoxPlot(Plot):
         self._plot.boxplot(
             [df[col].dropna() for col in df.columns],
             labels=df.columns
+        )
+
+
+class BarPlot(Plot):
+
+    def __init__(self,
+                 df,
+                 colx,
+                 coly,
+                 title=BAR_TITLE,
+                 y_axis_name=None,
+                 legend_location=Position.RIGHT,
+                 legend_offset=(0, 0),
+                 ncol_legend=1,
+                 **kwargs
+                 ):
+        super().__init__(**kwargs)
+
+        self._plot.title = title
+
+        self._plot.y_label = y_axis_name
+
+        if legend_location is not None:
+            self._legend(legend_location, legend_offset, ncol_legend)
+
+        self._plot.barplot(
+            colx, coly,df
         )

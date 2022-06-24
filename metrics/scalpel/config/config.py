@@ -35,8 +35,10 @@ from __future__ import annotations
 from collections import defaultdict
 from fnmatch import fnmatch
 from os import path, walk
+from os import sep as file_separator
 from os.path import splitext
 from pydoc import locate
+from re import escape
 from typing import Any, Dict, List, Optional, Type
 
 from metrics.scalpel.config.datafile import DataFile
@@ -55,6 +57,7 @@ from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.utils import CsvConfiguration
 from metrics.scalpel.utils import AbstractExpression, create_filter
 from metrics.scalpel.utils import LogData, NullUserDefinedPattern, compile_any
+from metrics.scalpel.utils import logger
 
 
 class FileNameMetaConfiguration:
@@ -103,13 +106,23 @@ class FileNameMetaConfiguration:
 
         :return: The compiled log-data.
         """
+        # Retrieving the pattern for the metadata, and fixing path separators.
         pattern = wrapper.get_simplified_pattern()
+        if pattern is not None:
+            pattern = pattern.replace('/', file_separator)
+
+        # Retrieving the regular expression for the metadata, and fixing path separators.
         regex = wrapper.get_regex_pattern()
+        if regex is not None:
+            regex = regex.replace('/', escape(file_separator))
+
         if pattern or regex:
             exact = wrapper.is_exact()
             groups = wrapper.get_groups()
             names, indices = zip(*groups)
-            return LogData(names, compile_any(pattern, regex, exact, *indices))
+            compiled_pattern = compile_any(pattern, regex, exact, *indices)
+            logger.trace(f'{names} log-data has been compiled to {compiled_pattern}')
+            return LogData(names, compiled_pattern)
         return LogData([], NullUserDefinedPattern())
 
 
@@ -140,10 +153,11 @@ class ScalpelConfigurationLoader:
         """
         self._listener.start_campaign()
         self._load_metadata()
+        self._load_experiment_wares()
+        self._load_input_set()
         self._load_mapping()
         self._load_default_values()
-        self._load_input_set()
-        self._load_experiment_wares()
+        self._load_ignored_data()
         return ScalpelConfiguration(self)
 
     def _load_metadata(self) -> None:
@@ -205,6 +219,13 @@ class ScalpelConfigurationLoader:
         for key, value in self._wrapper.get_default_values().items():
             self._listener.add_default_value(key, value)
 
+    def _load_ignored_data(self) -> None:
+        """
+        Loads the data that must be ignored when read by Scalpel.
+        """
+        for data in self._wrapper.get_ignored_data():
+            self._listener.add_ignored_data(data)
+
     def get_campaign_path(self) -> List[str]:
         """
         Gives the path of the files containing all the data about the campaign.
@@ -227,12 +248,16 @@ class ScalpelConfigurationLoader:
         fmt = self._wrapper.get_format()
         if fmt is not None:
             self._format = CampaignFormat.value_of(fmt)
+            logger.trace(f'campaign parsed using the {self._format} strategy')
             return self._format
 
         # Otherwise, we try to guess the format.
         self._format = self._guess_format()
         if self._format is None:
             raise ValueError('Could not infer campaign format')
+
+        # Returning the guessed format.
+        logger.trace(f'campaign parsed using the {self._format} strategy')
         return self._format
 
     def _guess_format(self) -> Optional[CampaignFormat]:
@@ -355,7 +380,9 @@ class ScalpelConfigurationLoader:
             regex = data.get_regex_pattern()
             exact = data.is_exact()
             names, groups = zip(*data.get_groups())
-            log_data[file].append(LogData(names, compile_any(pattern, regex, exact, *groups)))
+            compiled_pattern = compile_any(pattern, regex, exact, *groups)
+            logger.trace(f'{names} log-data has been compiled to {compiled_pattern}')
+            log_data[file].append(LogData(names, compiled_pattern))
         return log_data
 
     def get_data_files(self) -> Dict[str, DataFile]:
@@ -461,6 +488,7 @@ class ScalpelConfiguration:
         self._file_name_meta = loader.get_file_name_meta()
         self._log_datas = loader.get_log_datas()
         self._data_files = loader.get_data_files()
+        self._ignored_files = loader.get_ignored_files()
 
     def get_path(self) -> List[str]:
         """
@@ -530,6 +558,9 @@ class ScalpelConfiguration:
 
         :return: Whether the file must be parsed.
         """
+        if any(fnmatch(filename, ignored_file) for ignored_file in self._ignored_files):
+            return False
+
         if any(fnmatch(filename, data_file) for data_file in self._log_datas):
             return True
 

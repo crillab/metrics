@@ -32,7 +32,7 @@ import pickle
 import warnings
 from typing import List
 
-from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot
+from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot, BarPlot
 
 from pandas import DataFrame
 from itertools import product
@@ -116,11 +116,12 @@ class BasicAnalysis:
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 log_level: str = 'ERROR'):
+                 log_level: str = 'WARNING'):
         """
         Creates a basic analysis by using input_file or data_frame
         @param input_file: the yaml file given to scalpel to parse logs
         @param data_frame: the data_frame used to create the Analysis
+        @param log_level: The minimum level for the events to log while parsing the campaign.
         """
         if data_frame is not None:
             self._data_frame = data_frame
@@ -798,7 +799,7 @@ class OptiAnalysis(BasicAnalysis):
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
                  basic_analysis: BasicAnalysis = None, func=default_explode, samp=None, objective=lambda s: s == 'min',
-                 log_level: str = 'ERROR'):
+                 log_level: str = 'WARNING'):
         """
         Constructs an optimality analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
@@ -810,6 +811,7 @@ class OptiAnalysis(BasicAnalysis):
         (a default one is given)
         @param samp: the sampling times to apply on the exploding function
         @param objective a lambda to find the objective direction
+        @param log_level The minimum level for the events to log while parsing the campaign.
         """
         if input_file is not None or basic_analysis is not None:
             super().__init__(
@@ -912,6 +914,15 @@ def _make_cactus_plot_df(analysis, cumulated, cactus_col):
     return df_cactus.cumsum() if cumulated else df_cactus
 
 
+def compute_performance_ratio(df, row):
+    time_vbew = df[(df[EXPERIMENT_INPUT] == row[EXPERIMENT_INPUT]) & (df[EXPERIMENT_XP_WARE] == 'vbew')][
+        EXPERIMENT_CPU_TIME]
+    if len(time_vbew) > 0:
+        return row[EXPERIMENT_CPU_TIME] / \
+               time_vbew.iloc[0]
+    return None
+
+
 def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col=None):
     df = analysis.keep_experiment_wares({xp_ware_x, xp_ware_y}).data_frame
     df = df[df[SUCCESS_COL]]
@@ -953,7 +964,7 @@ class DecisionAnalysis(BasicAnalysis):
     """
 
     def __init__(self, input_file: str = None, data_frame: DataFrame = None,
-                 basic_analysis: BasicAnalysis = None, log_level: str = 'ERROR'):
+                 basic_analysis: BasicAnalysis = None, log_level: str = 'WARNING'):
         """
         Constructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
         'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
@@ -961,6 +972,7 @@ class DecisionAnalysis(BasicAnalysis):
         @param input_file: the yaml file to extract data
         @param data_frame: a valid dataframe containing the exploded experiments
         @param basic_analysis: a BasicAnalysis with the needed columns
+        @param log_level: The minimum level for the events to log while parsing the campaign.
         """
         if input_file is not None:
             super().__init__(input_file, data_frame, log_level)
@@ -1000,7 +1012,7 @@ class DecisionAnalysis(BasicAnalysis):
             **kwargs
         )
 
-    def contribution_table(self, deltas=[1, 10, 100], **kwargs):
+    def contribution_table(self, deltas=[1, 10, 100], contribution=True, **kwargs):
         """
         The contribution table allows to show the contribution of each experiment-ware: a
         contribution corresponds to
@@ -1020,14 +1032,24 @@ class DecisionAnalysis(BasicAnalysis):
         for delta in deltas:
             sub = contrib_raw[(contrib_raw['second_time'] - contrib_raw.cpu_time) >= delta]
             contrib[f'vbew {delta}s'] = sub.groupby(EXPERIMENT_XP_WARE).cpu_time.count()
-
-        contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
-
+        sort_columns = ['vbew simple']
+        sort_order = [False]
+        if contribution:
+            contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
+            sort_columns.append('contribution')
+            sort_order.append(False)
         return export_data_frame(
-            data_frame=contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'],
-                                                                 ascending=[False, False]),
+            data_frame=contrib.fillna(0).astype(int).sort_values(sort_columns,
+                                                                 ascending=sort_order),
             **kwargs
         )
+
+    def marginal_contribution(self, **kwargs: dict):
+        df = self.contribution_table(contribution=False)
+        df['experiment_ware'] = df.index
+        plot = BarPlot(df, 'experiment_ware', 'vbew simple', **kwargs)
+        plot.save()
+        return plot.show()
 
     def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         """
@@ -1070,6 +1092,14 @@ class DecisionAnalysis(BasicAnalysis):
         plot.save()
 
         return plot.show()
+
+    def performance_profile(self, **kwargs: dict):
+        local_analysis = DecisionAnalysis(basic_analysis=self)
+        local_analysis = local_analysis.add_virtual_experiment_ware()
+        df_solved = local_analysis.data_frame[local_analysis.data_frame[SUCCESS_COL]]
+        local_analysis = local_analysis.add_variable('performance_ratio',
+                                                     lambda row: compute_performance_ratio(df_solved, row))
+        return local_analysis.cdf_plot(cdf_col='performance_ratio', **kwargs)
 
     def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME,
                      **kwargs):

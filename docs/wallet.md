@@ -33,7 +33,7 @@ Globally, an *Analysis object is composed of five parts:
 * `figures` that permit to draw some tables and plots representing the data
 * `others` that correspond to operations like exporting.
 
-Here, an analysis id divided in three different objects:
+Here, an analysis is divided in three different objects:
 
 * `BasicAnalysis` is an analysis with the only constraint of a complete cartesian product between inputs and experiment-wares
 * `DecisionAnalysis` is an analysis taking into account the time and the success, or not, of each experiment
@@ -52,10 +52,13 @@ A final part focuses on the optimality analysis of the object `OptiAnalysis`.
 To create a new analysis, you only need to import the `DecisionAnalysis` class from *Wallet* module and instantiate a new `DecisionAnalysis` object with the path to the YAML configuration file:
 
 ```python
-from metrics.wallet import BasicAnalysis
+from metrics.wallet import DecisionAnalysis
 
 analysis = DecisionAnalysis(input_file='path/to/xcsp19/YAML/file')
 ```
+
+In the constructor above, it is possible to specify a `log_level` that will
+be passed to *Scalpel* to log parsing events.
 
 The analysis is composed of many variables describing the experiments: 
 * necessary ones: `input`, `experiment_ware`, `cpu_time`, `timeout`
@@ -106,9 +109,9 @@ At any moment, the analysis could be exported to save its state into a file:
 analysis.export('analysis.csv')
 ```
 
-An analysis could be exported as a csv (as a `DataFrame` representation) if the `.csv` extension is precised, else the analysis is exported as a binary object.
+An analysis could be exported as a csv (as a `DataFrame` representation) if the `.csv` extension is used, else the analysis is exported as a binary object.
 
-To import an analysis from a file, the function `import_analysis_from_file` is imported:
+To import an analysis from a file, the function `import_analysis_from_file` may be used:
 
 ```python
 imported_analysis = DecisionAnalysis.import_from_file(filepath)

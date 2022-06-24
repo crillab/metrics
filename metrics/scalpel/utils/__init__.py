@@ -34,6 +34,8 @@ from metrics.scalpel.utils.csvutils import CsvConfiguration, CsvReader
 from metrics.scalpel.utils.filters import AbstractExpression
 from metrics.scalpel.utils.filters import create_filter
 
+from metrics.scalpel.utils.logging import configure_logger, logger, timeit
+
 from metrics.scalpel.utils.pattern import AbstractUserDefinedPattern, NullUserDefinedPattern
 from metrics.scalpel.utils.pattern import LogData
 from metrics.scalpel.utils.pattern import compile_any

@@ -59,6 +59,7 @@ def requirements() -> List[str]:
         'pyparsing',
         'tenacity',
         'pyyaml',
+        'loguru'
     ]
 
 
@@ -71,6 +72,7 @@ setup(
         'metrics.scalpel',
         'metrics.scalpel.config',
         'metrics.scalpel.parser',
+        'metrics.scalpel.utils',
         'metrics.wallet',
         'metrics'
     ],

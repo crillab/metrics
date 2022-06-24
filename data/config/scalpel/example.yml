@@ -41,6 +41,8 @@ data:
     input:
   default-values:
     cpu_time:
+  ignored-data:
+    -
   file-name-meta:
     pattern:
     regex:
@@ -54,4 +56,6 @@ data:
       group:
       exact:
   data-files:
+    -
+  ignored-files:
     -

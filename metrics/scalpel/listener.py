@@ -25,9 +25,8 @@
 
 
 """
-This module provides a listener which listens to the events triggered while
-a campaign is being parsed, and builds its representation based on these
-events.
+This module provides a listener which listens to the events triggered while a
+campaign is being parsed, and builds its representation based on these events.
 """
 
 
@@ -35,7 +34,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Union
-from warnings import warn
 
 from metrics.core.builder import CampaignBuilder
 from metrics.core.builder.builder import InputSetBuilder, ModelBuilder
@@ -43,6 +41,8 @@ from metrics.core.constants import EXPERIMENT_INPUT, EXPERIMENT_XP_WARE
 from metrics.core.constants import INPUT_NAME, INPUT_SET_NAME
 from metrics.core.constants import XP_WARE_NAME
 from metrics.core.model import Campaign
+
+from metrics.scalpel.utils import logger
 
 
 class KeyMapping:
@@ -129,6 +129,7 @@ class AbstractCampaignParserListenerState:
         """
         name = ' '.join('' if read_values.get(v) is None else read_values.get(v) for v in sub_keys)
         self._create_if_missing(key, name, read_values)
+        logger.trace(f'logging {name} as {key}')
         builder[key] = name
 
     def _create_if_missing(self, key: str, identifier: str, all_values: Dict[str]) -> None:
@@ -237,6 +238,7 @@ class InExperimentCampaignParserListenerState(AbstractCampaignParserListenerStat
         :param all_values: All the values characterizing the element.
         """
         # Setting the element id.
+        logger.trace(f'building on the fly {element_key} with value {element_id}')
         builder[element_key] = element_id
 
         # If there is only one read value, then there is nothing more to do.
@@ -262,6 +264,7 @@ class CampaignParserListener:
         """
         self._key_mapping = KeyMapping()
         self._default_values = {}
+        self._ignored_data = set()
         self._campaign_builder = None
         self._input_set_builder = None
         self._current_builder = None
@@ -288,6 +291,14 @@ class CampaignParserListener:
         """
         self._default_values[key] = value
 
+    def add_ignored_data(self, key: str) -> None:
+        """
+        Specifies that some data must be ignored instead of being logged.
+
+        :param key: The key identifying the data to ignore.
+        """
+        self._ignored_data.add(key)
+
     def get_mapping(self, scalpel_key: str) -> List[str]:
         """
         Gives the mapping for the given Scalpel key.
@@ -300,6 +311,7 @@ class CampaignParserListener:
         """
         Notifies this listener that a new campaign is going to be parsed.
         """
+        logger.trace('starting to parse the campaign')
         self._campaign_builder = CampaignBuilder()
         self._current_builder = self._campaign_builder
 
@@ -321,11 +333,13 @@ class CampaignParserListener:
         self._commit_pending_keys()
         self._current_builder.check_if_complete()
         self._current_builder = None
+        logger.trace('campaign has been parsed')
 
     def start_experiment_ware(self) -> None:
         """
         Notifies this listener that a new experiment-ware is going to be parsed.
         """
+        logger.trace('starting to parse an experiment-ware')
         self._current_builder = self._campaign_builder.add_experiment_ware_builder()
 
     def end_experiment_ware(self) -> None:
@@ -336,11 +350,13 @@ class CampaignParserListener:
         self._commit_pending_keys()
         self._current_builder.check_if_complete()
         self._current_builder = self._campaign_builder
+        logger.trace('experiment-ware has been parsed')
 
     def start_input_set(self) -> None:
         """
         Notifies this listener that a new input set is going to be parsed.
         """
+        logger.trace('starting to parse an input-set')
         self._input_set_builder = self._campaign_builder.add_input_set_builder()
         self._current_builder = self._input_set_builder
 
@@ -368,11 +384,13 @@ class CampaignParserListener:
         self._current_builder.check_if_complete()
         self._input_set_builder = None
         self._current_builder = self._campaign_builder
+        logger.trace('input-set has been parsed')
 
     def start_input(self) -> None:
         """
         Notifies this listener that a new input is going to be parsed.
         """
+        logger.trace('starting to parse an input')
         self._current_builder = self._input_set_builder.add_input_builder()
 
     def end_input(self) -> None:
@@ -382,11 +400,13 @@ class CampaignParserListener:
         self._commit_pending_keys()
         self._current_builder.check_if_complete()
         self._current_builder = self._input_set_builder
+        logger.trace('input has been parsed')
 
     def start_experiment(self) -> None:
         """
         Notifies this listener that a new experiment is going to be parsed.
         """
+        logger.trace('starting to parse an experiment')
         self._current_builder = self._campaign_builder.add_experiment_builder()
         self._state = InExperimentCampaignParserListenerState(self)
         self._logged_keys.clear()
@@ -398,6 +418,7 @@ class CampaignParserListener:
         # Completing the missing values for the experiment.
         for key, value in self._default_values.items():
             if key not in self._logged_keys:
+                logger.debug(f'using default value for {key}')
                 self.log_data(key, value)
         self._commit_pending_keys()
         self._current_builder.check_if_complete()
@@ -405,6 +426,7 @@ class CampaignParserListener:
         # Switching to the "out-of-experiment" state.
         self._current_builder = self._campaign_builder
         self._state = DefaultCampaignParserListenerState(self)
+        logger.trace('experiment has been parsed')
 
     def log_data(self, key: str, value: Any) -> None:
         """
@@ -415,6 +437,13 @@ class CampaignParserListener:
         :param key: The key identifying the read data.
         :param value: The value that has been read.
         """
+        # Checking whether the logged data is relevant.
+        if key in self._ignored_data:
+            logger.trace(f'ignoring {value} for {key}')
+            return
+
+        # Saving the logged data.
+        logger.trace(f'{value} read for {key}')
         scalpel_key, nb_keys = self._key_mapping[key]
         read_values = self._pending_keys[scalpel_key]
         read_values[key] = str(value)
@@ -431,6 +460,7 @@ class CampaignParserListener:
         :param read_values: The values that have been read for the key.
         """
         if self._key_mapping[scalpel_key][0] == scalpel_key:
+            logger.trace(f'validating {scalpel_key}')
             if len(read_values.keys()) == 1 and scalpel_key in read_values.keys():
                 self._state.log_data(self._current_builder, scalpel_key, [scalpel_key], read_values)
                 self._logged_keys.add(scalpel_key)
@@ -439,6 +469,7 @@ class CampaignParserListener:
                 self._state.log_data(self._current_builder, scalpel_key, sub_keys, read_values)
                 self._logged_keys.add(scalpel_key)
         else:
+            logger.trace(f'remapping {scalpel_key}')
             sub_keys = self._key_mapping.get_sorted_keys(scalpel_key)
             value = ' '.join('' if read_values.get(v) is None else read_values.get(v) for v in sub_keys)
             self.log_data(scalpel_key, value)
@@ -455,7 +486,7 @@ class CampaignParserListener:
 
         # Otherwise, we commit the remaining keys, and warn the user.
         for key, value in self._pending_keys.items():
-            warn(f'Logging incomplete value for "{key}": {value}')
+            logger.warning(f'logging incomplete value for "{key}": {value}')
             self._commit_key(key, value)
         self.log_data('incomplete', True)
         self._pending_keys.clear()

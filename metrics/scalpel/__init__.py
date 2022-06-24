@@ -41,16 +41,16 @@ from metrics.scalpel.listener import CampaignParserListener
 
 from metrics.scalpel.config import read_configuration, ScalpelConfiguration
 from metrics.scalpel.parser import create_parser
-from metrics.scalpel.utils.logging import configure_logger
+from metrics.scalpel.utils import configure_logger
 
 
 def read_campaign(input_file: str,
-                  log_level: str = 'ERROR') -> Tuple[Campaign, Optional[ScalpelConfiguration]]:
+                  log_level: str = 'WARNING') -> Tuple[Campaign, Optional[ScalpelConfiguration]]:
     """
     Reads the data about a campaign based on the given input file.
 
     :param input_file: The input file describing the campaign.
-    :param log_level: The level for logging parsing events.
+    :param log_level: The minimum level for the events to log while parsing the campaign.
 
     :return: The read campaign and the configuration of this campaign, if any.
 
@@ -66,14 +66,14 @@ def read_campaign(input_file: str,
 
 
 def read_yaml(yaml_configuration: str,
-              log_level: str = 'ERROR') -> Tuple[Campaign, ScalpelConfiguration]:
+              log_level: str = 'WARNING') -> Tuple[Campaign, ScalpelConfiguration]:
     """
     Reads the data about a campaign following the configuration described in
     the given YAML file.
 
     :param yaml_configuration: The path of the YAML file describing Scalpel's
                                configuration.
-    :param log_level: The level for logging parsing events.
+    :param log_level: The minimum level for the events to log while parsing the campaign.
 
     :return: The read campaign and the configuration of this campaign.
     """
@@ -98,8 +98,8 @@ def read_json(json_file: str) -> Campaign:
         return load_json(json_campaign.read())
 
 
-def read_object(yaml_configuration: str,
-                campaign: Iterable[Any]) -> Tuple[Campaign, ScalpelConfiguration]:
+def read_object(yaml_configuration: str, campaign: Iterable[Any],
+                log_level: str = 'WARNING') -> Tuple[Campaign, ScalpelConfiguration]:
     """
     Reads the data stored in the given iterable object following the
     configuration described in the given YAML file.
@@ -110,9 +110,11 @@ def read_object(yaml_configuration: str,
                      an experiment, and must define an "items()" method returning a set of
                      key-value pairs (such as dictionaries or rows in a data-frame,
                      for instance).
+    :param log_level: The minimum level for the events to log while parsing the campaign.
 
     :return: The read campaign and the configuration of this campaign.
     """
+    configure_logger(log_level)
     parser_listener = CampaignParserListener()
     configuration = read_configuration(yaml_configuration, parser_listener)
     for experiment in campaign:
