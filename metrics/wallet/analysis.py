@@ -770,7 +770,7 @@ def _compute_scores(df, default_solver, score_map):
         def_s = df[df.experiment_ware == default_solver].iloc[0]
 
         for col in score_map:
-            df[f'{col}_less_def'] = df[col] - def_s[col]
+            df[f'{col}_minus_def'] = df[col] - def_s[col]
 
     return df
 
