@@ -665,7 +665,9 @@ def default_explode(df, samp, objective):
         while i < len(samp) and times[j] > samp[i]:
             d2 = d.copy()
             d2[EXPERIMENT_STATUS] = d2[EXPERIMENT_STATUS] if d2[EXPERIMENT_CPU_TIME] < samp[i] else 'INCOMPLETE'
-            d2[SUCCESS_COL] = d2[EXPERIMENT_STATUS] == 'COMPLETE'
+            if SUCCESS_COL not in d2:
+                d2[SUCCESS_COL] = True
+            d2[SUCCESS_COL] = d2[SUCCESS_COL] and d2[EXPERIMENT_STATUS] == 'COMPLETE'
             d2[EXPERIMENT_CPU_TIME] = times[j - 1] if j - 1 >= 0 else samp[i]
             d2[TIMEOUT_COL] = samp[i]
             d2[EXPERIMENT_BEST_BOUND] = bounds[j - 1] if j - 1 >= 0 else None
