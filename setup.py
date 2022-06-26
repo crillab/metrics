@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Metrics - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2022 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #                                                                             #
 #  This program is free software: you can redistribute it and/or modify it    #
@@ -44,8 +44,7 @@ def readme() -> str:
 
 def requirements() -> List[str]:
     """
-    Reads the requirements file of the project to use its content to determine
-    the dependencies of the package.
+    Gives the list of the dependencies of the package.
 
     :return: The dependencies of Metrics.
     """
@@ -53,13 +52,15 @@ def requirements() -> List[str]:
         'crillab-autograph',
         'dash-bootstrap-components',
         'deprecated',
+        'jinja2',
         'jsonpickle',
+        'loguru',
         'myst-parser',
         'pandas',
+        'pyfiglet',
         'pyparsing',
-        'tenacity',
         'pyyaml',
-        'loguru'
+        'tenacity'
     ]
 
 
@@ -73,6 +74,8 @@ setup(
         'metrics.scalpel.config',
         'metrics.scalpel.parser',
         'metrics.scalpel.utils',
+        'metrics.studio',
+        'metrics.templates',
         'metrics.wallet',
         'metrics'
     ],
@@ -91,18 +94,21 @@ setup(
     test_suite='nose.collector',
     tests_require=['nose'],
 
-    # scripts=[
-    #     'bin/metrics-scalpel',
-    # ],
+    scripts=[
+        'bin/metrics',
+    ],
 
     classifiers=[
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent'
     ],
     license=metrics.__license__,
 
+    package_data={
+        'metrics.templates': ['gitignore', '*.ipynb', '*.md', '*.txt', '*.yml']
+    },
     include_package_data=True,
     zip_safe=False
 )

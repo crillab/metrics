@@ -6,7 +6,8 @@ from metrics.wallet import BasicAnalysis
 
 class TestReadConfigurationBug(TestCase):
     def setUp(self) -> None:
-        self._example_dir = 'example/'
+        dirname = os.path.dirname(__file__)
+        self._example_dir = os.path.join(dirname, '..', 'data')
 
     def test_bug_gitlab_38(self):
         analysis = BasicAnalysis(

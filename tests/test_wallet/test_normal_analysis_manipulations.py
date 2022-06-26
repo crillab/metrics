@@ -1,4 +1,5 @@
 import re
+import os
 import unittest
 
 from metrics.core.constants import *
@@ -10,14 +11,17 @@ class NormalAnalysisManipulationTestCase(unittest.TestCase):
     def setUp(self) -> None:
         inconsistent_returns = {'ERR WRONGCERT', 'ERR UNSAT'}
         successful_returns = {'SAT', 'UNSAT'}
+        dirname = os.path.dirname(__file__)
+        self._example_dir = os.path.join(dirname, '..', 'data')
 
         self.analysis = DecisionAnalysis(
-            input_file='data/xcsp19/full_analysis/config/metrics_scalpel_full_paths.yml'
+            input_file=f'{self._example_dir}/xcsp19/full_analysis/config/metrics_scalpel_full_paths.yml'
         )
 
         self.analysis.check_input_consistency(
             lambda df: len(set(df['Checked answer'].unique()) & successful_returns) < 2)
         self.analysis.check_xp_consistency(lambda x: not x['Checked answer'] in inconsistent_returns)
+
 
     def test_builded_analysis(self):
         self.assertEqual(15600, len(self.analysis.data_frame))
@@ -101,7 +105,7 @@ class NormalAnalysisManipulationTestCase(unittest.TestCase):
         self.assertEqual(600, len(self.analysis.inputs))
 
     def test_export(self):
-        file = 'data/xcsp19/full_analysis/analysis.csv'
+        file = f'{self._example_dir}/xcsp19/full_analysis/analysis.csv'
         self.analysis.export(file)
         analysis = import_analysis_from_file(file)
 

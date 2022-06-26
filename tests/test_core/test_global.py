@@ -9,7 +9,7 @@ class MyTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '../../data/xcsp17.json')
+        filename = os.path.join(dirname, '../data/xcsp17.json')
         jr = JsonReader(filename)
         self.campaign = jr.campaign
 

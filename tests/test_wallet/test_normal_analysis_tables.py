@@ -3,16 +3,18 @@ import unittest
 
 from metrics.core.constants import *
 from metrics.wallet import BasicAnalysis, find_best_cpu_time_input, import_analysis_from_file, DecisionAnalysis
-
+import os
 
 class NormalAnalysisTablesTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         inconsistent_returns = {'ERR WRONGCERT', 'ERR UNSAT'}
         successful_returns = {'SAT', 'UNSAT'}
+        dirname = os.path.dirname(__file__)
+        self._example_dir = os.path.join(dirname, '..', 'data')
 
         self.analysis = DecisionAnalysis(
-            input_file='data/xcsp19/full_analysis/config/metrics_scalpel_full_paths.yml'
+            input_file=f'{self._example_dir}/xcsp19/full_analysis/config/metrics_scalpel_full_paths.yml'
         )
 
         self.analysis.check_input_consistency(

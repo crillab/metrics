@@ -1,10 +1,12 @@
 crillab-autograph
 dash-bootstrap-components
 deprecated
+jinja2
 jsonpickle
 loguru
 myst-parser
 pandas
+pyfiglet
 pyparsing
-tenacity
 pyyaml
+tenacity

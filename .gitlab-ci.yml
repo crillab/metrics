@@ -1,28 +1,31 @@
+# System configuration.
 before_script:
   - export http_proxy=$HTTP_PROXY
   - export https_proxy=$HTTP_PROXY
 
+# Run the tests with coverage.
 test:
-    script:
-        - rm -rf venv
-        - python3 -m venv venv
-        - source venv/bin/activate
-        - pip install -r requirements.txt
-        - pip install coverage
-        - make test
-    tags:
-        - pytest
-    stage: test
+  stage: test
+  script:
+    - rm -rf venv
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - pip install coverage
+    - make test
+  tags:
+    - pytest
 
+# Execute the SonarCloud analysis.
 sonar:
-    script:
-        - rm -rf venv
-        - python3 -m venv venv
-        - source venv/bin/activate
-        - pip install -r requirements.txt
-        - pip install coverage
-        - pip install pylint
-        - make sonar
-    tags:
-        - sonar
-    stage: test
+  stage: test
+  script:
+    - rm -rf venv
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - pip install coverage
+    - pip install pylint
+    - make sonar
+  tags:
+    - sonar

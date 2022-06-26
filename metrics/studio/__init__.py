@@ -1,8 +1,11 @@
 ###############################################################################
 #                                                                             #
-#  Metrics - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Studio - A Metrics Module                                                  #
+#  Copyright (c) 2019-2022 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
+#  mETRICS - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
+#  STUdIO - uSer inTerface for bUilding experIment repOrts                    #
+#                                                                             #
 #                                                                             #
 #  This program is free software: you can redistribute it and/or modify it    #
 #  under the terms of the GNU Lesser General Public License as published by   #
@@ -12,7 +15,7 @@
 #  This program is distributed in the hope that it will be useful, but        #
 #  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY #
 #  or FITNESS FOR A PARTICULAR PURPOSE.                                       #
-#  See the GNU General Public License for more details.                       #
+#  See the GNU Lesser General Public License for more details.                #
 #                                                                             #
 #  You should have received a copy of the GNU Lesser General Public License   #
 #  along with this program.                                                   #
@@ -20,24 +23,12 @@
 #                                                                             #
 ###############################################################################
 
-__all__ = [
-    '__title__',
-    '__summary__',
-    '__uri__',
-    '__version__',
-    '__author__',
-    '__email__',
-    '__license__',
-    '__copyright__',
-]
 
-__title__ = 'metrics'
-__summary__ = 'rEproducible sofTware peRformance analysIs in perfeCt Simplicity'
-__keywords__ = 'reproducible software performance analysis'
-__uri__ = 'https://github.com/crillab/metrics'
-__version__ = '1.2.0'
-__author__ = 'Thibault Falque, Romain Wallon, Hugues Wattez'
-__email__ = 'metrics@cril.fr'
+"""
+Metrics-Studio (STUdIO - uSer inTerface for bUilding experIment repOrts)
+provides convenient user interfaces for building experiment reports with Metrics,
+for instance using Jupyter Notebooks.
+"""
 
-__license__ = 'LGPLv3+'
-__copyright__ = '2019-2022 - Univ Artois & CNRS, Exakis Nelite'
+
+from metrics.studio.report import ReportBuilder

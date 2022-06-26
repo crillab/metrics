@@ -2,7 +2,7 @@ import unittest
 
 from metrics.core.constants import ERROR_COL
 from metrics.wallet import *
-
+import os
 
 class ProblematicAnalysisTestCase(unittest.TestCase):
 
@@ -10,9 +10,11 @@ class ProblematicAnalysisTestCase(unittest.TestCase):
     def setUpClass(cls):
         inconsistent_returns = {'ERR WRONGCERT', 'ERR UNSAT'}
         successful_returns = {'SAT', 'UNSAT'}
+        dirname = os.path.dirname(__file__)
+        example_dir = os.path.join(dirname, '..', 'data')
 
         cls.analysis = DecisionAnalysis(
-            input_file='data/xcsp19/problematic_analysis/config/metrics_scalpel_full_paths.yml'
+            input_file=f'{example_dir}/xcsp19/problematic_analysis/config/metrics_scalpel_full_paths.yml'
         )
 
         cls.analysis.check_success(lambda x: x['Checked answer'] in successful_returns)
