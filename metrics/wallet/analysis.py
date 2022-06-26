@@ -32,10 +32,10 @@ import pickle
 import warnings
 from typing import List
 
-from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot
+from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot, BarPlot
 
 from pandas import DataFrame
-from itertools import product
+from itertools import product, combinations
 import pandas as pd
 from deprecated import deprecated
 from types import SimpleNamespace
@@ -510,6 +510,18 @@ class BasicAnalysis:
             xpw[i + 1:]
         ]
 
+    def all_xp_ware_combination_analysis(self) -> List[BasicAnalysis]:
+        """
+
+        @return: all the analysis combinations (of each combination of experiment-wares)
+        """
+
+        return [
+            self.keep_experiment_wares(xpws)
+            for i in range(2, len(self.experiment_wares) + 1)
+            for xpws in combinations(self.experiment_wares, i)
+        ]
+
     def all_xp_ware_pair_analysis(self) -> List[BasicAnalysis]:
         """
 
@@ -637,11 +649,11 @@ def _make_list(l):
 
 
 def default_explode(df, samp, objective):
-    d = df.iloc[0].to_dict()
-    times = _make_list(d.pop('timestamp_list'))
-    bounds = _make_list(d.pop('bound_list'))
+    d: dict = df.iloc[0].to_dict()
+    times = _make_list(d.pop(EXPERIMENT_TIMESTAMP_LIST))
+    bounds = _make_list(d.pop(EXPERIMENT_BOUND_LIST))
 
-    if objective(d.pop('objective', None)):
+    if objective(d.pop(EXPERIMENT_OBJECTIVE, None)):
         bounds = [-x for x in bounds]
 
     if len(bounds) != len(times):
@@ -652,19 +664,21 @@ def default_explode(df, samp, objective):
     for j in range(len(bounds)):
         while i < len(samp) and times[j] > samp[i]:
             d2 = d.copy()
-            d2['status'] = d2['status'] if d2['cpu_time'] < samp[i] else 'INCOMPLETE'
-            d2['success'] = d2['status'] == 'COMPLETE'
-            d2['cpu_time'] = times[j - 1] if j - 1 >= 0 else samp[i]
-            d2['timeout'] = samp[i]
-            d2['best_bound'] = bounds[j - 1] if j - 1 >= 0 else None
+            d2[EXPERIMENT_STATUS] = d2[EXPERIMENT_STATUS] if d2[EXPERIMENT_CPU_TIME] < samp[i] else 'INCOMPLETE'
+            if SUCCESS_COL not in d2:
+                d2[SUCCESS_COL] = True
+            d2[SUCCESS_COL] = d2[SUCCESS_COL] and d2[EXPERIMENT_STATUS] == 'COMPLETE'
+            d2[EXPERIMENT_CPU_TIME] = times[j - 1] if j - 1 >= 0 else samp[i]
+            d2[TIMEOUT_COL] = samp[i]
+            d2[EXPERIMENT_BEST_BOUND] = bounds[j - 1] if j - 1 >= 0 else None
             l.append(d2)
             i += 1
 
     for j in range(i, len(samp)):
         d2 = d.copy()
-        d2['cpu_time'] = times[-1] if len(times) > 0 else samp[j]
-        d2['timeout'] = samp[j]
-        d2['best_bound'] = bounds[-1] if len(times) > 0 else None
+        d2[EXPERIMENT_CPU_TIME] = times[-1] if len(times) > 0 else samp[j]
+        d2[TIMEOUT_COL] = samp[j]
+        d2[EXPERIMENT_BEST_BOUND] = bounds[-1] if len(times) > 0 else None
         l.append(d2)
 
     return pd.DataFrame(l)
@@ -771,7 +785,7 @@ def _compute_scores(df, default_solver, score_map):
         def_s = df[df.experiment_ware == default_solver].iloc[0]
 
         for col in score_map:
-            df[f'{col}_less_def'] = df[col] - def_s[col]
+            df[f'{col}_minus_def'] = df[col] - def_s[col]
 
     return df
 
@@ -824,6 +838,12 @@ class OptiAnalysis(BasicAnalysis):
             self._data_frame = data_frame
         else:
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
+        columns = set(self._data_frame.columns)
+        expected_columns = {EXPERIMENT_OBJECTIVE, EXPERIMENT_STATUS, EXPERIMENT_BOUND_LIST, EXPERIMENT_TIMESTAMP_LIST,
+                            EXPERIMENT_CPU_TIME}
+        missing = expected_columns - columns
+        if missing:
+            raise ValueError(f'Some columns are missing: {missing}')
 
     def _explode_experiments(self, func, samp, objective):
         self.apply_on_groupby(
@@ -914,6 +934,15 @@ def _make_cactus_plot_df(analysis, cumulated, cactus_col):
     return df_cactus.cumsum() if cumulated else df_cactus
 
 
+def _compute_performance_ratio(df, row, vbew_name):
+    time_vbew = df[(df[EXPERIMENT_INPUT] == row[EXPERIMENT_INPUT]) & (df[EXPERIMENT_XP_WARE] == vbew_name)][
+        EXPERIMENT_CPU_TIME]
+    if len(time_vbew) > 0:
+        return row[EXPERIMENT_CPU_TIME] / \
+               time_vbew.iloc[0]
+    return None
+
+
 def _make_scatter_plot_df(analysis, xp_ware_x, xp_ware_y, scatter_col, color_col=None):
     df = analysis.keep_experiment_wares({xp_ware_x, xp_ware_y}).data_frame
     df = df[df[SUCCESS_COL]]
@@ -974,7 +1003,12 @@ class DecisionAnalysis(BasicAnalysis):
         else:
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
 
-        # test if the naalysis is in conformity
+        # test if the analysis is in conformity
+        columns = set(self._data_frame.columns)
+        expected_columns = {EXPERIMENT_CPU_TIME}
+        missing = expected_columns - columns
+        if missing:
+            raise ValueError(f'Some columns are missing: {missing}')
 
     def stat_table(self, par=[1, 2, 10], **kwargs):
         """
@@ -1003,7 +1037,7 @@ class DecisionAnalysis(BasicAnalysis):
             **kwargs
         )
 
-    def contribution_table(self, deltas=[1, 10, 100], **kwargs):
+    def contribution_table(self, deltas=[1, 10, 100], contribution=True, **kwargs):
         """
         The contribution table allows to show the contribution of each experiment-ware: a
         contribution corresponds to
@@ -1023,14 +1057,24 @@ class DecisionAnalysis(BasicAnalysis):
         for delta in deltas:
             sub = contrib_raw[(contrib_raw['second_time'] - contrib_raw.cpu_time) >= delta]
             contrib[f'vbew {delta}s'] = sub.groupby(EXPERIMENT_XP_WARE).cpu_time.count()
-
-        contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
-
+        sort_columns = ['vbew simple']
+        sort_order = [False]
+        if contribution:
+            contrib['contribution'] = contrib_raw.groupby(EXPERIMENT_XP_WARE).unique.sum()
+            sort_columns.append('contribution')
+            sort_order.append(False)
         return export_data_frame(
-            data_frame=contrib.fillna(0).astype(int).sort_values(['vbew simple', 'contribution'],
-                                                                 ascending=[False, False]),
+            data_frame=contrib.fillna(0).astype(int).sort_values(sort_columns,
+                                                                 ascending=sort_order),
             **kwargs
         )
+
+    def marginal_contribution(self, **kwargs: dict):
+        df = self.contribution_table(contribution=False)
+        df['experiment_ware'] = df.index
+        plot = BarPlot(df, 'experiment_ware', 'vbew simple', **kwargs)
+        plot.save()
+        return plot.show()
 
     def cactus_plot(self, cumulated=False, cactus_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
         """
@@ -1073,6 +1117,12 @@ class DecisionAnalysis(BasicAnalysis):
         plot.save()
 
         return plot.show()
+
+    def performance_profile(self, vbew_name, **kwargs: dict):
+        df_solved = self.data_frame[self.data_frame[SUCCESS_COL]]
+        local_analysis = self.add_variable('performance_ratio',
+                                           lambda row: _compute_performance_ratio(df_solved, row, vbew_name))
+        return local_analysis.cdf_plot(cdf_col='performance_ratio', **kwargs)
 
     def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME,
                      **kwargs):
