@@ -1,7 +1,0 @@
-name: solnon
-setup:
-  timeout: 1000
-  memout: 8000000
-source:
-  path: example/solnon/res.csv
-  format: reverse-csv

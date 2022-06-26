@@ -7,7 +7,7 @@
 ## Description of the environment
 
 The experiments presented here have been run on computers running {{ os }},
-and equipped with {{ cpu }} and {{ ram }} of RAM.
+and equipped with {{ cpu }} as CPU and {{ ram }} of RAM.
 
 The CPU time was limited to {{ timeout }} and the memory limit was
 set to {{ memout }}.

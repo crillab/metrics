@@ -31,6 +31,7 @@ Notebooks templates.
 
 
 import os
+
 from typing import Any, Dict
 
 from jinja2 import Environment, PackageLoader
@@ -43,7 +44,7 @@ class ReportBuilder:
     files needed to build the report for a campaign.
     """
 
-    def __init__(self, root_dir: str = '.'):
+    def __init__(self, root_dir: str = '.') -> None:
         """
         Creates a new report builder.
 
@@ -53,14 +54,23 @@ class ReportBuilder:
         self._template_vars = {}
         self._env = Environment(loader=PackageLoader('metrics'), autoescape=select_autoescape())
 
-    def create_directories(self):
+    def create_directories(self) -> None:
         """
         Creates the directories needed for the report.
         """
+        if not os.path.exists(self._root_dir):
+            os.mkdir(self._root_dir)
+
         for name in ('config', 'experiment_wares', 'experiments', 'input_set'):
             path = os.path.join(self._root_dir, name)
             if not os.path.exists(path):
                 os.mkdir(path)
+
+    def install(self) -> None:
+        """
+        Installs Metrics' dependencies in the current environment.
+        """
+        os.system('pip3 install crillab-metrics jupyter')
 
     def git_init(self) -> None:
         """
@@ -69,20 +79,20 @@ class ReportBuilder:
         os.system(f'git init "{self._root_dir}"')
         self._write_template('gitignore', '.gitignore')
 
-    def add_readme(self):
+    def add_readme(self) -> None:
         """
         Adds a README file to the report.
         """
         self._write_template('README.md', 'README.md')
 
-    def add_requirements(self):
+    def add_requirements(self) -> None:
         """
         Adds the requirements file to the report (i.e., the file listing all the dependencies
         that should be installed to execute the report).
         """
         self._write_template('requirements.txt', 'requirements.txt')
 
-    def add_scalpel_config(self, config_name: str = 'scalpel_config'):
+    def add_scalpel_config(self, config_name: str = 'scalpel_config') -> None:
         """
         Adds Scalpel's configuration to the report.
 
@@ -90,7 +100,7 @@ class ReportBuilder:
         """
         self._write_template('scalpel_config.yml', os.path.join('config', f'{config_name}.yml'))
 
-    def add_load_experiments(self, notebook_name: str = 'load_experiments'):
+    def add_load_experiments(self, notebook_name: str = 'load_experiments') -> None:
         """
         Adds the Jupyter Notebook allowing to load experiment data from the campaign.
 
@@ -98,7 +108,7 @@ class ReportBuilder:
         """
         self._write_template('load_experiments.ipynb', f'{notebook_name}.ipynb')
 
-    def add_runtime_analysis(self, notebook_name: str = 'runtime_analysis'):
+    def add_runtime_analysis(self, notebook_name: str = 'runtime_analysis') -> None:
         """
         Adds the Jupyter Notebook allowing to perform a runtime analysis of the experiment-wares
         run during the campaign.
@@ -107,7 +117,7 @@ class ReportBuilder:
         """
         self._write_template('runtime_analysis.ipynb', f'{notebook_name}.ipynb')
 
-    def add_optim_analysis(self, notebook_name: str = 'optim_analysis'):
+    def add_optim_analysis(self, notebook_name: str = 'optim_analysis') -> None:
         """
         Adds the Jupyter Notebook allowing to perform an optimization analysis of the
         experiment-wares run during the campaign.
@@ -116,7 +126,7 @@ class ReportBuilder:
         """
         self._write_template('optim_analysis.ipynb', f'{notebook_name}.ipynb')
 
-    def _write_template(self, template_name: str, output_file: str):
+    def _write_template(self, template_name: str, output_file: str) -> None:
         """
         Writes a report file following a template.
 

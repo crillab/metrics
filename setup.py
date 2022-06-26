@@ -1,7 +1,7 @@
 ###############################################################################
 #                                                                             #
 #  Metrics - rEproducible sofTware peRformance analysIs in perfeCt Simplicity #
-#  Copyright (c) 2019-2020 - Univ Artois & CNRS, Exakis Nelite                #
+#  Copyright (c) 2019-2022 - Univ Artois & CNRS, Exakis Nelite                #
 #  -------------------------------------------------------------------------- #
 #                                                                             #
 #  This program is free software: you can redistribute it and/or modify it    #
@@ -99,7 +99,7 @@ setup(
     ],
 
     classifiers=[
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent'

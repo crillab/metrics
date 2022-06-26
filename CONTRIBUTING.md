@@ -17,7 +17,7 @@ personal configuration file on this repository.
 In this project, we try to follow development best practices.
 
 Because this requires to execute many different tasks, we have gathered them
-all in a `Makefile` to make easier their execution.
+in a `Makefile` to make easier their execution.
 The available targets are described below.
 
 #### Unit Tests
@@ -64,7 +64,7 @@ The report will be uploaded to the SonarQube instance specified to
 
 #### PyPI Targets
 
-**This section is intended for *Metrics-Scalpel's* developers only.**
+**This section is intended for *Metrics'* developers only.**
 
 The `metrics` module is available on [PyPI](https://pypi.org), and
 managed with [`setuptools`](https://pypi.org/project/setuptools/).
@@ -90,7 +90,7 @@ make upload
 
 ## Introducing New Features
 
-When using *Metrics-Scalpel*, you may miss some features.
+When using *Metrics*, you may miss some features.
 You can submit a *feature request* or a *merge request* for them.
 
 Note that new features have to be useful for most of the users, and should not
@@ -139,8 +139,8 @@ the features while rejecting others.
 
 ## Bug Fixing
 
-While using *Metrics-Scalpel*, you may find bugs that you may want to either
-*report* or *fix*.
+While using *Metrics*, you may find bugs that you may want to either *report*
+or *fix*.
 
 ### Reporting a Bug
 

@@ -6,7 +6,8 @@ from metrics.scalpel import CampaignParserListener, read_configuration
 
 class TestReadConfiguration(TestCase):
     def setUp(self) -> None:
-        self._example_dir = 'example/'
+        dirname = os.path.dirname(__file__)
+        self._example_dir = os.path.join(dirname, '..', 'data')
 
     def test_sat_competition(self) -> None:
         parser_listener = CampaignParserListener()

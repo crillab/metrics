@@ -1,4 +1,5 @@
 import re
+import os
 import unittest
 
 from autograph.core.enumstyle import LineType, Position, FontWeight
@@ -12,9 +13,11 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
     def setUp(self) -> None:
         inconsistent_returns = {'ERR WRONGCERT', 'ERR UNSAT'}
         successful_returns = {'SAT', 'UNSAT'}
+        dirname = os.path.dirname(__file__)
+        self._example_dir = os.path.join(dirname, '..', 'data')
 
         self.analysis = DecisionAnalysis(
-            input_file='data/xcsp19/full_analysis/config/metrics_scalpel_full_paths.yml'
+            input_file=f'{self._example_dir}/xcsp19/full_analysis/config/metrics_scalpel_full_paths.yml'
         )
 
         self.analysis.check_input_consistency(
@@ -73,7 +76,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
 
             # Others
             latex_writing=True,
-            output="data/xcsp19/full_analysis/output/cactus.pdf",
+            output=f"{self._example_dir}/xcsp19/full_analysis/output/cactus.pdf",
             dynamic=False
         )
 
@@ -121,7 +124,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
 
             # Others
             latex_writing=False,
-            output="data/xcsp19/full_analysis/output/cactus2.pdf",
+            output=f"{self._example_dir}/xcsp19/full_analysis/output/cactus2.pdf",
             dynamic=False
         )
 
@@ -177,7 +180,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
 
             # Others
             latex_writing=True,
-            output="data/xcsp19/full_analysis/output/cdf.pdf",
+            output=f"{self._example_dir}/xcsp19/full_analysis/output/cdf.pdf",
             dynamic=False
         )
 
@@ -227,7 +230,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
 
             # Others
             latex_writing=True,
-            output="data/xcsp19/full_analysis/output/scatter.pdf",
+            output=f"{self._example_dir}/xcsp19/full_analysis/output/scatter.pdf",
             dynamic=False
         )
 
@@ -268,7 +271,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
 
             # Others
             latex_writing=True,
-            output="data/xcsp19/full_analysis/output/box.pdf",
+            output=f"{self._example_dir}/xcsp19/full_analysis/output/box.pdf",
             dynamic=False
         )
 
@@ -318,7 +321,7 @@ class NormalAnalysisPlotsTestCase(unittest.TestCase):
 
             # Others
             latex_writing=False,
-            output="data/xcsp19/full_analysis/output/box_by_family.pdf",
+            output=f"{self._example_dir}/xcsp19/full_analysis/output/box_by_family.pdf",
             dynamic=False
         )
 

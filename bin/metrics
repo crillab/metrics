@@ -91,7 +91,7 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
 
     # Registering options for generating documents.
     parser.add_argument('--requirements', help='flag for adding the requirements file', action='store_true')
-    parser.add_argument('--readme', help='flag for adding a README file', action='store_true')
+    parser.add_argument('--readme', help='flag for adding the README file', action='store_true')
     parser.add_argument('--scalpel-config', help='flag for adding the Scalpel configuration file', action='store_true')
     parser.add_argument('--config-file', help='the name for the Scalpel configuration file', default='scalpel_config')
     parser.add_argument('--load', help='flag for adding the loading notebook', action='store_true')
@@ -101,7 +101,10 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     parser.add_argument('--optimization', help='flag for adding the optimization notebook', action='store_true')
     parser.add_argument('--optimization-notebook', help='the name for the optimization notebook', default='optim_analysis')
 
-    # Registering options for initializing a git repository.
+    # Registering the option for installing Metrics' dependencies.
+    parser.add_argument('--install', help="flag for installing Metrics' dependencies", action='store_true')
+
+    # Registering the option for initializing a git repository.
     parser.add_argument('--git', help='flag for initializing a git repository', action='store_true')
 
     return parser, vars(parser.parse_args())
@@ -115,7 +118,7 @@ def print_header() -> None:
     print(figlet.renderText('Metrics'))
 
 
-def display_help(parser: ArgumentParser):
+def display_help(parser: ArgumentParser) -> None:
     """
     Displays the help of this script.
     """
@@ -123,7 +126,7 @@ def display_help(parser: ArgumentParser):
     parser.print_help()
 
 
-def version():
+def version() -> None:
     """
     Displays the current version of Metrics.
     """
@@ -134,7 +137,7 @@ def version():
     print('it under the terms of the GNU Lesser General Public License.')
 
 
-def init(arguments: Dict[str, Any]):
+def init(arguments: Dict[str, Any]) -> None:
     """
     Initializes a new report directory.
     """
@@ -149,6 +152,8 @@ def init(arguments: Dict[str, Any]):
 
         # Creating the report files.
         report.create_directories()
+        if arguments['install']:
+            report.install()
         if arguments['git']:
             report.git_init()
         if arguments['readme']:
