@@ -66,9 +66,9 @@ input-set:
   name: sat-race-2019
   type: file
   files:
-    - ../data/sat-competition/input/data/sat2019.input
+    - tests/data/sat-competition/input/data/sat2019.input
 source:
-  path: ../data/sat-competition/input/data/sat2019.csv
+  path: tests/data/sat-competition/input/data/sat2019.csv
   is-success:
     - ${status} == 'complete'
     - ${result} in ['SAT-VERIFIED', 'UNSAT']

@@ -9,7 +9,7 @@ setup:
   memout: 16384
 
 source:
-  path: ../data/xcsp19/problematic_analysis/input/XCSP19.txt
+  path: tests/data/xcsp19/problematic_analysis/input/XCSP19.txt
   format: evaluation
   is-success:
     - ${Checked answer} in ["SAT", "UNSAT"]

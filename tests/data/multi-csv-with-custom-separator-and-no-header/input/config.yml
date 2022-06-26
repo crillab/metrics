@@ -13,8 +13,8 @@ source:
   separator: ' '
   has-header: false
   path:
-    - ../data/multi-csv-with-custom-separator-and-no-header/input/data/glu.txt
-    - ../data/multi-csv-with-custom-separator-and-no-header/input/data/kissat.txt
+    - tests/data/multi-csv-with-custom-separator-and-no-header/input/data/glu.txt
+    - tests/data/multi-csv-with-custom-separator-and-no-header/input/data/kissat.txt
 data:
   file-name-meta:
     regex: (\w+)\.txt
