@@ -833,17 +833,17 @@ class OptiAnalysis(BasicAnalysis):
                 None if basic_analysis is None else basic_analysis.data_frame,
                 log_level
             )
+            columns = set(self._data_frame.columns)
+            expected_columns = {EXPERIMENT_OBJECTIVE, EXPERIMENT_STATUS, EXPERIMENT_BOUND_LIST, EXPERIMENT_TIMESTAMP_LIST,
+                                EXPERIMENT_CPU_TIME}
+            missing = expected_columns - columns
+            if missing:
+                raise ValueError(f'Some columns are missing: {missing}')
             self._explode_experiments(func, samp, objective)
         elif data_frame is not None:
             self._data_frame = data_frame
         else:
             raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
-        columns = set(self._data_frame.columns)
-        expected_columns = {EXPERIMENT_OBJECTIVE, EXPERIMENT_STATUS, EXPERIMENT_BOUND_LIST, EXPERIMENT_TIMESTAMP_LIST,
-                            EXPERIMENT_CPU_TIME}
-        missing = expected_columns - columns
-        if missing:
-            raise ValueError(f'Some columns are missing: {missing}')
 
     def _explode_experiments(self, func, samp, objective):
         self.apply_on_groupby(
