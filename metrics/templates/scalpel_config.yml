@@ -45,9 +45,10 @@ data:
   file-name-meta:
     pattern:
     regex:
-    experiment_ware:
-    input:
-    exact:
+    groups:
+      experiment_ware:
+      input:
+      exact:
   raw-data:
     - log-data:
       pattern:

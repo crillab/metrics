@@ -177,7 +177,7 @@ class ScalpelConfigurationLoader:
         # Loading the limits set to the campaign.
         timeout = self._wrapper.get_time_out()
         self._listener.add_default_value(EXPERIMENT_CPU_TIME, timeout)
-        self._listener.log_data(CAMPAIGN_TIMEOUT, self._wrapper.get_time_out())
+        self._listener.log_data(CAMPAIGN_TIMEOUT, timeout)
         self._listener.log_data(CAMPAIGN_MEMOUT, self._wrapper.get_memory_out())
 
     def _load_experiment_wares(self) -> None:

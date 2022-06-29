@@ -294,12 +294,6 @@ class AttributeManagerSets:
             is_list=False, empty=False,
             nullable=False
         )
-        self._campaign_attr_set.add_attribute_manager_for_typing(
-            name=CAMPAIGN_MEMOUT,
-            ordered_typing=[TypingStrategyEnum.FLOAT],
-            is_list=False, empty=False,
-            nullable=False
-        )
         self._campaign_attr_set.add_attribute_manager_for_builder(
             name=CAMPAIGN_XP_WARES,
             builder_type=ExperimentWareBuilder,
