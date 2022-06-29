@@ -292,7 +292,7 @@ class ScalpelConfigurationWrapperSaverDecorator(IScalpelConfigurationWrapper):
 
     def get_raw_data(self) -> Iterable[IRawDataConfigurationWrapper]:
         self._dict_config['data']['raw-data'] = []
-        return [RawDataConfigurationWrapperSaverDecorator(d, self._dict_config['data']['raw_data'])
+        return [RawDataConfigurationWrapperSaverDecorator(d, self._dict_config['data']['raw-data'])
                 for d in self._decorated.get_raw_data()]
 
     def get_data_files(self) -> Iterable[IDataFileConfigurationWrapper]:

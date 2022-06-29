@@ -286,5 +286,5 @@ class BarPlot(Plot):
             self._legend(legend_location, legend_offset, ncol_legend)
 
         self._plot.barplot(
-            colx, coly,df
+            colx, coly, df
         )

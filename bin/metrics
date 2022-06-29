@@ -26,7 +26,6 @@
 This script automates the analysis of a campaign of experiments with Metrics.
 """
 
-
 from argparse import ArgumentParser
 from os import system
 from typing import Any, Dict, Tuple
@@ -34,13 +33,16 @@ from typing import Any, Dict, Tuple
 from pyfiglet import Figlet
 
 import metrics
+from metrics.scalpel import CampaignParserListener
+from metrics.scalpel.config import ScalpelConfigurationLoader
+from metrics.scalpel.config.configsaver import ScalpelConfigurationWrapperSaverDecorator
 
 from metrics.studio import ReportBuilder
-
 
 #############
 # FUNCTIONS #
 #############
+from metrics.studio.scalpelcli import CLIScalpelConfigurationWrapper
 
 
 def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
@@ -54,7 +56,7 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     # Registering the commands recognized by this script.
     parser.add_argument('command',
                         help='the Metrics command to execute',
-                        default='help', choices=['help', 'init', 'notebook', 'version'])
+                        default='help', choices=['help', 'init', 'notebook', 'scalpel', 'version'])
 
     # Registering the option used to display the help of the program.
     parser.add_argument('-h', '--help',
@@ -99,7 +101,8 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     parser.add_argument('--runtime', help='flag for adding the runtime notebook', action='store_true')
     parser.add_argument('--runtime-notebook', help='the name for the runtime notebook', default='runtime_analysis')
     parser.add_argument('--optimization', help='flag for adding the optimization notebook', action='store_true')
-    parser.add_argument('--optimization-notebook', help='the name for the optimization notebook', default='optim_analysis')
+    parser.add_argument('--optimization-notebook', help='the name for the optimization notebook',
+                        default='optim_analysis')
 
     # Registering the option for installing Metrics' dependencies.
     parser.add_argument('--install', help="flag for installing Metrics' dependencies", action='store_true')
@@ -179,6 +182,14 @@ def notebook(root_directory: str = '.') -> None:
     system(f'jupyter notebook --notebook-dir="{root_directory}"')
 
 
+def scalpel(scalpel_file):
+    print_header()
+    wrapper = ScalpelConfigurationWrapperSaverDecorator(CLIScalpelConfigurationWrapper(), scalpel_file)
+    scalpel_config = ScalpelConfigurationLoader(wrapper, CampaignParserListener())
+    scalpel_config.load()
+    wrapper.save()
+
+
 ################
 # MAIN PROGRAM #
 ################
@@ -206,5 +217,7 @@ if __name__ == '__main__':
         init(args)
     elif command == 'notebook':
         notebook(args['root_directory'])
+    elif command == 'scalpel':
+        scalpel(args['config_file'])
     elif command == 'version':
         version()

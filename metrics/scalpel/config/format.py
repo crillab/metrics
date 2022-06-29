@@ -28,7 +28,6 @@
 This module provides the enumerations representing the formats recognized by Scalpel.
 """
 
-
 from __future__ import annotations
 
 from enum import Enum
@@ -77,6 +76,10 @@ class FormatEnum(Enum):
             if identifier in fmt:
                 return fmt
         return None
+
+    @classmethod
+    def all_yaml_string(cls):
+        return [f._names[0] for f in cls]
 
 
 class InputSetFormat(FormatEnum):
