@@ -308,4 +308,4 @@ class ScalpelConfigurationWrapperSaverDecorator(IScalpelConfigurationWrapper):
 
     def save(self):
         with open(self._file, 'w') as outfile:
-            yaml.dump(self._dict_config, outfile, default_flow_style=False)
+            yaml.dump({k:v for k, v in self._dict_config.items()}, outfile, default_flow_style=False)
