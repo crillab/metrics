@@ -13,7 +13,7 @@ PACKAGE_NAME = crillab-metrics
 MODULE_NAME = metrics
 
 # The version of the package to build.
-VERSION = 1.2.1
+VERSION = 1.2.2
 
 # The directory of the unit tests for the package to build.
 TESTS = tests
