@@ -270,6 +270,7 @@ class BarPlot(Plot):
                  colx,
                  coly,
                  title=BAR_TITLE,
+                 x_axis_name=None,
                  y_axis_name=None,
                  legend_location=Position.RIGHT,
                  legend_offset=(0, 0),
@@ -280,6 +281,7 @@ class BarPlot(Plot):
 
         self._plot.title = title
 
+        self._plot.x_label = x_axis_name
         self._plot.y_label = y_axis_name
 
         if legend_location is not None:
