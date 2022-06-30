@@ -269,22 +269,24 @@ class BarPlot(Plot):
                  df,
                  colx,
                  coly,
+                 category=None,
                  title=BAR_TITLE,
                  x_axis_name=None,
                  y_axis_name=None,
                  legend_location=Position.RIGHT,
                  legend_offset=(0, 0),
                  ncol_legend=1,
+                 estimator=sum,
                  **kwargs
                  ):
         super().__init__(**kwargs)
 
+        self._plot.barplot(
+            colx, coly, df, category=category,estimator=estimator
+        )
+
         if legend_location is not None:
             self._legend(legend_location, legend_offset, ncol_legend)
-
-        self._plot.barplot(
-            colx, coly, df
-        )
 
         self._plot.title = title
         self._plot.x_label = x_axis_name

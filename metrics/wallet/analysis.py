@@ -540,6 +540,11 @@ class BasicAnalysis:
             **kwargs
         )
 
+    def barplot(self, x, y, color=None, **kwargs):
+        plot = BarPlot(self._data_frame, x, y, category=color, **kwargs)
+        plot.save()
+        return plot.show()
+
     def description_table(self, **kwargs):
         """
 
@@ -834,7 +839,8 @@ class OptiAnalysis(BasicAnalysis):
                 log_level
             )
             columns = set(self._data_frame.columns)
-            expected_columns = {EXPERIMENT_OBJECTIVE, EXPERIMENT_STATUS, EXPERIMENT_BOUND_LIST, EXPERIMENT_TIMESTAMP_LIST,
+            expected_columns = {EXPERIMENT_OBJECTIVE, EXPERIMENT_STATUS, EXPERIMENT_BOUND_LIST,
+                                EXPERIMENT_TIMESTAMP_LIST,
                                 EXPERIMENT_CPU_TIME}
             missing = expected_columns - columns
             if missing:
