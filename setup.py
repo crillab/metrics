@@ -52,6 +52,7 @@ def requirements() -> List[str]:
         'crillab-autograph',
         'dash-bootstrap-components',
         'deprecated',
+        'InquirerPy',
         'jinja2',
         'jsonpickle',
         'loguru',
