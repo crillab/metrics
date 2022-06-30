@@ -1,15 +1,13 @@
 from typing import List, Iterable, Dict, Optional
 
-from InquirerPy.base import Choice
-from InquirerPy.validator import PathValidator, EmptyInputValidator
+from InquirerPy.validator import EmptyInputValidator
 
-from metrics.core.constants import CAMPAIGN_NAME, CAMPAIGN_TIMEOUT, CAMPAIGN_MEMOUT
 from metrics.scalpel.config import CampaignFormat
 from metrics.scalpel.config.wrapper import IScalpelConfigurationWrapper, IDataFileConfigurationWrapper, \
     IRawDataConfigurationWrapper, IFileNameMetaConfigurationWrapper, IInputSetWrapper, \
     DictFileNameMetaConfigurationWrapper, DictRawDataConfigurationWrapper, DictDataFileConfigurationWrapper, \
     EmptyFileNameMetaConfigurationWrapper
-from InquirerPy import prompt, inquirer
+from InquirerPy import inquirer
 
 
 class CLIScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
@@ -69,7 +67,7 @@ class CLIScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
                 message="Enter the campaign path"
             ).execute()
             l.append(dest_path)
-            not_finish = inquirer.confirm(message="Another campaign path ?", default=False).execute()
+            not_finish = inquirer.confirm(message="Add another campaign path?", default=False).execute()
         self._campaign_path = l
         return l
 
@@ -115,7 +113,7 @@ class CLIScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
             if is_success == '':
                 break
             l.append(is_success)
-            not_finish = inquirer.confirm(message="Add and with another is_success function ?", default=False).execute()
+            not_finish = inquirer.confirm(message="Add another condition?", default=False).execute()
         return l
 
     def ask_key(self):
@@ -165,9 +163,9 @@ class CLIScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
                 key = self.ask_key()
                 while another_value:
                     l.append(self.ask_value())
-                    another_value = inquirer.confirm(message="Another value ?", default=False).execute()
+                    another_value = inquirer.confirm(message="Another value?", default=False).execute()
                 d[key] = l
-            not_finish = inquirer.confirm(message="Another key ?", default=False).execute()
+            not_finish = inquirer.confirm(message="Another key?", default=False).execute()
         return d
 
     def get_default_values(self) -> Dict[str, str]:
@@ -201,7 +199,7 @@ class CLIScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
                 validate=EmptyInputValidator(),
             ).execute()
             d['groups'][key] = int(group)
-            not_finish = inquirer.confirm(message="Another group ?", default=False).execute()
+            not_finish = inquirer.confirm(message="Another group?", default=False).execute()
         print("End group")
 
     def ask_expression(self):
@@ -233,7 +231,7 @@ class CLIScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
         not_finish = True
         while not_finish:
             list_raw_data.append(self.ask_raw_data())
-            not_finish = inquirer.confirm(message="Another raw data ?", default=False).execute()
+            not_finish = inquirer.confirm(message="Another raw data?", default=False).execute()
         return list_raw_data
 
     def ask_data_files(self) -> DictDataFileConfigurationWrapper | None:
@@ -253,11 +251,11 @@ class CLIScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
             if df is None:
                 break
             list_data_files.append(df)
-            not_finish = inquirer.confirm(message="Another raw data ?", default=False).execute()
+            not_finish = inquirer.confirm(message="Another raw data?", default=False).execute()
         return list_data_files
 
     def ask_for_add_part(self, message):
-        return inquirer.confirm(message=f"Do you want add {message} ?", default=False).execute()
+        return inquirer.confirm(message=f"Do you want add {message}?", default=False).execute()
 
     def get_ignored_files(self) -> List[str]:
         pass
