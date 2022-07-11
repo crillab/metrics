@@ -53,10 +53,74 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     """
     parser = ArgumentParser(prog=metrics.__name__, description=metrics.__summary__, add_help=False)
 
-    # Registering the commands recognized by this script.
-    parser.add_argument('command',
-                        help='the Metrics command to execute',
-                        default='help', choices=['help', 'init', 'notebook', 'scalpel', 'version'])
+    subparser = parser.add_subparsers(help="The commands recognized by this script.",
+                                      dest="command")
+
+    parser_command_init = subparser.add_parser("init", help="init command")
+
+    # Registering the option used to switch to the interactive mode.
+    parser_command_init.add_argument('-i', '--interactive',
+                                     help='switches to the interactive mode',
+                                     action='store_true')
+
+    # Registering the option used to specify the root directory for the report.
+    parser_command_init.add_argument('-d', '--root-directory',
+                                     help='specifies the root directory for the report',
+                                     default='.')
+
+    # Registering options about the metadata of the analysis.
+    parser_command_init.add_argument('--title', help='the title of the analysis')
+    parser_command_init.add_argument('--date', help='the date of the analysis')
+    parser_command_init.add_argument('--description', help='the description of the analysis')
+    parser_command_init.add_argument('--input-description', help='the description of the input set')
+    parser_command_init.add_argument('--xp-ware-description',
+                                     help='the description of the experiment-wares')
+
+    # Registering options about the environment used for the experiments.
+    parser_command_init.add_argument('--os', help='the description of the operating system')
+    parser_command_init.add_argument('--cpu', help='the description of the CPU')
+    parser_command_init.add_argument('--ram', help='the available RAM')
+    parser_command_init.add_argument('--timeout', help='the time limit')
+    parser_command_init.add_argument('--memout', help='the memory limit')
+
+    # Registering options for generating documents.
+    parser_command_init.add_argument('--requirements', help='flag for adding the requirements file',
+                                     action='store_true')
+    parser_command_init.add_argument('--readme', help='flag for adding the README file',
+                                     action='store_true')
+    parser_command_init.add_argument('--scalpel-config',
+                                     help='flag for adding the Scalpel configuration file',
+                                     action='store_true')
+    parser_command_init.add_argument('--config-file',
+                                     help='the name for the Scalpel configuration file',
+                                     default='scalpel_config')
+    parser_command_init.add_argument('--load', help='flag for adding the loading notebook',
+                                     action='store_true')
+    parser_command_init.add_argument('--load-notebook', help='the name for the loading notebook',
+                                     default='load_experiments')
+    parser_command_init.add_argument('--runtime', help='flag for adding the runtime notebook',
+                                     action='store_true')
+    parser_command_init.add_argument('--runtime-notebook', help='the name for the runtime notebook',
+                                     default='runtime_analysis')
+    parser_command_init.add_argument('--optimization',
+                                     help='flag for adding the optimization notebook',
+                                     action='store_true')
+    parser_command_init.add_argument('--optimization-notebook',
+                                     help='the name for the optimization notebook',
+                                     default='optim_analysis')
+
+    # Registering the option for installing Metrics' dependencies.
+    parser_command_init.add_argument('--install', help="flag for installing Metrics' dependencies",
+                                     action='store_true')
+
+    # Registering the option for initializing a git repository.
+    parser_command_init.add_argument('--git', help='flag for initializing a git repository',
+                                     action='store_true')
+
+    parser_command_notebook = subparser.add_parser("notebook", help="notebook command")
+    parser_command_scalpel = subparser.add_parser("scalpel", help="scalpel command")
+    parser_command_help = subparser.add_parser("help", help="help command")
+    parser_command_version = subparser.add_parser("version", help="version command")
 
     # Registering the option used to display the help of the program.
     parser.add_argument('-h', '--help',
@@ -67,48 +131,6 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     parser.add_argument('-v', '--version',
                         help='shows the version of Metrics being executed',
                         action='store_true')
-
-    # Registering the option used to switch to the interactive mode.
-    parser.add_argument('-i', '--interactive',
-                        help='switches to the interactive mode',
-                        action='store_true')
-
-    # Registering the option used to specify the root directory for the report.
-    parser.add_argument('-d', '--root-directory',
-                        help='specifies the root directory for the report',
-                        default='.')
-
-    # Registering options about the metadata of the analysis.
-    parser.add_argument('--title', help='the title of the analysis')
-    parser.add_argument('--date', help='the date of the analysis')
-    parser.add_argument('--description', help='the description of the analysis')
-    parser.add_argument('--input-description', help='the description of the input set')
-    parser.add_argument('--xp-ware-description', help='the description of the experiment-wares')
-
-    # Registering options about the environment used for the experiments.
-    parser.add_argument('--cpu', help='the description of the CPU')
-    parser.add_argument('--ram', help='the available RAM')
-    parser.add_argument('--timeout', help='the time limit')
-    parser.add_argument('--memout', help='the memory limit')
-
-    # Registering options for generating documents.
-    parser.add_argument('--requirements', help='flag for adding the requirements file', action='store_true')
-    parser.add_argument('--readme', help='flag for adding the README file', action='store_true')
-    parser.add_argument('--scalpel-config', help='flag for adding the Scalpel configuration file', action='store_true')
-    parser.add_argument('--config-file', help='the name for the Scalpel configuration file', default='scalpel_config')
-    parser.add_argument('--load', help='flag for adding the loading notebook', action='store_true')
-    parser.add_argument('--load-notebook', help='the name for the loading notebook', default='load_experiments')
-    parser.add_argument('--runtime', help='flag for adding the runtime notebook', action='store_true')
-    parser.add_argument('--runtime-notebook', help='the name for the runtime notebook', default='runtime_analysis')
-    parser.add_argument('--optimization', help='flag for adding the optimization notebook', action='store_true')
-    parser.add_argument('--optimization-notebook', help='the name for the optimization notebook',
-                        default='optim_analysis')
-
-    # Registering the option for installing Metrics' dependencies.
-    parser.add_argument('--install', help="flag for installing Metrics' dependencies", action='store_true')
-
-    # Registering the option for initializing a git repository.
-    parser.add_argument('--git', help='flag for initializing a git repository', action='store_true')
 
     return parser, vars(parser.parse_args())
 
@@ -184,7 +206,8 @@ def notebook(root_directory: str = '.') -> None:
 
 def scalpel(scalpel_file):
     print_header()
-    wrapper = ScalpelConfigurationWrapperSaverDecorator(CLIScalpelConfigurationWrapper(), scalpel_file)
+    wrapper = ScalpelConfigurationWrapperSaverDecorator(CLIScalpelConfigurationWrapper(),
+                                                        scalpel_file)
     scalpel_config = ScalpelConfigurationLoader(wrapper, CampaignParserListener())
     scalpel_config.load()
     wrapper.save()
