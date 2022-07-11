@@ -35,7 +35,7 @@ __title__ = 'metrics'
 __summary__ = 'rEproducible sofTware peRformance analysIs in perfeCt Simplicity'
 __keywords__ = 'reproducible software performance analysis'
 __uri__ = 'https://github.com/crillab/metrics'
-__version__ = '1.2.3'
+__version__ = '1.2.4'
 __author__ = 'Thibault Falque, Romain Wallon, Hugues Wattez'
 __email__ = 'metrics@cril.fr'
 
