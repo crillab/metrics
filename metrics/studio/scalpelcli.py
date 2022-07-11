@@ -234,7 +234,7 @@ class CLIScalpelConfigurationWrapper(IScalpelConfigurationWrapper):
             not_finish = inquirer.confirm(message="Another raw data?", default=False).execute()
         return list_raw_data
 
-    def ask_data_files(self) -> DictDataFileConfigurationWrapper | None:
+    def ask_data_files(self) -> Optional[DictDataFileConfigurationWrapper]:
         path = self.ask_path()
         if path == '':
             return None
