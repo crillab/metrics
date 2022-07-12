@@ -118,7 +118,15 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
                                      action='store_true')
 
     parser_command_notebook = subparser.add_parser("notebook", help="notebook command")
+    parser_command_notebook.add_argument('-d', '--root-directory',
+                                         help='specifies the root directory for the report',
+                                         default='.')
+
     parser_command_scalpel = subparser.add_parser("scalpel", help="scalpel command")
+    parser_command_scalpel.add_argument('--config-file',
+                                        help='the name for the Scalpel configuration file',
+                                        default='scalpel_config')
+    
     parser_command_help = subparser.add_parser("help", help="help command")
     parser_command_version = subparser.add_parser("version", help="version command")
 
@@ -239,7 +247,7 @@ if __name__ == '__main__':
     elif command == 'init':
         init(args)
     elif command == 'notebook':
-        notebook(args['root_directory'])
+        notebook(args.get('root_directory', '.'))
     elif command == 'scalpel':
         scalpel(args['config_file'])
     elif command == 'version':

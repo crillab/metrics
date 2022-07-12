@@ -1,0 +1,549 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+make: *** No rule to make target 'all'.  Stop.
+
+# GNU Make 4.3
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2020 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Tue Jul 12 19:19:33 2022
+
+# Variables
+
+# environment
+JAVA_HOME = /usr/lib/jvm/java-8-openjdk-amd64
+# environment
+GDK_BACKEND = x11
+# environment
+LC_ALL = C
+# environment
+NO_AT_BRIDGE = 1
+# environment
+GNOME_SHELL_SESSION_MODE = ubuntu
+# environment
+SSH_AGENT_LAUNCHER = gnome-keyring
+# environment
+TERMINATOR_DBUS_NAME = net.tenshu.Terminator25ef4b219e3b005583550f2b0f9f990c3
+# environment
+NEPTUNE_TOKEN = eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5tbCIsImFwaV9rZXkiOiIxMGNhY2I3Yi1mN2YxLTQzNDktOWYwOC1iMjE2ZmQxYThiZWUifQ==
+# environment
+GJS_DEBUG_OUTPUT = stderr
+# makefile (from 'Makefile', line 10)
+PACKAGE_NAME = crillab-metrics
+# environment
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-859273dc-c5e8-40a1-b626-1f3e47504a07.sock
+# environment
+VSCODE_CWD = /home/thibault/Travail/Doctorat/Tools/metrics
+# environment
+BLOB_KEY = kvwYFxtQaYepOgMNq9UkJ7CyjPd9Hr3sPSdMH2UGl0hHmzBmNvfFze6SyhdmWWvDUeOwXYBiQFcfOB4Hpt0oZg==
+# environment
+TERMINATOR_UUID = urn:uuid:731abb15-6e2b-469c-8f08-c42853d2c346
+# default
+MAKE_COMMAND := make
+# environment
+QT_ACCESSIBILITY = 1
+# environment
+GOPATH = /home/thibault/go
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# default
+.VARIABLES := 
+# environment
+PWD = /home/thibault/Travail/Doctorat/Tools/metrics
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# makefile (from 'Makefile', line 22)
+OUTDIR = build
+# environment
+XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+VSCODE_LOG_STACK = false
+# automatic
+%F = $(notdir $%)
+# environment
+VSCODE_CODE_CACHE_PATH = /home/thibault/.config/Code/CachedData/30d9c6cd9483b2cc586687151bcbcd635f373630
+# environment
+LANG = C
+# environment
+BIN_SONAR = /home/thibault/.software/sonarqube-6.7.5/bin/linux-x86-64/sonar.sh
+# environment
+XAUTHORITY = /run/user/1000/.mutter-Xwaylandauth.5UFUO1
+# default
+.LOADED := 
+# default
+.INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
+# makefile
+MAKEFLAGS = pqrR
+# environment
+CODESFORCES_HANDLE = octopus.pastis
+# environment
+TERMINATOR_DBUS_PATH = /net/tenshu/Terminator2
+# makefile
+CURDIR := /home/thibault/Travail/Doctorat/Tools/metrics
+# environment
+PERL5LIB = /home/thibault/perl5/lib/perl5
+# environment
+VSCODE_PIPE_LOGGING = true
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# environment
+LESSOPEN = | /usr/bin/lesspipe %s
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# makefile (from 'Makefile', line 16)
+VERSION = 1.2.4
+# environment
+MFLAGS = -pqrR
+# environment
+SSH_AUTH_SOCK = /run/user/1000/keyring/ssh
+# default
+.SHELLFLAGS := -c
+# environment
+WAYLAND_DISPLAY = wayland-0
+# environment
+XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+XDG_SESSION_DESKTOP = ubuntu
+# makefile (from 'Makefile', line 1)
+MAKEFILE_LIST := Makefile
+# environment
+CONDA_SHLVL = 0
+# makefile (from 'Makefile', line 13)
+MODULE_NAME = metrics
+# automatic
+@F = $(notdir $@)
+# environment
+VSCODE_VERBOSE_LOGGING = true
+# environment
+VSCODE_PID = 10339
+# environment
+XDG_SESSION_TYPE = wayland
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# environment
+CONDA_PYTHON_EXE = /home/thibault/anaconda3/bin/python
+# environment
+CODESFORCES_PASSWORD = Kb9n,iA%v8-C4)/r[WeL
+# environment
+SESSION_MANAGER = local/thibault-XPS-15-9570:@/tmp/.ICE-unix/3535,unix/thibault-XPS-15-9570:/tmp/.ICE-unix/3535
+# automatic
+*F = $(notdir $*)
+# environment
+IBUS_DISABLE_SNOOPER = 1
+# environment
+CHROME_DESKTOP = code-url-handler.desktop
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# environment
+ANACONDA_PATH = /home/thibault/anaconda3
+# environment
+VSCODE_NLS_CONFIG = {"locale":"fr","availableLanguages":{"*":"fr"},"_languagePackId":"575d78304484aa5fa0cbb32d34fd883d.fr","_translationsConfigFile":"/home/thibault/.config/Code/clp/575d78304484aa5fa0cbb32d34fd883d.fr/tcf.json","_cacheRoot":"/home/thibault/.config/Code/clp/575d78304484aa5fa0cbb32d34fd883d.fr","_resolvedLanguagePackCoreLocation":"/home/thibault/.config/Code/clp/575d78304484aa5fa0cbb32d34fd883d.fr/30d9c6cd9483b2cc586687151bcbcd635f373630","_corruptedFile":"/home/thibault/.config/Code/clp/575d78304484aa5fa0cbb32d34fd883d.fr/corrupted.info","_languagePackSupport":true}
+# environment
+ANDROID_SDK_ROOT = /home/thibault/Android/Sdk
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# environment
+ANDROID_HOME = /home/thibault/Android/Sdk
+# environment
+GNOME_DESKTOP_SESSION_ID = this-is-deprecated
+# makefile
+SHELL = /bin/sh
+# default
+MAKECMDGOALS := all
+# environment
+XMODIFIERS = @im=ibus
+# environment
+GJS_DEBUG_TOPICS = JS ERROR;JS LOG
+# environment
+SHLVL = 1
+# environment
+MONGODB_URI_ADP = mongodb://adp:adpomniboard@40.89.137.202/adp
+# environment
+MAKELEVEL := 0
+# environment
+cluster_user = falque
+# default
+MAKE = $(MAKE_COMMAND)
+# environment
+PATH = /home/thibault/.cargo/bin:/home/thibault/anaconda3/condabin:/usr/local/lib/nodejs/node--/bin:/home/thibault/perl5/bin:"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin":/usr/local/go/bin:/home/thibault/bin:/home/thibault/Android/Sdk/tools:/home/thibault/Android/Sdk/platform-tools:/home/thibault/.cabal/bin:/home/thibault/Android/Sdk/emulator:/home/thibault/Android/Sdk/tools:/home/thibault/Android/Sdk/tools/bin:/home/thibault/Android/Sdk/platform-tools
+# default
+MAKEFILES := 
+# automatic
+^F = $(notdir $^)
+# environment
+INVOCATION_ID = 8a215d11a5504ba7a542ba4df4374a94
+# environment
+VSCODE_LOG_NATIVE = false
+# environment
+USERNAME = thibault
+# environment
+GNOME_SETUP_DISPLAY = :1
+# environment
+LESSCLOSE = /usr/bin/lesspipe %s %s
+# automatic
+?F = $(notdir $?)
+# environment
+PERL_LOCAL_LIB_ROOT = /home/thibault/perl5
+# environment
+XDG_CURRENT_DESKTOP = Unity
+# environment
+LS_COLORS = rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:
+# automatic
++F = $(notdir $+)
+# environment
+DESKTOP_SESSION = ubuntu
+# environment
+ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+LOGNAME = thibault
+# environment
+GIO_LAUNCHED_DESKTOP_FILE = /usr/share/applications/code.desktop
+# makefile
+.DEFAULT_GOAL := test
+# environment
+DISPLAY = :0
+# environment
+USER = thibault
+# environment
+GTK_MODULES = gail:atk-bridge
+# default
+MAKE_VERSION := 4.3
+# makefile (from 'Makefile', line 19)
+TESTS = tests
+# environment
+MANAGERPID = 3384
+# environment
+GIO_LAUNCHED_DESKTOP_FILE_PID = 359481
+# environment
+PYTHONPATH = /home/thibault/Travail/Doctorat/Tools/metrics:/home/thibault/Travail/Doctorat/Tools/plots:
+# environment
+_ = /usr/bin/code
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# environment
+COLORTERM = truecolor
+# environment
+_CE_M = 
+# environment
+JOURNAL_STREAM = 8:42893
+# environment
+XDG_SESSION_CLASS = user
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /home/thibault
+# environment
+QT_IM_MODULE = ibus
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# environment
+VSCODE_IPC_HOOK = /run/user/1000/vscode-b29da0f6-1.68.1-main.sock
+# environment
+TERM = xterm-256color
+# environment
+IM_CONFIG_PHASE = 1
+# environment
+PERL_MM_OPT = INSTALL_BASE=/home/thibault/perl5
+# default
+.RECIPEPREFIX := 
+# automatic
+<F = $(notdir $<)
+# default
+SUFFIXES := 
+# environment
+VSCODE_CLI = 1
+# environment
+PERL_MB_OPT = --install_base "/home/thibault/perl5"
+# environment
+ELECTRON_NO_ATTACH_CONSOLE = 1
+# environment
+VTE_VERSION = 6203
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
+# environment
+XDG_MENU_PREFIX = gnome-
+# environment
+CONDA_EXE = /home/thibault/anaconda3/bin/conda
+# environment
+_CE_CONDA = 
+# environment
+GDMSESSION = ubuntu
+# variable set hash-table stats:
+# Load=134/1024=13%, Rehash=0, Collisions=4/181=2%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 64769, inode 37683683): 24 files, no impossibilities.
+# tests/test_core (device 64769, inode 37707810): 6 files, no impossibilities.
+# tests/test_wallet (device 64769, inode 37724227): 6 files, no impossibilities.
+# tests/test_scalpel (device 64769, inode 37707811): 7 files, no impossibilities.
+# tests (device 64769, inode 37707809): 6 files, no impossibilities.
+# tests/data (device 64769, inode 37707778): 7 files, no impossibilities.
+# metrics (device 64769, inode 37707792): 9 files, no impossibilities.
+
+# 65 files, no impossibilities in 7 directories.
+
+# Implicit Rules
+
+# No implicit rules.
+
+# Files
+
+register:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 64):
+	python3 setup.py register
+
+deploy: clean package upload
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+
+# Not a target:
+tests/test_core/test_global.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+package: dist/crillab-metrics-1.2.4.tar.gz
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+
+# Not a target:
+tests/test_wallet/test_normal_analysis_static_plots.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+ 
+# Not a target:
+metrics/__init__.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+tests/test_core/json_reader.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+tests/test_wallet/test_normal_analysis_manipulations.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+#  Last modified 2022-07-11 21:41:02.172711236
+#  File has been updated.
+#  Successfully updated.
+
+build/pylint.out: build metrics/__init__.py tests/test_core/json_reader.py tests/test_core/test_campaign.py tests/test_core/test_global.py tests/test_core/test_typing.py tests/test_scalpel/test_config.py tests/test_scalpel/test_filters.py tests/test_scalpel/test_listener.py tests/test_scalpel/test_output.py tests/test_scalpel/test_pattern.py tests/test_wallet/test_normal_analysis_manipulations.py tests/test_wallet/test_normal_analysis_static_plots.py tests/test_wallet/test_normal_analysis_tables.py tests/test_wallet/test_problematic_analysis.py
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 52):
+	pylint $(MODULE_NAME) $(TESTS) -r n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" | tee $(OUTDIR)/pylint.out
+
+upload:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 75):
+	twine upload dist/*
+
+build/nosetests.xml: build metrics/__init__.py tests/test_core/test_campaign.py tests/test_core/test_global.py tests/test_core/test_typing.py tests/test_scalpel/test_config.py tests/test_scalpel/test_filters.py tests/test_scalpel/test_listener.py tests/test_scalpel/test_output.py tests/test_scalpel/test_pattern.py tests/test_wallet/test_normal_analysis_manipulations.py tests/test_wallet/test_normal_analysis_static_plots.py tests/test_wallet/test_normal_analysis_tables.py tests/test_wallet/test_problematic_analysis.py
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 40):
+	nosetests --with-xunit --with-coverage --cover-package $(MODULE_NAME) --cover-xml $(TESTS)/*/test*.py
+	mv nosetests.xml .coverage coverage.xml $(OUTDIR)
+
+clean:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 89):
+	rm -rf $(OUTDIR) *.egg *.egg-info dist
+
+# Not a target:
+tests/test_wallet/test_problematic_analysis.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+tests/test_core/test_campaign.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+tests/test_scalpel/test_listener.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+pylint: build/pylint.out
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+
+# Not a target:
+tests/test_wallet/test_normal_analysis_tables.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+tests/test_scalpel/test_pattern.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+sonar: test pylint
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 56):
+	if test -z "$$SONAR_ORGA"; then sonar-scanner -Dsonar.host.url=${SONAR_HOST} -Dsonar.login=${SONAR_TOKEN} -Dsonar.projectKey=${SONAR_KEY}; else sonar-scanner -Dsonar.host.url=${SONAR_HOST} -Dsonar.login=${SONAR_TOKEN} -Dsonar.projectKey=${SONAR_KEY} -Dsonar.organization=${SONAR_ORGA}; fi
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+dist/crillab-metrics-1.2.4.tar.gz:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 71):
+	python3 setup.py sdist
+
+# Not a target:
+all:
+#  Command line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has not been updated.
+
+# Not a target:
+tests/test_scalpel/test_config.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+help:
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 93):
+	@echo
+	@echo "Linting and Running Tests of Metrics"
+	@echo "===================================="
+	@echo
+	@echo "Available targets are:"
+	@echo "    - test (default)  -> executes unit tests with code coverage"
+	@echo "    - pylint          -> executes the Pylint static analysis"
+	@echo "    - sonar           -> executes the SonarQube static analysis"
+	@echo "    - register        -> registers the project on PyPI"
+	@echo "    - package         -> packages the project to upload it on PyPI"
+	@echo "    - upload          -> uploads the project on PyPI"
+	@echo "    - deploy          -> executes all targets for deploying on PyPI"
+	@echo "    - clean           -> deletes the build files"
+	@echo "    - help            -> displays this message"
+	@echo
+
+build:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 85):
+	mkdir $(OUTDIR)
+
+# Not a target:
+tests/test_scalpel/test_output.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+test: build/nosetests.xml build/coverage.xml
+#  Phony target (prerequisite of .PHONY).
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has not been updated.
+
+# Not a target:
+tests/test_scalpel/test_filters.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+build/coverage.xml: build metrics/__init__.py tests/test_core/test_campaign.py tests/test_core/test_global.py tests/test_core/test_typing.py tests/test_scalpel/test_config.py tests/test_scalpel/test_filters.py tests/test_scalpel/test_listener.py tests/test_scalpel/test_output.py tests/test_scalpel/test_pattern.py tests/test_wallet/test_normal_analysis_manipulations.py tests/test_wallet/test_normal_analysis_static_plots.py tests/test_wallet/test_normal_analysis_tables.py tests/test_wallet/test_problematic_analysis.py
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 40):
+	nosetests --with-xunit --with-coverage --cover-package $(MODULE_NAME) --cover-xml $(TESTS)/*/test*.py
+	mv nosetests.xml .coverage coverage.xml $(OUTDIR)
+
+# Not a target:
+tests/test_core/test_typing.py:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+.PHONY: test pylint sonar register package upload deploy clean help
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# files hash-table stats:
+# Load=33/1024=3%, Rehash=0, Collisions=1/104=1%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 91 / storage = 1509 B / avg = 16 B
+# current buf: size = 8162 B / used = 1509 B / count = 91 / avg = 16 B
+
+# strcache performance: lookups = 157 / hit rate = 42%
+# hash-table stats:
+# Load=91/8192=1%, Rehash=0, Collisions=2/157=1%
+# Finished Make data base on Tue Jul 12 19:19:33 2022
+
+ 
