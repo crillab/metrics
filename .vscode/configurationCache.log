@@ -1,1 +1,0 @@
-{"buildTargets":["build","build/coverage.xml","build/nosetests.xml","build/pylint.out","clean","deploy","dist/crillab-metrics-1.2.4.tar.gz","help","package","pylint","register","sonar","test","upload"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
