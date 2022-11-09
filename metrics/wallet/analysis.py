@@ -609,7 +609,7 @@ class BasicAnalysis:
             values = []
             for ew in self.experiment_wares:
                 cell = cell_function(group, ew)
-                row[ew] = normalize_function([cell], group)
+                row[ew] = normalize_function([cell], group)[0]
                 values.append(cell)
             row['best'] = best_function(normalize_function(values, group))
             tab.append(row)
