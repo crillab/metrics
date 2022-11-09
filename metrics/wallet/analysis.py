@@ -474,6 +474,17 @@ class BasicAnalysis:
             inplace=inplace
         )
 
+    def delete_simple_inputs(self, limit=10, inplace=False):
+        """
+        Based on success column and cpu time, it removes all the inputs commonly solved within a certain time limit
+        @rtype: the filtered analysis
+        """
+        return self.filter_inputs(
+            function=lambda x: not x[SUCCESS_COL] or x[EXPERIMENT_CPU_TIME] > limit,
+            how='any',
+            inplace=inplace
+        )
+
     def groupby(self, column) -> List[BasicAnalysis]:
         """
         Makes a group by a given column.
