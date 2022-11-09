@@ -596,7 +596,13 @@ class BasicAnalysis:
             **kwargs
         )
 
-    def score_table(self, cell_function, best_function, score_function, default_solver=None,score_name=None):
+    def score_table(self, cell_function, best_function, score_function, default_solver=None, score_name=None,
+                    normalize_function=None):
+        def default_normalize_function(values, group):
+            pass
+
+        if normalize_function is None:
+            normalize_function = default_normalize_function
         tab = []
         for index, group in self.data_frame.groupby('input'):
             row = {'input': index}
@@ -605,7 +611,7 @@ class BasicAnalysis:
                 cell = cell_function(group, ew)
                 row[ew] = cell
                 values.append(cell)
-            row['best'] = best_function(values)
+            row['best'] = best_function(normalize_function(values,group))
             tab.append(row)
         df = pd.DataFrame(tab)
         score_df = score_function(df, default_solver)
@@ -921,7 +927,8 @@ class OptiAnalysis(BasicAnalysis):
             **kwargs
         )
 
-    #def score_number_times_best_bound(self):
+    # def score_number_times_best_bound(self):
+
 
 def _cpu_time_stat(x, i):
     return x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else x[TIMEOUT_COL] * i
