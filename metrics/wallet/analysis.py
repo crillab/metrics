@@ -596,6 +596,20 @@ class BasicAnalysis:
             **kwargs
         )
 
+    def score_table(self, cell_function, best_function, score_function):
+        tab = []
+        for index, group in self.data_frame.groupby('input'):
+            row = {'input': index}
+            values = []
+            for ew in self.experiment_wares:
+                cell = cell_function(group, ew)
+                row[ew] = cell
+                values.append(cell)
+            row['best'] = best_function(values)
+            tab.append(row)
+        df = pd.DataFrame(tab)
+
+
     def line_plot(self, index, column, values, **kwargs: dict):
         """
         Makes a lineplot of the data
