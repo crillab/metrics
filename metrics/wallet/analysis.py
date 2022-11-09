@@ -609,9 +609,9 @@ class BasicAnalysis:
             values = []
             for ew in self.experiment_wares:
                 cell = cell_function(group, ew)
-                row[ew] = cell
+                row[ew] = normalize_function([cell], group)
                 values.append(cell)
-            row['best'] = best_function(normalize_function(values,group))
+            row['best'] = best_function(normalize_function(values, group))
             tab.append(row)
         df = pd.DataFrame(tab)
         score_df = score_function(df, default_solver)
