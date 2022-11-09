@@ -596,7 +596,7 @@ class BasicAnalysis:
             **kwargs
         )
 
-    def score_table(self, cell_function, best_function, score_function):
+    def score_table(self, cell_function, best_function, score_function, default_solver=None,score_name=None):
         tab = []
         for index, group in self.data_frame.groupby('input'):
             row = {'input': index}
@@ -608,7 +608,11 @@ class BasicAnalysis:
             row['best'] = best_function(values)
             tab.append(row)
         df = pd.DataFrame(tab)
-
+        score_df = score_function(df, default_solver)
+        total = score_df.sum(numeric_only=True)
+        total['input'] = f'Score ({score_name})' if score_name is not None else 'Score'
+        new_df = df.append(total.transpose(), ignore_index=True)
+        return new_df
 
     def line_plot(self, index, column, values, **kwargs: dict):
         """
@@ -917,6 +921,7 @@ class OptiAnalysis(BasicAnalysis):
             **kwargs
         )
 
+    #def score_number_times_best_bound(self):
 
 def _cpu_time_stat(x, i):
     return x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else x[TIMEOUT_COL] * i
