@@ -570,8 +570,8 @@ class BasicAnalysis:
                 'n_inputs': len(self.inputs),
                 'n_experiments': len(df),
                 'n_missing_xp': (df['missing']).sum(),
-                'n_inconsistent_xp': (~df['consistent_xp']).sum(),
-                'n_inconsistent_xp_due_to_input': (~df['consistent_input']).sum(),
+                'n_inconsistent_xp': (~df['consistent_xp']).sum() if 'consistent_xp' in df.columns else None,
+                'n_inconsistent_xp_due_to_input': (~df['consistent_input']).sum() if 'consistent_input' in df.columns else None,
                 'more_info_about_variables': "<analysis>.data_frame.describe(include='all')"
             }, name='analysis').to_frame(),
             **kwargs
