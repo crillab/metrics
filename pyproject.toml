@@ -1,0 +1,40 @@
+
+[project]
+name = "crillab-metrics"
+version = "1.2.6"
+description = "rEproducible sofTware peRformance analysIs in perfeCt Simplicity"
+keywords = ["reproducible software performance analysis"]
+readme = "README.md"
+authors = [
+    {name = "Thibault Falque, Romain Wallon, Hugues Wattez", email = "metrics@cril.fr"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+]
+dependencies = [
+    "InquirerPy",
+    "crillab-autograph",
+    "dash-bootstrap-components",
+    "deprecated",
+    "jinja2",
+    "jsonpickle",
+    "loguru",
+    "myst-parser",
+    "pandas",
+    "pyfiglet",
+    "pyparsing",
+    "pyyaml",
+    "tenacity",
+]
+license = {text = "LGPLv3+"}
+requires-python = ">=3.10"
+
+[project.urls]
+Homepage = "https://github.com/crillab/metrics"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
