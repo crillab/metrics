@@ -124,7 +124,7 @@ class LinePlot(Plot):
         color_map = dict() if color_map is None else color_map
         style_map = dict() if style_map is None else style_map
 
-        for name, series in df.iteritems():
+        for name, series in df.items():
             style = PlotStyle()
             if name in color_map:
                 style.color = color_map[name]
@@ -167,7 +167,7 @@ class CDFPlot(Plot):
         color_map = dict() if color_map is None else color_map
         style_map = dict() if style_map is None else style_map
 
-        for name, series in df.iteritems():
+        for name, series in df.items():
             style = PlotStyle()
             if name in color_map:
                 style.color = color_map[name]
