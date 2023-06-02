@@ -30,7 +30,6 @@ containing the output of experiment-wares produced during a campaign, to
 extract the data they contain.
 """
 
-
 from json import load as load_json
 from typing import Any, Optional, TextIO
 from xml.etree.ElementTree import Element, parse as load_xml
@@ -38,6 +37,7 @@ from xml.etree.ElementTree import Element, parse as load_xml
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration
 from metrics.scalpel.utils import CsvConfiguration, CsvReader
+from loguru import logger
 
 
 class CampaignOutputParser:
@@ -290,8 +290,16 @@ class RawCampaignOutputParser(CampaignOutputParser):
 
         :param stream: The stream to read.
         """
-        for line in stream:
-            self._parse_line(line.rstrip())
+        iter_lines = iter(stream)
+        while True:
+            try:
+                line = next(iter_lines)
+                self._parse_line(line.rstrip())
+            except StopIteration:
+                break
+            except Exception as e:
+                logger.warning(f'{self._file_path}: {e}')
+                continue
 
     def _parse_line(self, line: str) -> None:
         """
