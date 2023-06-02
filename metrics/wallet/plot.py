@@ -273,7 +273,7 @@ class BarPlot(Plot):
                  title=BAR_TITLE,
                  x_axis_name=None,
                  y_axis_name=None,
-                 legend_location=Position.RIGHT,
+                 legend_location=None,
                  legend_offset=(0, 0),
                  ncol_legend=1,
                  estimator=sum,
