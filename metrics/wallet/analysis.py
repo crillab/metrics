@@ -1143,6 +1143,7 @@ class DecisionAnalysis(BasicAnalysis):
         df = self.contribution_table(contribution=False)
         df['experiment_ware'] = df.index
         plot = BarPlot(df, 'experiment_ware', 'vbew simple', **kwargs)
+        plot.plot.hline(len(self.inputs))
         plot.save()
         return plot.show()
 
