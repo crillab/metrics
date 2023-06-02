@@ -675,6 +675,33 @@ class BasicAnalysis:
                 df = df.applymap(lambda x: eval(str(x)))
             return cls(data_frame=df)
 
+    def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME,
+                     **kwargs):
+        """
+        To draw a scatter-plot, we need to specify the experiment-wares on the x-axis and tge
+        y-axis: xp_ware_x and
+        xp_ware_y. By default, the scatter plot draw its graphic by using the cpu_time of results:
+        you are free to
+        change this behaviour by replacing the scatter_col parameter.
+        @param xp_ware_x: the first experiment-ware
+        @param xp_ware_y: the second experiment-ware
+        @param color_col: to give a specific color to points in function of a column
+        @param scatter_col: The data to plot (cpu_time by default)
+        @param kwargs: kwargs are given to the ScatterPlot(...) object.
+        @return: the drawn figure
+        """
+        if xp_ware_x not in self.experiment_wares:
+            raise ValueError(f'Experiment-ware xp_ware_x={xp_ware_x} does not exist.')
+        if xp_ware_y not in self.experiment_wares:
+            raise ValueError(f'Experiment-ware xp_ware_y={xp_ware_y} does not exist.')
+
+        df = _make_scatter_plot_df(self, xp_ware_x, xp_ware_y, scatter_col, color_col)
+
+        plot = ScatterPlot(df, color_col=color_col, **kwargs)
+        plot.save()
+
+        return plot.show()
+
 
 def _is_none_or_nan(x):
     return x is None or math.isnan(x)
@@ -1166,33 +1193,6 @@ class DecisionAnalysis(BasicAnalysis):
         local_analysis = self.add_variable('performance_ratio',
                                            lambda row: _compute_performance_ratio(df_solved, row, vbew_name))
         return local_analysis.cdf_plot(cdf_col='performance_ratio', **kwargs)
-
-    def scatter_plot(self, xp_ware_x, xp_ware_y, color_col=None, scatter_col=EXPERIMENT_CPU_TIME,
-                     **kwargs):
-        """
-        To draw a scatter-plot, we need to specify the experiment-wares on the x-axis and tge
-        y-axis: xp_ware_x and
-        xp_ware_y. By default, the scatter plot draw its graphic by using the cpu_time of results:
-        you are free to
-        change this behaviour by replacing the scatter_col parameter.
-        @param xp_ware_x: the first experiment-ware
-        @param xp_ware_y: the second experiment-ware
-        @param color_col: to give a specific color to points in function of a column
-        @param scatter_col: The data to plot (cpu_time by default)
-        @param kwargs: kwargs are given to the ScatterPlot(...) object.
-        @return: the drawn figure
-        """
-        if xp_ware_x not in self.experiment_wares:
-            raise ValueError(f'Experiment-ware xp_ware_x={xp_ware_x} does not exist.')
-        if xp_ware_y not in self.experiment_wares:
-            raise ValueError(f'Experiment-ware xp_ware_y={xp_ware_y} does not exist.')
-
-        df = _make_scatter_plot_df(self, xp_ware_x, xp_ware_y, scatter_col, color_col)
-
-        plot = ScatterPlot(df, color_col=color_col, **kwargs)
-        plot.save()
-
-        return plot.show()
 
     def box_plot(self, box_col=EXPERIMENT_CPU_TIME, box_by=EXPERIMENT_XP_WARE, **kwargs: dict):
         """
