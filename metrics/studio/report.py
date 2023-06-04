@@ -53,6 +53,8 @@ class ReportBuilder:
         self._root_dir = root_dir
         self._template_vars = {}
         self._env = Environment(loader=PackageLoader('metrics'), autoescape=select_autoescape())
+        self._has_runtime_analysis = False
+        self._has_optim_analysis = False
 
     def create_directories(self) -> None:
         """
@@ -106,7 +108,12 @@ class ReportBuilder:
 
         :param notebook_name: The name of the notebook to add.
         """
-        self._write_template('load_experiments.ipynb', f'{notebook_name}.ipynb')
+        notebook_source = 'load_experiments.ipynb'
+        if self._has_optim_analysis:
+            notebook_source = 'load_experiments_optim.ipynb'
+        elif self._has_runtime_analysis:
+            notebook_source = 'load_experiments_sat.ipynb'
+        self._write_template(notebook_source, f'{notebook_name}.ipynb')
 
     def add_runtime_analysis(self, notebook_name: str = 'runtime_analysis') -> None:
         """
@@ -115,6 +122,7 @@ class ReportBuilder:
 
         :param notebook_name: The name of the notebook to add.
         """
+        self._has_runtime_analysis = True
         self._write_template('runtime_analysis.ipynb', f'{notebook_name}.ipynb')
 
     def add_optim_analysis(self, notebook_name: str = 'optim_analysis') -> None:
@@ -124,6 +132,7 @@ class ReportBuilder:
 
         :param notebook_name: The name of the notebook to add.
         """
+        self._has_optim_analysis = True
         self._write_template('optim_analysis.ipynb', f'{notebook_name}.ipynb')
 
     def _write_template(self, template_name: str, output_file: str) -> None:

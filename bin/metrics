@@ -195,12 +195,12 @@ def init(arguments: Dict[str, Any]) -> None:
             report.add_requirements()
         if arguments['scalpel_config']:
             report.add_scalpel_config(arguments['config_file'])
-        if arguments['load']:
-            report.add_load_experiments(arguments['load_notebook'])
-        if arguments['runtime']:
-            report.add_runtime_analysis(arguments['runtime_notebook'])
         if arguments['optimization']:
             report.add_optim_analysis(arguments['optimization_notebook'])
+        if arguments['runtime']:
+            report.add_runtime_analysis(arguments['runtime_notebook'])
+        if arguments['load']:
+            report.add_load_experiments(arguments['load_notebook'])
 
 
 def notebook(root_directory: str = '.') -> None:
