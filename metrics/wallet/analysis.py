@@ -571,7 +571,8 @@ class BasicAnalysis:
                 'n_experiments': len(df),
                 'n_missing_xp': (df['missing']).sum(),
                 'n_inconsistent_xp': (~df['consistent_xp']).sum() if 'consistent_xp' in df.columns else None,
-                'n_inconsistent_xp_due_to_input': (~df['consistent_input']).sum() if 'consistent_input' in df.columns else None,
+                'n_inconsistent_xp_due_to_input': (
+                    ~df['consistent_input']).sum() if 'consistent_input' in df.columns else None,
                 'more_info_about_variables': "<analysis>.data_frame.describe(include='all')"
             }, name='analysis').to_frame(),
             **kwargs
@@ -867,7 +868,7 @@ def _input_agg(df, col):
     return pd.Series(d2)
 
 
-class OptiAnalysis(BasicAnalysis):
+class BoundOptiAnalysis(BasicAnalysis):
     """
     An Optimality Analysis is an analysis with the constraint of having the cartesian product of
     experiment-wares and inputs and additionnal informations:
@@ -957,6 +958,82 @@ class OptiAnalysis(BasicAnalysis):
     # def score_number_times_best_bound(self):
 
 
+class OverviewOptiAnalysis(BasicAnalysis):
+    def __init__(self, input_file: str = None, data_frame: DataFrame = None,
+                 basic_analysis: BasicAnalysis = None, log_level: str = 'WARNING'):
+        """
+        Constructs a decision analysis by giving an 'input_file' to parse the campaign logs OR a
+        'data_frame' of already build analysis OR a 'basic_analysis' with the necessary data to
+        build a DecisionAnalysis.
+        @param input_file: the yaml file to extract data
+        @param data_frame: a valid dataframe containing the exploded experiments
+        @param basic_analysis: a BasicAnalysis with the needed columns
+        @param log_level: The minimum level for the events to log while parsing the campaign.
+        """
+        if input_file is not None:
+            super().__init__(input_file, data_frame, log_level)
+        elif data_frame is not None:
+            self._data_frame = data_frame
+        elif basic_analysis is not None:
+            self._data_frame = basic_analysis.data_frame
+        else:
+            raise AttributeError('input_file or data_frame or basic_analysis needs to be given.')
+
+        # test if the analysis is in conformity
+        columns = set(self._data_frame.columns)
+        expected_columns = {EXPERIMENT_CPU_TIME, EXPERIMENT_TIMESTAMP_LIST, EXPERIMENT_BOUND_LIST,
+                            EXPERIMENT_BEST_BOUND, EXPERIMENT_OBJECTIVE, EXPERIMENT_STATUS}
+        missing = expected_columns - columns
+        if missing:
+            raise ValueError(f'Some columns are missing: {missing}')
+
+    def bound_stat_table(self, agg_col=None):
+        if agg_col is None:
+            agg_col = []
+        agg_col = [EXPERIMENT_XP_WARE] + agg_col
+        new_df = []
+        for index, group in self._data_frame.groupby(EXPERIMENT_INPUT):
+            best = min if 'min' in group[EXPERIMENT_OBJECTIVE].values else max
+            best_bound = best([v for v in group[EXPERIMENT_BEST_BOUND]])
+            for ew in group[EXPERIMENT_XP_WARE]:
+                tmp = dict()
+                row = group[group[EXPERIMENT_XP_WARE] == ew].iloc[0]
+                for c in agg_col:
+                    tmp[c] = row[c]
+                bound = get_as_list(row[EXPERIMENT_BOUND_LIST], -1)
+                tmp['Number of best bounds'] = bound == best_bound
+                tmp['Number of solutions'] = bound is not None
+                tmp['Number of optimal solutions'] = row[EXPERIMENT_CPU_TIME] < row[TIMEOUT_COL]
+                new_df.append(tmp)
+        return pd.DataFrame(new_df).groupby(agg_col).agg('sum')
+
+    def bound_bar_plot(self):
+        df = self.bound_stat_table()
+        new_df = []
+        for index, row in df.iterrows():
+            for c in df.columns:
+                if c == 'experiment_ware':
+                    continue
+                tmp = {'experiment_ware': index, 'title': c, 'total': row[c]}
+                new_df.append(tmp)
+
+        df2 = pd.DataFrame(new_df)
+        plot = BarPlot(df2, colx="experiment_ware", coly="total", category="title")
+        plot.plot.hline(len(self.inputs))
+        plot.save()
+        return plot.show()
+
+
+
+def get_as_list(l, index):
+    if isinstance(l, list):
+        return l[index]
+    elif pd.isnull(l):
+        return None
+    else:
+        return l
+
+
 def _cpu_time_stat(x, i):
     return x[EXPERIMENT_CPU_TIME] if x[SUCCESS_COL] else x[TIMEOUT_COL] * i
 
@@ -1009,7 +1086,7 @@ def _compute_performance_ratio(df, row, vbew_name):
         EXPERIMENT_CPU_TIME]
     if len(time_vbew) > 0:
         return row[EXPERIMENT_CPU_TIME] / \
-               time_vbew.iloc[0]
+            time_vbew.iloc[0]
     return None
 
 
@@ -1218,6 +1295,7 @@ class DecisionAnalysis(BasicAnalysis):
 
 
 Analysis = DecisionAnalysis
+OptiAnalysis = BoundOptiAnalysis
 
 
 class DataFrameBuilder:

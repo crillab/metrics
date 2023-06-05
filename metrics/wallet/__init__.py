@@ -22,8 +22,8 @@
 # ##############################################################################
 import pickle
 
-from metrics.wallet.analysis import Analysis, BasicAnalysis, DecisionAnalysis, OptiAnalysis, \
-    find_best_cpu_time_input, export_data_frame
+from metrics.wallet.analysis import Analysis, BasicAnalysis, DecisionAnalysis, BoundOptiAnalysis, OptiAnalysis, \
+    OverviewOptiAnalysis, find_best_cpu_time_input, export_data_frame
 from autograph.core.enumstyle import *
 
 import pandas as pd
