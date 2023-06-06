@@ -1,7 +1,7 @@
 
 [project]
 name = "crillab-metrics"
-version = "1.2.6"
+version = "1.3.0"
 description = "rEproducible sofTware peRformance analysIs in perfeCt Simplicity"
 keywords = ["reproducible software performance analysis"]
 readme = "README.md"
@@ -9,7 +9,7 @@ authors = [
     {name = "Thibault Falque, Romain Wallon, Hugues Wattez", email = "metrics@cril.fr"},
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.8",

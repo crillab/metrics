@@ -13,7 +13,7 @@ PACKAGE_NAME = crillab-metrics
 MODULE_NAME = metrics
 
 # The version of the package to build.
-VERSION = 1.2.6
+VERSION = 1.3.0
 
 # The directory of the unit tests for the package to build.
 TESTS = tests
@@ -68,7 +68,7 @@ package: dist/$(PACKAGE_NAME)-$(VERSION).tar.gz
 
 # Packages the project into a gzipped-tarball archive.
 dist/$(PACKAGE_NAME)-$(VERSION).tar.gz:
-	python3 setup.py sdist
+	python3 -m build
 
 # Uploads the project on PyPI.
 upload:
