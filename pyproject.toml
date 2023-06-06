@@ -6,7 +6,7 @@ description = "rEproducible sofTware peRformance analysIs in perfeCt Simplicity"
 keywords = ["reproducible software performance analysis"]
 readme = "README.md"
 authors = [
-    {name = "Thibault Falque, Romain Wallon, Hugues Wattez", email = "metrics@cril.fr"},
+    {name = "Thibault Falque, Romain Wallon, Hugues Wattez"}, {email = "metrics@cril.fr"},
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
