@@ -126,9 +126,6 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     parser_command_scalpel.add_argument('--config-file',
                                         help='the name for the Scalpel configuration file',
                                         default='scalpel_config')
-    
-    parser_command_help = subparser.add_parser("help", help="help command")
-    parser_command_version = subparser.add_parser("version", help="version command")
 
     # Registering the option used to display the help of the program.
     parser.add_argument('-h', '--help',
