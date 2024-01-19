@@ -1,0 +1,14 @@
+hpc:
+  campaign_directory : {{campaign_directory}}
+  host : {{host}}
+  port : {{port}}
+slurm:
+  qos : {{qos}}
+  partition : {{partition}}
+  n_nodes : {{n_nodes}}
+  n_cpu : {{n_cpu}}
+  wall_timeout: {{wall_timeout}}
+runsolver:
+  cpu_timeout: {{cpu_timeout}}
+  mem_out: {{mem}}
+  delay: {{delay}}
