@@ -1,6 +1,11 @@
 # from https://stackoverflow.com/questions/3096860/convert-time-string-expressed-as-numbermhdsw-to-seconds-in-python
 from datetime import timedelta
 import re
+
+from platformdirs import user_data_dir
+
+import metrics
+
 UNITS = {'s': 'seconds', 'm': 'minutes', 'h': 'hours', 'd': 'days', 'w': 'weeks'}
 
 
@@ -13,3 +18,10 @@ def convert_to_seconds(text):
             flags=re.I
         )
     }).total_seconds())
+
+
+def get_cache_dir() -> str:
+    appname = metrics.__title__.lower()
+    appauthor = metrics.__title__.lower()
+    cache_dir = user_data_dir(appname, appauthor)
+    return cache_dir

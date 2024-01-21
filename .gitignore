@@ -30,3 +30,7 @@ dist
 
 # Miscellaneous
 .DS_Store
+
+*.cast
+.campaign.yml
+input_set
