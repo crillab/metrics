@@ -31,10 +31,12 @@ from os import system
 from typing import Any, Dict, Tuple
 
 import git
+import sysrsync
 from git import Repo
 from platformdirs import *
 
 from pyfiglet import Figlet
+from slugify import slugify
 
 import metrics
 from metrics.scalpel import CampaignParserListener
@@ -42,13 +44,14 @@ from metrics.scalpel.config import ScalpelConfigurationLoader
 from metrics.scalpel.config.configsaver import ScalpelConfigurationWrapperSaverDecorator
 
 from metrics.studio import ReportBuilder
-from metrics.studio.campaign import CampaignBuilder, CampaignFactory
+from metrics.studio.campaign import CampaignBuilder, CampaignFactory, CampaignModel
 from metrics.studio.instance import InstanceDownloader, CompositeInstanceDownloader, XCSPDownloader, XCSPFilter
 import loguru
 #############
 # FUNCTIONS #
 #############
 from metrics.studio.scalpelcli import CLIScalpelConfigurationWrapper
+from metrics.studio.util import get_cache_dir
 
 
 def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
@@ -132,14 +135,17 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     parser_command_scalpel.add_argument('--config-file',
                                         help='the name for the Scalpel configuration file',
                                         default='scalpel_config')
-
+    # command instances
     parser_command_instances = subparser.add_parser("instances", help="instances command")
     parser_command_instances_subcommands = parser_command_instances.add_subparsers(dest="subcommand")
+
+    ## command download of instances
 
     parser_command_instances_download = parser_command_instances_subcommands.add_parser('download')
     parser_command_instances_download.add_argument("-u", "--url", help="The url for downloading files.")
     parser_command_instances_download.add_argument("-f", "--file", help="A path or an url to a file that "
                                                                         "contains one url by line.")
+    ## command xcsp of instances
 
     parser_command_instances_xcsp = parser_command_instances_subcommands.add_parser('xcsp')
     parser_command_instances_xcsp.add_argument("-y", "--year", type=int, default=-1,
@@ -150,6 +156,8 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     parser_command_instances_xcsp.add_argument("-e", "--exclude", nargs='+')
     parser_command_instances_xcsp.add_argument("-i", "--include", nargs='+')
 
+    ## command collect of instances
+
     parser_command_instances_collect = parser_command_instances_subcommands.add_parser('collect')
     parser_command_instances_collect.add_argument("--extension", help="Extension file to collect", nargs="+",
                                                   default=["xml", "xml.lzma"])
@@ -157,6 +165,7 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
                                                   help="HPC campaign directory. If not specified, the value in the "
                                                        "'.campaign.yml' file will be used. If the file does not exist, "
                                                        "the value must be specified. ")
+    ## command sat of instances
 
     parser_command_instances_sat = parser_command_instances_subcommands.add_parser("sat")
     parser_command_instances_sat.add_argument("--gbd", nargs="+", help="One or multiple path to database files.")
@@ -164,7 +173,16 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
                                               default="https://benchmark-database.de/file/")
     parser_command_instances_sat.add_argument("--query", help="Valid gbd query.")
 
-    parser_campaigns = subparser.add_parser("campaigns", help="campaign subcommand")
+    # command campaigns
+
+    parser_campaigns = subparser.add_parser("campaigns", help="Campaigns' command for managing the entire campaign. "
+                                                              "Each 'campaigns' sub-command can be used to specify "
+                                                              "the campaign id or the name to be used. It is also "
+                                                              "possible to specify the campaign's remote folder, "
+                                                              "the remote ssh host and the ssh port.")
+    group_id_name = parser_campaigns.add_mutually_exclusive_group()
+    group_id_name.add_argument('--id', help="The id of the campaign.")
+    group_id_name.add_argument('--name', help="The name of the campaign.")
 
     parser_campaigns.add_argument("-c", "--campaign-directory",
                                   help="specifies the path to the parent folder of the campaign folder on the "
@@ -173,25 +191,56 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
                                   help="specifies the ssh hostname of HPC.")
 
     parser_campaigns.add_argument("-p", "--port",
-                                  help="specifies the ssh port of HPC.")
+                                  help="specifies the ssh port of HPC.", default=22)
 
-    parser_campaigns_subparser = parser_campaigns.add_subparsers(dest="subcommand")
+    parser_campaigns_subparser = parser_campaigns.add_subparsers(dest="subcommand",
+                                                                 help="The sub-commands available allow you to "
+                                                                      "initialise, save, download, upload, submit, "
+                                                                      "check and cancel a campaign.  ")
     parser_campaign_init = parser_campaigns_subparser.add_parser("init", description="campaign init subcommand")
     parser_campaign_init.add_argument("--qos", help="slurm qos")
     parser_campaign_init.add_argument("--partition", help="slurm partition")
-    parser_campaign_init.add_argument("--n-nodes", help="n nodes", type=int)
-    parser_campaign_init.add_argument("--n-cpu", help="n cpu", type=int)
+    parser_campaign_init.add_argument("--n-nodes", help="Number of  nodes. See option '-N' of 'sbatch'.", type=int)
+    parser_campaign_init.add_argument("--n-cpu", help="Number of cpu. See option '-c' of 'sbatch'.", type=int)
 
-    parser_campaign_init.add_argument("--cpu", help="specifies the CPU timeout")
-    parser_campaign_init.add_argument("--wall", help="specifies the WALL timeout")
-    parser_campaign_init.add_argument("--delay", help="specifies the delay before the programme is killed.")
-    parser_campaign_init.add_argument("--memout", help="specifies the memoryout.")
+    parser_campaign_init.add_argument("--cpu", help="specifies the CPU timeout (for runsolver)")
+    parser_campaign_init.add_argument("--wall", help="specifies the WALL timeout (using by slurm and runsolver)")
+    parser_campaign_init.add_argument("--delay",
+                                      help="specifies the delay before the programme is killed. (for runsolver)")
+    parser_campaign_init.add_argument("--memout", help="specifies the memory-out. (for runsolver)")
 
-    parser_campaign_upload = parser_campaigns_subparser.add_parser("upload", description="upload subcommand")
-    parser_campaign_download = parser_campaigns_subparser.add_parser("download", description="download subcommand")
-    parser_campaign_execute = parser_campaigns_subparser.add_parser("execute", description="execute subcommand")
-    parser_campaign_status = parser_campaigns_subparser.add_parser("status", description="status subcommand")
-    parser_campaign_cancel = parser_campaigns_subparser.add_parser("cancel", description="status subcommand")
+    parser_campaigns_register = parser_campaigns_subparser.add_parser('register', help="The 'register' command is used "
+                                                                                       "to register the campaign and "
+                                                                                       "obtain an id so that the "
+                                                                                       "commands for this campaign can "
+                                                                                       "be run without necessarily "
+                                                                                       "being in the local folder. ")
+    parser_campaigns_register.add_argument("--name", help="The name of the campaign",
+                                           default=slugify(os.getcwd().split(os.path.sep)[-1], lower=True))
+
+    parser_campaign_upload = parser_campaigns_subparser.add_parser("upload",
+                                                                   help="The 'upload' command is used to "
+                                                                        "upload the campaign from the current "
+                                                                        "folder to the remote campaign folder. ")
+    parser_campaign_upload.add_argument("--rsync-options", default="-havz")
+    parser_campaign_download = parser_campaigns_subparser.add_parser("download",
+                                                                     help="The 'download' command is used to "
+                                                                          "download the campaign from the "
+                                                                          "remote campaign folder to the "
+                                                                          "current campaign folder.")
+    parser_campaign_download.add_argument("--rsync-options", default="-havz")
+
+    parser_campaign_submit = parser_campaigns_subparser.add_parser("submit", help="The 'submit' command is "
+                                                                                  "used to submit all jobs to "
+                                                                                  "the remote scheduler. ")
+    parser_campaign_status = parser_campaigns_subparser.add_parser("status",
+                                                                   help="The 'status' command is used to check "
+                                                                        "the execution status of the current "
+                                                                        "campaign or the campaign whose name "
+                                                                        "or id is specified in the parameter. ")
+    parser_campaign_cancel = parser_campaigns_subparser.add_parser("cancel",
+                                                                   help="The 'cancel' command is used to cancel jobs "
+                                                                        "in a campaign. ")
 
     # parser_ew = subparser.add_parser("experiment-wares", help="experiment-wares subcommand")
     # parser_ew_subparser = parser_campaigns.add_subparsers(dest="subcommand")
@@ -244,13 +293,6 @@ def _create_cache_directory():
     os.makedirs(os.path.join(cache_dir, "cache"), exist_ok=True)
     os.makedirs(os.path.join(cache_dir, "cache", "xcsp"), exist_ok=True)
     os.makedirs(os.path.join(cache_dir, "cache", "experiment-ware"), exist_ok=True)
-
-
-def get_cache_dir() -> str:
-    appname = metrics.__title__.lower()
-    appauthor = metrics.__title__.lower()
-    cache_dir = user_data_dir(appname, appauthor)
-    return cache_dir
 
 
 def download_metadata():
@@ -378,18 +420,27 @@ def instances(arguments: Dict[str, Any]) -> None:
 def campaign_init(args):
     loguru.logger.info("Init campaign...")
     campaign_builder = CampaignFactory.campaign_builder(args, ".campaign.yml")
-    campaign = campaign_builder.build()
-    campaign.save()
+    c = campaign_builder.build()
+    c.save()
+
 
 def campaign_upload(args):
-    pass
+    campaign_builder = CampaignFactory.campaign_builder(args, ".campaign.yml")
+    c = campaign_builder.build()
+    sysrsync.run(source=os.getcwd(),
+                 destination=c.campaign_dir, destitination_ssh=c.ssh_hostname,
+                 sync_source_contents=False, options=args["rsync_options"])
 
 
 def campaign_download(args):
-    pass
+    campaign_builder = CampaignFactory.campaign_builder(args, ".campaign.yml")
+    c = campaign_builder.build()
+    sysrsync.run(source=os.path.join(c.campaign_dir, "experiments"),
+                 destination=os.getcwd(), source_ssh=c.ssh_hostname,
+                 sync_source_contents=False, options=args["rsync_options"])
 
 
-def campaign_execute(args):
+def campaign_submit(args):
     pass
 
 
@@ -401,8 +452,10 @@ def campaign_status(args):
     pass
 
 
-def campaign_runsolver(args):
-    pass
+def campaign_register(args):
+    print(args)
+    m = CampaignModel.create(name=args["name"], local_directory=os.getcwd())
+    m.save()
 
 
 def campaign(args):
@@ -414,14 +467,16 @@ def campaign(args):
         campaign_upload(args)
     elif command == "download":
         campaign_download(args)
-    elif command == "execute":
-        campaign_execute(args)
+    elif command == "submit":
+        campaign_submit(args)
     elif command == "status":
         campaign_status(args)
     elif command == "cancel":
         campaign_cancel(args)
-    elif command == "runsolver":
-        campaign_runsolver(args)
+    elif command == "register":
+        campaign_register(args)
+    else:
+        loguru.logger.error(f"'{command}' is not a valid subcommand of 'campaigns'.")
 
 
 ################
