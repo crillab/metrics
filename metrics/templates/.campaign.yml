@@ -1,4 +1,4 @@
-hpc:
+ssh:
   campaign_directory : {{campaign_directory}}
   host : {{host}}
   port : {{port}}
@@ -10,5 +10,5 @@ slurm:
   wall_timeout: {{wall_timeout}}
 runsolver:
   cpu_timeout: {{cpu_timeout}}
-  mem_out: {{mem}}
+  memory_out: {{memory_out}}
   delay: {{delay}}
