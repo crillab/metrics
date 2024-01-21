@@ -4,8 +4,23 @@ from typing import Any
 import loguru
 import yaml
 from jinja2 import Environment, PackageLoader, select_autoescape
+from peewee import Model, CharField, SqliteDatabase
 
-from metrics.studio.util import convert_to_seconds
+from metrics.studio.util import convert_to_seconds, get_cache_dir
+
+db = SqliteDatabase(os.path.join(get_cache_dir(), "campaign.db"))
+
+
+class CampaignModel(Model):
+    name = CharField(max_length=1024)
+    local_directory = CharField(unique=True, max_length=2048)
+
+    class Meta:
+        database = db  # This model uses the "people.db" database.
+
+
+db.connect(reuse_if_open=True)
+db.create_tables([CampaignModel], safe=True)
 
 
 class Campaign:
@@ -13,7 +28,15 @@ class Campaign:
     def __init__(self, root_dir='.'):
         self._env = Environment(loader=PackageLoader('metrics'), autoescape=select_autoescape())
         self._root_dir = root_dir
-        self._template_vars = {'slurm': {}, 'runsolver': {},'hpc':{}}
+        self._template_vars = {'slurm': {}, 'runsolver': {}, 'ssh': {}}
+
+    @property
+    def campaign_dir(self):
+        return self._template_vars['slurm']['campaign_dir']
+
+    @property
+    def ssh_hostname(self):
+        return self._template_vars['slurm']['hostname']
 
     def _write_template(self, template_name: str, output_file: str) -> None:
         """
@@ -25,7 +48,7 @@ class Campaign:
         """
         with open(os.path.join(self._root_dir, output_file), 'w') as file:
             template = self._env.get_template(template_name)
-            all_vars = self._template_vars["hpc"]
+            all_vars = self._template_vars["ssh"]
             all_vars.update(self._template_vars["slurm"])
             all_vars.update(self._template_vars["runsolver"])
             print(template.render(**all_vars), file=file)
@@ -49,79 +72,73 @@ class Campaign:
         """
         return self._template_vars[item]
 
+    def update_dict(self, yaml_data):
+        self._template_vars.update(yaml_data)
+
     def save(self):
-        self._write_template('.campaign.yml','.campaign.yml')
+        self._write_template('.campaign.yml', '.campaign.yml')
 
 
-def campaigns_init(arguments, cb: 'CampaignBuilder'):
-    if arguments["campaign_directory"]:
+def campaigns_init_from_argument(arguments, cb: 'CampaignBuilder'):
+    if "campaign_directory" in arguments and arguments["campaign_directory"]:
         cb.add_campaign_directory(arguments["campaign_directory"])
-    if arguments["host"]:
+    if "host" in arguments and arguments["host"]:
         cb.add_host(arguments["host"])
-    if arguments["port"]:
-        cb.add_host(arguments["ports"])
-    if arguments["qos"]:
+    if "port" in arguments and arguments["port"]:
+        cb.add_port(arguments["port"])
+    if "qos" in arguments and arguments["qos"]:
         cb.add_qos(arguments["qos"])
-    if arguments["partition"]:
+    if "partition" in arguments and arguments["partition"]:
         cb.add_partition(arguments["partition"])
-    if arguments["n_nodes"]:
-        cb.add_nNodes(arguments["n_nodes"])
-    if arguments["n_cpu"]:
+    if "n_nodes" in arguments and arguments["n_nodes"]:
+        cb.add_n_nodes(arguments["n_nodes"])
+    if "n_cpu" in arguments and arguments["n_cpu"]:
         cb.add_partition(arguments["n_cpu"])
-    if arguments["cpu"]:
+    if "cpu" in arguments and arguments["cpu"]:
         cb.add_cpu_timeout(arguments["cpu"])
-    if arguments["wall"]:
+    if "wall" in arguments and arguments["wall"]:
         cb.add_wall_timeout(arguments["wall"])
-    if arguments["delay"]:
+    if "delay" in arguments and arguments["delay"]:
         cb.add_delay(arguments["delay"])
-    if arguments["memout"]:
+    if "memout" in arguments and arguments["memout"]:
         cb.add_memout(arguments["memout"])
+    return cb
+
+
+def campaigns_init_from_dict(yaml_data, cb: 'CampaignBuilder'):
+    cb.add_data_from_dict(yaml_data)
     return cb
 
 
 class CampaignFactory:
     @staticmethod
     def campaign_builder(arguments, file) -> 'CampaignBuilder':
-        campaign_file = ".campaign.yml"
         cb = CampaignBuilder()
-        if os.path.exists(campaign_file):
-            with open(campaign_file, "r") as stream:
+        if os.path.exists(file):
+            with open(file, "r") as stream:
                 try:
                     data = yaml.safe_load(stream)
                     loguru.logger.debug(data)
-
+                    campaigns_init_from_dict(data, cb)
                 except yaml.YAMLError as exc:
-                    loguru.logger.error("Failed to parse the '.campaign.yml' file.")
+                    loguru.logger.error(f"Failed to parse the '.campaign.yml' file. {exc}")
         loguru.logger.debug(arguments)
-        if arguments["subcommand"] == "init":
-            cb = campaigns_init(arguments, cb)
+        cb = campaigns_init_from_argument(arguments, cb)
         return cb
 
 
 class CampaignBuilder:
     def __init__(self, root_dir='.'):
         self._campaign = Campaign(root_dir=root_dir)
-        # self._name = None
-        # self._campaign_directory = None
-        # self._host = None
-        # self._port = 22
-        # self._cpu_timeout = None
-        # self._wall_timeout = None
-        # self._memout = None
-        # self._delay = None
-        # self._qos = None
-        # self._partition = None
-        # self._nNodes = None
-        # self._nCpu = None
 
     def add_host(self, host):
-        self._campaign["hpc"]["host"] = host
+        self._campaign["ssh"]["host"] = host
 
     def add_port(self, port):
-        self._campaign["hpc"]["port"] = port
+        self._campaign["ssh"]["port"] = port
 
     def add_campaign_directory(self, cp):
-        self._campaign["hpc"]["campaign_directory"] = cp
+        self._campaign["ssh"]["campaign_directory"] = cp
 
     def add_cpu_timeout(self, timeout):
         self._campaign["runsolver"]["cpu_timeout"] = convert_to_seconds(timeout)
@@ -141,11 +158,14 @@ class CampaignBuilder:
     def add_partition(self, partition):
         self._campaign["slurm"]["partition"] = partition
 
-    def add_nNodes(self, nNodes):
+    def add_n_nodes(self, nNodes):
         self._campaign["slurm"]["n_nodes"] = nNodes
 
-    def add_nCpu(self, nCpu):
+    def add_n_cpu(self, nCpu):
         self._campaign["slurm"]["n_cpu"] = nCpu
+
+    def add_data_from_dict(self, d):
+        self._campaign.update_dict(d)
 
     def build(self) -> Campaign:
         return self._campaign
