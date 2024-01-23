@@ -1,4 +1,5 @@
 # from https://stackoverflow.com/questions/3096860/convert-time-string-expressed-as-numbermhdsw-to-seconds-in-python
+import os
 from datetime import timedelta
 import re
 
@@ -25,3 +26,11 @@ def get_cache_dir() -> str:
     appauthor = metrics.__title__.lower()
     cache_dir = user_data_dir(appname, appauthor)
     return cache_dir
+
+
+def walk_through_files(path, file_extensions):
+    for (dirpath, dirnames, filenames) in os.walk(path):
+        for filename in filenames:
+            for extension in file_extensions:
+                if filename.endswith(extension):
+                    yield os.path.join(dirpath, filename)

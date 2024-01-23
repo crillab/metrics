@@ -25,7 +25,7 @@ class Downloader(abc.ABC):
         self._root_input_set = root_input_set
 
     @abc.abstractmethod
-    def download(self,rename=None,list_of_files=None):
+    def download(self, rename=None, list_of_files=None, extension=None):
         pass
 
 
@@ -34,16 +34,17 @@ class InstanceDownloader(Downloader):
         super().__init__(root_input_set)
         self._url = url
 
-    def download(self, rename=None,list_of_files=None):
-        # TODO
+    def download(self, rename=None, list_of_files=None, extension=None):
+        # TODO ssl
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
         ssl._create_default_https_context = ssl._create_unverified_context
         loguru.logger.debug(self._url)
-        r = requests.head(self._url, allow_redirects=True,verify=False)
-        local_filename, headers = urllib.request.urlretrieve(r.url, filename=os.path.join(self._root_input_set,
-                                                                                              r.url.split(os.path.sep)[-1]),)
+        r = requests.head(self._url, allow_redirects=True, verify=False)
+        filename = r.url.split(os.path.sep)[-1] if extension is None else r.url.split(os.path.sep)[-1] + extension
+        local_filename, headers = urllib.request.urlretrieve(r.url,
+                                                             filename=os.path.join(self._root_input_set, filename))
         if local_filename.endswith(".zip"):
             with ZipFile(local_filename, "r") as z:
                 root_dir = z.namelist()[0].split(os.path.sep)[0]
@@ -53,12 +54,12 @@ class InstanceDownloader(Downloader):
 
 
 class CompositeInstanceDownloader(Downloader):
-    def __init__(self, file=None,base_url=None, root_input_set="./input_set"):
+    def __init__(self, file=None, base_url=None, root_input_set="./input_set"):
         super().__init__(root_input_set)
         self._file = file
         self._url = base_url
 
-    def download(self,rename=None,list_of_files=None):
+    def download(self, rename=None, list_of_files=None, extension=None):
         urls = []
         if self._file is not None:
             with open(self._file, 'r') as f:
@@ -68,7 +69,7 @@ class CompositeInstanceDownloader(Downloader):
                 urls.append(f"{self._url}/{f}")
         for item in alive_it(urls):
             downloader = InstanceDownloader(item, self._root_input_set)
-            downloader.download()
+            downloader.download(rename=None, list_of_files=list_of_files, extension=extension)
 
 
 class XCSPDownloader(Downloader):
@@ -76,7 +77,7 @@ class XCSPDownloader(Downloader):
         super().__init__(root_input_set)
         self._year = year
 
-    def download(self,rename=None,list_of_files=None):
+    def download(self, rename=None, list_of_files=None, extension=None):
         if self._year == -1:
             for key, t in alive_it(XCSP_URL.items()):
                 url, name = t
@@ -147,5 +148,4 @@ class XCSPFilter:
         loguru.logger.info("Copy selected instances to input_set directory...")
         for file in self._filter_df['instance'].values:
             shutil.copyfile(os.path.join(self._xcsp_cache, file),
-                        os.path.join(self._root_input_set, file.split(os.path.sep)[-1]))
-
+                            os.path.join(self._root_input_set, file.split(os.path.sep)[-1]))

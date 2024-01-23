@@ -1,10 +1,11 @@
 import os.path
+from datetime import datetime
 from typing import Any
 
 import loguru
 import yaml
 from jinja2 import Environment, PackageLoader, select_autoescape
-from peewee import Model, CharField, SqliteDatabase
+from peewee import Model, CharField, SqliteDatabase, DateTimeField
 
 from metrics.studio.util import convert_to_seconds, get_cache_dir
 
@@ -14,6 +15,11 @@ db = SqliteDatabase(os.path.join(get_cache_dir(), "campaign.db"))
 class CampaignModel(Model):
     name = CharField(max_length=1024)
     local_directory = CharField(unique=True, max_length=2048)
+    status = CharField(max_length=256, null=True)
+    date = DateTimeField(default=datetime.now())
+
+    def __str__(self):
+        return f"{self.name}"
 
     class Meta:
         database = db  # This model uses the "people.db" database.
@@ -32,11 +38,11 @@ class Campaign:
 
     @property
     def campaign_dir(self):
-        return self._template_vars['slurm']['campaign_dir']
+        return self._template_vars['ssh'].get('campaign_directory')
 
     @property
     def ssh_hostname(self):
-        return self._template_vars['slurm']['hostname']
+        return self._template_vars['ssh']['hostname']
 
     def _write_template(self, template_name: str, output_file: str) -> None:
         """
@@ -106,6 +112,7 @@ def campaigns_init_from_argument(arguments, cb: 'CampaignBuilder'):
 
 
 def campaigns_init_from_dict(yaml_data, cb: 'CampaignBuilder'):
+    print(yaml_data)
     cb.add_data_from_dict(yaml_data)
     return cb
 

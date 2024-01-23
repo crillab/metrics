@@ -11,3 +11,10 @@ pyfiglet
 pyparsing
 pyyaml
 tenacity
+peewee
+gbd-tool
+GitPython
+awesome-slugify
+alive-progress
+sysrsync
+requests
