@@ -42,7 +42,7 @@ class Campaign:
 
     @property
     def ssh_hostname(self):
-        return self._template_vars['ssh']['hostname']
+        return self._template_vars['ssh']['host']
 
     def _write_template(self, template_name: str, output_file: str) -> None:
         """

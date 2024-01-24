@@ -225,13 +225,13 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
                                                                    help="The 'upload' command is used to "
                                                                         "upload the campaign from the current "
                                                                         "folder to the remote campaign folder. ")
-    parser_campaign_upload.add_argument("--rsync-options", default="-havz")
+    parser_campaign_upload.add_argument("--rsync-options", default=("-h", "-a", "-v", "-z"))
     parser_campaign_download = parser_campaigns_subparser.add_parser("download",
                                                                      help="The 'download' command is used to "
                                                                           "download the campaign from the "
                                                                           "remote campaign folder to the "
                                                                           "current campaign folder.")
-    parser_campaign_download.add_argument("--rsync-options", default="-havz")
+    parser_campaign_download.add_argument("--rsync-options", default=("-h", "-a", "-v", "-z"))
 
     parser_campaign_submit = parser_campaigns_subparser.add_parser("submit", help="The 'submit' command is "
                                                                                   "used to submit all jobs to "
@@ -446,7 +446,7 @@ def campaign_upload(args):
     campaign_builder = CampaignFactory.campaign_builder(args, ".campaign.yml")
     c = campaign_builder.build()
     sysrsync.run(source=os.getcwd(),
-                 destination=c.campaign_dir, destitination_ssh=c.ssh_hostname,
+                 destination=c.campaign_dir, destination_ssh=c.ssh_hostname,
                  sync_source_contents=False, options=args["rsync_options"])
 
 
