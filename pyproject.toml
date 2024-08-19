@@ -1,4 +1,3 @@
-
 [project]
 name = "crillab-metrics"
 version = "1.3.0"
@@ -6,7 +5,8 @@ description = "rEproducible sofTware peRformance analysIs in perfeCt Simplicity"
 keywords = ["reproducible software performance analysis"]
 readme = "README.md"
 authors = [
-    {name = "Thibault Falque, Romain Wallon, Hugues Wattez"}, {email = "metrics@cril.fr"},
+    { name = "Thibault Falque, Romain Wallon, Hugues Wattez" },
+    { email = "metrics@cril.fr" },
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -29,7 +29,7 @@ dependencies = [
     "pyyaml",
     "tenacity",
 ]
-license = {text = "LGPLv3+"}
+license = { text = "LGPLv3+" }
 requires-python = ">=3.10"
 
 [project.urls]
@@ -38,3 +38,40 @@ Homepage = "https://github.com/crillab/metrics"
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+[project.extras]
+sat = ["gbd-tools"]
+minizinc = ["mzn-bench"]
+
+[tool.pdm.build]
+includes = ["bin/*", "metrics/*"]
+
+[tool.scripts]
+metrics = "bin/metrics"
+
+[tool.pyinstaller]
+# Fichier à encapsuler
+script = "bin/metrics"
+# Inclure l'ensemble des modules et sous-packages du package metrics
+paths = ["metrics"]
+# Inclure l'interpréteur Python dans le fichier résultat
+onefile = true
+
+# Options supplémentaires pour la génération des packages
+[tool.pyinstaller.datas]
+# Ajoutez ici les fichiers de données supplémentaires à inclure dans le package
+
+# Génération des packages supplémentaires
+[tool.pyinstaller.deploy]
+# Génération d'un package Debian
+deb = true
+# Génération d'un package Snapcraft
+snap = true
+# Génération d'un package Homebrew
+homebrew = true
+# Génération d'un package Chocolatey
+chocolatey = true
+
+# Options pour le packaging
+[tool.pyinstaller.options]
+# Ajoutez ici d'autres options de configuration PyInstaller selon vos besoins

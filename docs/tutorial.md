@@ -40,14 +40,21 @@ the execution of the solver, and effortlessly organizing them.
 In the end, the main purpose of Metrics is to favor the sharing and
 reproducibility of experimental results and their analysis.
 
-Towards this direction, *Metrics*' web-app, a.k.a.
-[*Metrics-Studio*](http://crillab-metrics.cloud), allows to draw common figures,
-such as cactus plots and scatter plots from CSV or JSON files so as to provide
-a quick overview of the conducted experiments.
-From this overview, one can then use locally the
-[*Metrics*' library](https://pypi.org/project/crillab-metrics/) for a
-fine-grained control of the drawn figures, for instance through the use of
-[Jupyter notebooks](https://jupyter.org/).
+[//]: # (Towards this direction, *Metrics*' web-app, a.k.a.)
+
+[//]: # ([*Metrics-Studio*]&#40;http://crillab-metrics.cloud&#41;, allows to draw common figures,)
+
+[//]: # (such as cactus plots and scatter plots from CSV or JSON files so as to provide)
+
+[//]: # (a quick overview of the conducted experiments.)
+
+[//]: # (From this overview, one can then use locally the)
+
+[//]: # ([*Metrics*' library]&#40;https://pypi.org/project/crillab-metrics/&#41; for a)
+
+[//]: # (fine-grained control of the drawn figures, for instance through the use of)
+
+[//]: # ([Jupyter notebooks]&#40;https://jupyter.org/&#41;.)
 
 
 
