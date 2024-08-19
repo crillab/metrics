@@ -25,34 +25,56 @@
 """
 This script automates the analysis of a campaign of experiments with Metrics.
 """
+import importlib
 import os
+import pkgutil
 import sys
 from argparse import ArgumentParser
-from os import system
 from typing import Any, Dict, Tuple
 
-import git
+import loguru
+import peewee
 import sysrsync
-from git import Repo
+from paramiko.client import SSHClient
 from pyfiglet import Figlet
 from rich.console import Console
 from rich.table import Table
-from slugify import slugify
 
 import metrics
-from metrics.scalpel import CampaignParserListener
-from metrics.scalpel.config import ScalpelConfigurationLoader
-from metrics.scalpel.config.configsaver import ScalpelConfigurationWrapperSaverDecorator
+from metrics.common.util import walk_through_files
+from metrics.studio.campaign import CampaignModel
+from metrics.studio.constant import METRICS_DIR_EXPERIMENTS
 
-from metrics.studio import ReportBuilder
-from metrics.studio.campaign import CampaignBuilder, CampaignFactory, CampaignModel
-from metrics.studio.instance import InstanceDownloader, CompositeInstanceDownloader, XCSPDownloader, XCSPFilter
-import loguru
+ALIAS_COMMANDS = {
+    "c": "campaign",
+    "camp": "campaign",
+    "solver": "experiment-ware",
+    "ew": "experiment-ware",
+    "b": "binary",
+    "n": "notebook",
+    "jupyter": "notebook",
+    "ju": "notebook",
+    "book": "notebook",
+}
+
+
 #############
 # FUNCTIONS #
 #############
-from metrics.studio.scalpelcli import CLIScalpelConfigurationWrapper
-from metrics.studio.util import get_cache_dir, walk_through_files
+
+def discover_and_fill_parsers(package_name, subparser):
+    """Découvre les modules d'un package et appelle fill_parser(subparser) pour chacun."""
+    package = importlib.import_module(package_name)
+    package_path = package.__path__
+
+    # Parcourt les modules du package
+    for loader, name, is_pkg in pkgutil.walk_packages(package_path):
+        module = importlib.import_module(package_name + '.' + name)
+
+        # Vérifie si le module a une méthode fill_parser
+        if hasattr(module, 'fill_parser'):
+            # Appelle la méthode fill_parser avec subparser comme argument
+            module.fill_parser(subparser)
 
 
 def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
@@ -66,190 +88,7 @@ def parse_arguments() -> Tuple[ArgumentParser, Dict[str, Any]]:
     subparser = parser.add_subparsers(help="The commands recognized by this script.",
                                       dest="command")
 
-    parser_command_init = subparser.add_parser("init", help="init command")
-
-    # Registering the option used to switch to the interactive mode.
-    parser_command_init.add_argument('-i', '--interactive',
-                                     help='switches to the interactive mode',
-                                     action='store_true')
-
-    # Registering the option used to specify the root directory for the report.
-    parser_command_init.add_argument('-d', '--root-directory',
-                                     help='specifies the root directory for the report',
-                                     default='.')
-
-    # Registering options about the metadata of the analysis.
-    parser_command_init.add_argument('--title', help='the title of the analysis')
-    parser_command_init.add_argument('--date', help='the date of the analysis')
-    parser_command_init.add_argument('--description', help='the description of the analysis')
-    parser_command_init.add_argument('--input-description', help='the description of the input set')
-    parser_command_init.add_argument('--xp-ware-description',
-                                     help='the description of the experiment-wares')
-
-    # Registering options about the environment used for the experiments.
-    parser_command_init.add_argument('--os', help='the description of the operating system')
-    parser_command_init.add_argument('--cpu', help='the description of the CPU')
-    parser_command_init.add_argument('--ram', help='the available RAM')
-    parser_command_init.add_argument('--timeout', help='the time limit')
-    parser_command_init.add_argument('--memout', help='the memory limit')
-
-    # Registering options for generating documents.
-    parser_command_init.add_argument('--requirements', help='flag for adding the requirements file',
-                                     action='store_true')
-    parser_command_init.add_argument('--readme', help='flag for adding the README file',
-                                     action='store_true')
-    parser_command_init.add_argument('--scalpel-config',
-                                     help='flag for adding the Scalpel configuration file',
-                                     action='store_true')
-    parser_command_init.add_argument('--config-file',
-                                     help='the name for the Scalpel configuration file',
-                                     default='scalpel_config')
-    parser_command_init.add_argument('--load', help='flag for adding the loading notebook',
-                                     action='store_true')
-    parser_command_init.add_argument('--load-notebook', help='the name for the loading notebook',
-                                     default='load_experiments')
-    parser_command_init.add_argument('--runtime', help='flag for adding the runtime notebook',
-                                     action='store_true')
-    parser_command_init.add_argument('--runtime-notebook', help='the name for the runtime notebook',
-                                     default='runtime_analysis')
-    parser_command_init.add_argument('--optimization',
-                                     help='flag for adding the optimization notebook',
-                                     action='store_true')
-    parser_command_init.add_argument('--optimization-notebook',
-                                     help='the name for the optimization notebook',
-                                     default='optim_analysis')
-
-    # Registering the option for installing Metrics' dependencies.
-    parser_command_init.add_argument('--install', help="flag for installing Metrics' dependencies",
-                                     action='store_true')
-
-    # Registering the option for initializing a git repository.
-    parser_command_init.add_argument('--git', help='flag for initializing a git repository',
-                                     action='store_true')
-
-    parser_command_notebook = subparser.add_parser("notebook", help="notebook command")
-    parser_command_notebook.add_argument('-d', '--root-directory',
-                                         help='specifies the root directory for the report',
-                                         default='.')
-
-    parser_command_scalpel = subparser.add_parser("scalpel", help="scalpel command")
-    parser_command_scalpel.add_argument('--config-file',
-                                        help='the name for the Scalpel configuration file',
-                                        default='scalpel_config')
-    # command instances
-    parser_command_instances = subparser.add_parser("instances", help="instances command")
-    parser_command_instances_subcommands = parser_command_instances.add_subparsers(dest="subcommand")
-
-    ## command download of instances
-
-    parser_command_instances_download = parser_command_instances_subcommands.add_parser('download')
-    parser_command_instances_download.add_argument("-u", "--url", help="The url for downloading files.")
-    parser_command_instances_download.add_argument("-f", "--file", help="A path or an url to a file that "
-                                                                        "contains one url by line.")
-    ## command xcsp of instances
-
-    parser_command_instances_xcsp = parser_command_instances_subcommands.add_parser('xcsp')
-    parser_command_instances_xcsp.add_argument("-y", "--year", type=int, default=-1,
-                                               help="Specify the year of the XCSP competition.", nargs='+')
-    parser_command_instances_xcsp.add_argument('-t', '--types', choices=['cop', 'csp', 'minicsp', 'minicop', 'all'],
-                                               default='all', help="Specify the type of instance. ")
-    parser_command_instances_xcsp.add_argument("--no-global-constraint", action='store_true')
-    parser_command_instances_xcsp.add_argument("-e", "--exclude", nargs='+')
-    parser_command_instances_xcsp.add_argument("-i", "--include", nargs='+')
-
-    ## command collect of instances
-
-    parser_command_instances_collect = parser_command_instances_subcommands.add_parser('collect')
-    parser_command_instances_collect.add_argument("--extensions", help="Extension file to collect", nargs="+",
-                                                  default=["xml", "xml.lzma"])
-    parser_command_instances_collect.add_argument("--campaign-directory",
-                                                  help="HPC campaign directory. If not specified, the value in the "
-                                                       "'.campaign.yml' file will be used. If the file does not exist, "
-                                                       "the value must be specified. ")
-    ## command sat of instances
-
-    parser_command_instances_sat = parser_command_instances_subcommands.add_parser("sat")
-    parser_command_instances_sat.add_argument("--gbd", nargs="+", help="One or multiple path to database files.")
-    parser_command_instances_sat.add_argument("--url", help="Base url for downloading instances file",
-                                              default="https://benchmark-database.de/file/")
-    parser_command_instances_sat.add_argument("--query", help="Valid gbd query.")
-
-    # command campaigns
-
-    parser_campaigns = subparser.add_parser("campaigns", help="Campaigns' command for managing the entire campaign. "
-                                                              "Each 'campaigns' sub-command can be used to specify "
-                                                              "the campaign id or the name to be used. It is also "
-                                                              "possible to specify the campaign's remote folder, "
-                                                              "the remote ssh host and the ssh port.")
-    group_id_name = parser_campaigns.add_mutually_exclusive_group()
-    group_id_name.add_argument('--id', help="The id of the campaign.")
-    group_id_name.add_argument('--name', help="The name of the campaign.")
-
-    parser_campaigns.add_argument("-c", "--campaign-directory",
-                                  help="specifies the path to the parent folder of the campaign folder on the "
-                                       "runtime system (.e.g. HPC).")
-    parser_campaigns.add_argument("--host",
-                                  help="specifies the ssh hostname of HPC.")
-
-    parser_campaigns.add_argument("-p", "--port",
-                                  help="specifies the ssh port of HPC.", default=22)
-
-    parser_campaigns_subparser = parser_campaigns.add_subparsers(dest="subcommand",
-                                                                 help="The sub-commands available allow you to "
-                                                                      "initialise, save, download, upload, submit, "
-                                                                      "check and cancel a campaign.  ")
-    parser_campaign_init = parser_campaigns_subparser.add_parser("init", description="campaign init subcommand")
-    parser_campaign_init.add_argument("--qos", help="slurm qos")
-    parser_campaign_init.add_argument("--partition", help="slurm partition")
-    parser_campaign_init.add_argument("--n-nodes", help="Number of  nodes. See option '-N' of 'sbatch'.", type=int)
-    parser_campaign_init.add_argument("--n-cpu", help="Number of cpu. See option '-c' of 'sbatch'.", type=int)
-
-    parser_campaign_init.add_argument("--cpu", help="specifies the CPU timeout (for runsolver)")
-    parser_campaign_init.add_argument("--wall", help="specifies the WALL timeout (using by slurm and runsolver)")
-    parser_campaign_init.add_argument("--delay",
-                                      help="specifies the delay before the programme is killed. (for runsolver)")
-    parser_campaign_init.add_argument("--memout", help="specifies the memory-out. (for runsolver)")
-
-    parser_campaigns_register = parser_campaigns_subparser.add_parser('register', help="The 'register' command is used "
-                                                                                       "to register the campaign and "
-                                                                                       "obtain an id so that the "
-                                                                                       "commands for this campaign can "
-                                                                                       "be run without necessarily "
-                                                                                       "being in the local folder. ")
-    parser_campaigns_register.add_argument("--name", help="The name of the campaign",
-                                           default=slugify(os.getcwd().split(os.path.sep)[-1], lowercase=True))
-    parser_campaigns_register.add_argument("--dir", help="The directory of the campaign. By default current directory.",
-                                           default=os.getcwd())
-
-    parser_campaign_upload = parser_campaigns_subparser.add_parser("upload",
-                                                                   help="The 'upload' command is used to "
-                                                                        "upload the campaign from the current "
-                                                                        "folder to the remote campaign folder. ")
-    parser_campaign_upload.add_argument("--rsync-options", default=("-h", "-a", "-v", "-z"))
-    parser_campaign_download = parser_campaigns_subparser.add_parser("download",
-                                                                     help="The 'download' command is used to "
-                                                                          "download the campaign from the "
-                                                                          "remote campaign folder to the "
-                                                                          "current campaign folder.")
-    parser_campaign_download.add_argument("--rsync-options", default=("-h", "-a", "-v", "-z"))
-
-    parser_campaign_submit = parser_campaigns_subparser.add_parser("submit", help="The 'submit' command is "
-                                                                                  "used to submit all jobs to "
-                                                                                  "the remote scheduler. ")
-    parser_campaign_status = parser_campaigns_subparser.add_parser("status",
-                                                                   help="The 'status' command is used to check "
-                                                                        "the execution status of the current "
-                                                                        "campaign or the campaign whose name "
-                                                                        "or id is specified in the parameter. ")
-    parser_campaign_cancel = parser_campaigns_subparser.add_parser("cancel",
-                                                                   help="The 'cancel' command is used to cancel jobs "
-                                                                        "in a campaign. ")
-    parser_campaign_list = parser_campaigns_subparser.add_parser("list",
-                                                                 help="List all registered campaigns.")
-
-    # parser_ew = subparser.add_parser("experiment-wares", help="experiment-wares subcommand")
-    # parser_ew_subparser = parser_campaigns.add_subparsers(dest="subcommand")
-    # parser_ew_collect = parser_ew_subparser.add_parser("collect")
+    discover_and_fill_parsers("metrics.command", subparser)
 
     # Registering the option used to display the help of the program.
     parser.add_argument('-h', '--help',
@@ -291,111 +130,10 @@ def version() -> None:
     print('it under the terms of the GNU Lesser General Public License.')
 
 
-def _create_cache_directory():
-    cache_dir = get_cache_dir()
-    os.makedirs(cache_dir, exist_ok=True)
-    os.makedirs(os.path.join(cache_dir, "logs"), exist_ok=True)
-    os.makedirs(os.path.join(cache_dir, "cache"), exist_ok=True)
-    os.makedirs(os.path.join(cache_dir, "cache", "xcsp"), exist_ok=True)
-    os.makedirs(os.path.join(cache_dir, "cache", "experiment-ware"), exist_ok=True)
-
-
-def download_metadata():
-    loguru.logger.info("Downloading metadata...")
-    xcsp_cache = os.path.join(get_cache_dir(), "cache", "xcsp")
-    metadata_dir = os.path.join(xcsp_cache, "metadata")
-    if not os.path.exists(metadata_dir):
-        cloned_repo = Repo.clone_from("https://github.com/thibaultfalque/xcsp3-metadata",
-                                      metadata_dir)
-    else:
-        cloned_repo = Repo(metadata_dir)
-    cloned_repo.remote().pull()
-
-
-def init(arguments: Dict[str, Any]) -> None:
-    """
-    Initializes a new report directory.
-    """
-
-    _create_cache_directory()
-    download_metadata()
-
-    if arguments['interactive']:
-        # The interactive mode is on: we need to ask the users for details.
-        print_header()
-
-    else:
-        # The interactive mode is off: we get all details from the command line.
-        report = ReportBuilder(arguments['root_directory'])
-        report.update_vars(arguments)
-
-        # Creating the report files.
-        report.create_directories()
-        if arguments['install']:
-            report.install()
-        if arguments['git']:
-            report.git_init()
-        if arguments['readme']:
-            report.add_readme()
-        if arguments['requirements']:
-            report.add_requirements()
-        if arguments['scalpel_config']:
-            report.add_scalpel_config(arguments['config_file'])
-        if arguments['optimization']:
-            report.add_optim_analysis(arguments['optimization_notebook'])
-        if arguments['runtime']:
-            report.add_runtime_analysis(arguments['runtime_notebook'])
-        if arguments['load']:
-            report.add_load_experiments(arguments['load_notebook'])
-
-
-def notebook(root_directory: str = '.') -> None:
-    """
-    Runs Jupyter Notebook inside the root directory of the report.
-
-    :param root_directory: The root directory of the report.
-    """
-    system(f'jupyter notebook --notebook-dir="{root_directory}"')
-
-
-def scalpel(scalpel_file):
-    print_header()
-    wrapper = ScalpelConfigurationWrapperSaverDecorator(CLIScalpelConfigurationWrapper(),
-                                                        scalpel_file)
-    scalpel_config = ScalpelConfigurationLoader(wrapper, CampaignParserListener())
-    scalpel_config.load()
-    wrapper.save()
-
-
-def instances_download_file(url):
-    InstanceDownloader(url).download()
-
-
-def instances_download_list_files(file):
-    CompositeInstanceDownloader(file).download()
-
-
-def instances_download(arguments):
-    loguru.logger.info("Downloading instances...")
-    if arguments.get('url') is not None:
-        instances_download_file(arguments.get('url'))
-    if arguments.get('file') is not None:
-        instances_download_list_files(arguments.get('file'))
-
-
-def xcsp_download(arguments):
-    xcsp_cache = os.path.join(get_cache_dir(), "cache", "xcsp")
-    xcsp_metadata = os.path.join(get_cache_dir(), "cache", "xcsp", "metadata")
-    loguru.logger.info("Downloading instances in cache directory...")
-    XCSPDownloader(arguments.get('year'), xcsp_cache).download()
-
-    XCSPFilter(xcsp_cache, xcsp_metadata, arguments).filter().copy()
-
 
 def collect(arguments):
-    campaign_builder = CampaignFactory.campaign_builder(args, ".campaign.yml")
+    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
     c = campaign_builder.build()
-    print(c.campaign_dir)
     remote_campaign_directory = arguments.get("campaign_directory") or c.campaign_dir
     if remote_campaign_directory is None:
         loguru.logger.error(
@@ -404,46 +142,24 @@ def collect(arguments):
         sys.exit(1)
     loguru.logger.info(f"Collecting instances with extension(s) '{','.join(arguments['extensions'])}'.")
     with open('./input_set/jobs.lst', 'w') as f:
+        files = []
         for file in walk_through_files("./input_set", file_extensions=arguments["extensions"]):
-            print(os.path.join(remote_campaign_directory, file.replace('./', '')), file=f)
+            files.append(os.path.join(remote_campaign_directory, file.replace('./', '')))
+    return files
 
 
-def sat(arguments):
-    try:
-        from gbd_core.api import GBD
-        if os.environ.get("GBD_DB") is None and arguments["gbd"] is None:
-            loguru.logger.error(
-                "Please specify the GBD_DB environment variable or add the cli argument '--gbd path1 path2'")
-        paths = arguments["gbd"] or os.environ.get("GBD_DB").split(",")
-        with GBD(paths) as gbd:
-            df = gbd.query(arguments["query"])
-            CompositeInstanceDownloader(base_url=arguments["url"]).download(list_of_files=df["hash"].values,
-                                                                            extension=".cnz.xz")
-    except ImportError as e:
-        loguru.logger.error("Could not import gbd_core.api. Please install with 'pip install gbd-tools'. ")
-
-
-def instances(arguments: Dict[str, Any]) -> None:
-    command = args['subcommand']
-    if command == "download":
-        instances_download(arguments)
-    elif command == "xcsp":
-        xcsp_download(arguments)
-    elif command == "collect":
-        collect(arguments)
-    elif command == "sat":
-        sat(arguments)
 
 
 def campaign_init(args):
     loguru.logger.info("Init campaign...")
-    campaign_builder = CampaignFactory.campaign_builder(args, ".campaign.yml")
+    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
     c = campaign_builder.build()
     c.save()
 
 
 def campaign_upload(args):
-    campaign_builder = CampaignFactory.campaign_builder(args, ".campaign.yml")
+    loguru.logger.info("Upload campaign")
+    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
     c = campaign_builder.build()
     sysrsync.run(source=os.getcwd(),
                  destination=c.campaign_dir, destination_ssh=c.ssh_hostname,
@@ -451,15 +167,28 @@ def campaign_upload(args):
 
 
 def campaign_download(args):
-    campaign_builder = CampaignFactory.campaign_builder(args, ".campaign.yml")
+    loguru.logger.info("Download experiments")
+    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
     c = campaign_builder.build()
-    sysrsync.run(source=os.path.join(c.campaign_dir, "experiments"),
+    sysrsync.run(source=os.path.join(c.campaign_dir, METRICS_DIR_EXPERIMENTS),
                  destination=os.getcwd(), source_ssh=c.ssh_hostname,
                  sync_source_contents=False, options=args["rsync_options"])
 
 
 def campaign_submit(args):
-    pass
+    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
+    c = campaign_builder.build()
+
+    instances = collect(args)
+    ews = experiment_wares_collect(args)
+    campaign_upload(args)
+
+    client = SSHClient()
+    client.load_system_host_keys()
+    client.connect(c.ssh_hostname)
+    for instance in instances:
+        for ew in ews:
+            stdin, stdout, stderr = client.exec_command('')
 
 
 def campaign_cancel(args):
@@ -471,8 +200,11 @@ def campaign_status(args):
 
 
 def campaign_register(args):
-    m = CampaignModel.create(name=args["name"], local_directory=args["dir"])
-    m.save()
+    try:
+        m = CampaignModel.create(name=args["name"], local_directory=args["dir"])
+        m.save()
+    except peewee.IntegrityError as e:
+        loguru.logger.error(f"Campaign with the path {args['dir']} already exists.")
 
 
 def campaign_list():
@@ -512,40 +244,67 @@ def campaign(args):
         loguru.logger.error(f"'{command}' is not a valid subcommand of 'campaigns'.")
 
 
+def experiment_wares_collect(args):
+    files = []
+    for file in os.listdir("./experiment_wares"):
+        f = os.path.join("./experiment_wares", file)
+        if os.path.isdir(f):
+            continue
+        if os.access(f, os.X_OK):
+            files.append(f)
+    loguru.logger.debug(files)
+    return files
+
+
+def experiment_wares(args):
+    command = args['subcommand']
+    if command == "collect":
+        results = experiment_wares_collect(args)
+        table = Table(title="Experiment Ware List")
+        table.add_column("Name", justify="right")
+        for ew in results:
+            table.add_row(ew)
+        console = Console()
+        console.print(table)
+
+
 ################
 # MAIN PROGRAM #
 ################
 
-
 if __name__ == '__main__':
-    _create_cache_directory()
-    download_metadata()
     # Parsing the command line arguments.
     argument_parser, args = parse_arguments()
 
     # If the help is asked, we display it and exit.
     if args['help']:
         display_help(argument_parser)
-        exit()
+        sys.exit()
 
     # If the version is asked, we display it and exit.
     if args['version']:
         version()
-        exit()
+        sys.exit()
 
     # Executing the specified Metrics command.
     command = args['command']
     if command == 'help':
         display_help(argument_parser)
-    elif command == 'init':
-        init(args)
-    elif command == 'instances':
-        instances(args)
-    elif command == 'campaigns':
-        campaign(args)
-    elif command == 'notebook':
-        notebook(args.get('root_directory', '.'))
-    elif command == 'scalpel':
-        scalpel(args['config_file'])
     elif command == 'version':
         version()
+    else:
+        try:
+            if command in ALIAS_COMMANDS:
+                command = ALIAS_COMMANDS[command]
+            module = importlib.import_module("metrics.command." + command.replace("-", "_"))
+            if hasattr(module, 'manage_command'):
+                module.manage_command(args)
+        except TypeError as e:
+            loguru.logger.error(f"Command '{command}' not found.")
+            loguru.logger.error(e)
+    # elif command == 'instances':
+    #     instances(args)
+    # elif command == 'campaigns':
+    #     campaign(args)
+    # elif command == "experiment-wares":
+    #     experiment_wares(args)
