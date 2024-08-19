@@ -29,6 +29,23 @@ Metrics-Studio (STUdIO - uSer inTerface for bUilding experIment repOrts)
 provides convenient user interfaces for building experiment reports with Metrics,
 for instance using Jupyter Notebooks.
 """
+import os.path
 
+import loguru
+from jinja2 import Environment, PackageLoader, select_autoescape
 
+from metrics.common.util import get_cache_ew_config_file
+from metrics.studio.campaign import CampaignModel
+from metrics.studio.database import db
 from metrics.studio.report import ReportBuilder
+
+
+def init_metrics_studio():
+    loguru.logger.info("Creating database...")
+    db.create_tables([CampaignModel], safe=True)
+    ew_config_file = get_cache_ew_config_file()
+    if not os.path.exists(ew_config_file):
+        env = Environment(loader=PackageLoader('metrics'), autoescape=select_autoescape())
+        with open(ew_config_file, 'w') as file:
+            template = env.get_template("ew.yaml")
+            print(template.render({}), file=file)
