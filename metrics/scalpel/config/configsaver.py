@@ -27,8 +27,8 @@
 """
 This module provides classes for saving the configuration of Scalpel.
 """
-from collections import defaultdict
 import yaml
+
 from metrics.scalpel.config.wrapper import *
 
 
@@ -173,7 +173,8 @@ class ScalpelConfigurationWrapperSaverDecorator(IScalpelConfigurationWrapper):
     def __init__(self, decorated: IScalpelConfigurationWrapper, file: str):
         self._decorated = decorated
         self._file = file
-        self._dict_config = defaultdict(dict)
+        with open(file, 'r', encoding='utf-8') as yaml_stream:
+            self._dict_config = yaml.load(yaml_stream)
 
     def get_campaign_name(self) -> Optional[str]:
         name = self._decorated.get_campaign_name()
@@ -308,4 +309,4 @@ class ScalpelConfigurationWrapperSaverDecorator(IScalpelConfigurationWrapper):
 
     def save(self):
         with open(self._file, 'w') as outfile:
-            yaml.dump({k:v for k, v in self._dict_config.items()}, outfile, default_flow_style=False)
+            yaml.dump({k: v for k, v in self._dict_config.items()}, outfile, default_flow_style=False)
