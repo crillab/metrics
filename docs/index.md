@@ -6,7 +6,6 @@
    :caption: Contents
 
    tutorial
-   code
    scalpel-config
    wallet
 ```
