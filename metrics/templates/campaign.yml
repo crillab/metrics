@@ -1,0 +1,72 @@
+name: { { title } }
+date: { { date } }
+
+setup:
+  os: { { os } }
+  cpu: { { cpu } }
+  ram: { { ram } }
+  timeout: { { cpu_timeout } }
+  wall_timeout: {{wall_timeout}}
+  memout: { { memout } }
+  delay: {{delay}}
+
+experiment-wares:
+  -
+input-set:
+  name:
+  type:
+  family:
+  input-name:
+  extensions:
+    -
+  path-list:
+    -
+source:
+  path:
+    -
+  format:
+  has-header:
+  quote-char:
+  separator:
+  title-separator:
+  follow-symlinks:
+  parser:
+  is-success:
+
+data:
+  mapping:
+    experiment_ware:
+    cpu_time:
+    input:
+  default-values:
+    cpu_time: { { timeout } }
+  ignored-data:
+    -
+  file-name-meta:
+    pattern:
+    regex:
+    groups:
+      experiment_ware:
+      input:
+      exact:
+  raw-data:
+    - log-data:
+      pattern:
+      regex:
+      group:
+      exact:
+  data-files:
+    -
+  ignored-files:
+    -
+ssh:
+  campaign_directory: {{campaign_directory}}
+  host: {{host}}
+  port: {{port}}
+queue_management:
+  type: {{type}}
+  qos: {{qos}}
+  partition: {{partition}}
+  n_nodes: {{n_nodes}}
+  n_cpu: {{n_cpu}}
+  wall_timeout: {{wall_timeout}}
