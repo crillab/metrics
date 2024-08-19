@@ -44,13 +44,34 @@ BUILD_SH = "build.sh"
 
 
 class BinaryBuilder(TemplateBuilder):
+    """
+    A builder class for generating scripts related to binary management.
+    Inherits from TemplateBuilder.
+    """
+
     def __init__(self, root_dir):
+        """
+        Initialize the BinaryBuilder with the specified root directory.
+
+        :param root_dir: Root directory where the templates will be generated.
+        """
         super().__init__(root_dir)
 
     def add_executable(self, executable):
+        """
+        Add the executable command to the template variables.
+
+        :param executable: The executable command to be added to the template.
+        """
         self._template_vars["executable"] = executable
 
     def add_parameters(self, format_parameters, included_options=None):
+        """
+        Add parameters for the executable to the template variables.
+
+        :param format_parameters: The parameter string to be formatted.
+        :param included_options: Optional list of options to be included in the parameters.
+        """
         if included_options is None:
             included_options = []
         parameters = format_parameters.replace("{{instance}}", "$INSTANCE").replace("{{options}}",
@@ -58,22 +79,37 @@ class BinaryBuilder(TemplateBuilder):
         self._template_vars["parameters"] = parameters
 
     def add_command_prefix(self, command_prefix):
+        """
+        Add a command prefix to the template variables.
+
+        :param command_prefix: The command prefix to be added. Defaults to an empty string if None.
+        """
         self._template_vars["command_prefix"] = command_prefix if command_prefix is not None else ""
 
     def build(self, template_name, output_name):
+        """
+        Build the template using the provided template name and output it to the specified file.
+
+        :param template_name: The name of the template to use.
+        :param output_name: The name of the output file.
+        """
         self._write_template(template_name, output_name)
 
 
 def fill_parser(subparser) -> None:
+    """
+    Define the command-line argument parser for the 'binary' command and its subcommands.
+
+    :param subparser: The subparser object to add the 'binary' command to.
+    """
     parser_ew = subparser.add_parser("binary", aliases=["b"],
-                                     help="binary' command for managing the binaries of the campaign.")
+                                     help="The 'binary' command for managing the binaries of the campaign.")
 
     parser_ew_subparser = parser_ew.add_subparsers(dest="subcommand",
-                                                   help="The sub-commands available allow you to "
-                                                        "collect the experiment_ware of the campaign.  ")
+                                                   help="Sub-commands available for managing the binary of the campaign.")
+
     list_parser = parser_ew_subparser.add_parser("list",
-                                                 description="This command list the binaries available for "
-                                                             "this campaign.")
+                                                 description="This command lists the binaries available for this campaign.")
     list_parser.add_argument("-c", "--campaign-dir", help="The path to the campaign directory.",
                              default=".")
 
@@ -84,40 +120,54 @@ def fill_parser(subparser) -> None:
                              help="Force an update of the list of binaries available globally.")
 
     add_parser = parser_ew_subparser.add_parser("add",
-                                                description="This command integrates an experiment_ware into the existing "
-                                                            "campaign. It adds the files associated with the experiment_ware "
+                                                description="This command integrates an binary into the existing "
+                                                            "campaign. It adds the files associated with the binary "
                                                             "and updates the campaign configuration file to include settings "
                                                             "for parsing this solver.")
-    add_parser.add_argument("name", help="The name of the experiment_ware.")
+    add_parser.add_argument("name", help="The name of the binary.")
     add_parser.add_argument("ew_version",
-                            help="The name of the version of the experiment_ware. The default value is 'latest'.",
+                            help="The name of the version of the binary. The default value is 'latest'.",
                             default="latest")
     add_parser.add_argument("-c", "--campaign-dir", help="The path to the campaign directory.",
                             default=".")
 
     repo_parser = parser_ew_subparser.add_parser("repo",
-                                                 description="This command manages the source repository of the experiment_ware.")
-    repo_parser.add_argument("--url", help="The url or path to a new repository.")
-    repo_parser.add_argument("--remove", help="The id of the source to remove.", type=int)
+                                                 description="This command manages the source repository of the binary.")
+    repo_parser.add_argument("--url", help="The URL or path to a new repository.")
+    repo_parser.add_argument("--remove", help="The ID of the source to remove.", type=int)
 
     build_parser = parser_ew_subparser.add_parser("build",
-                                                  description="This command build an experiment_ware.")
-    build_parser.add_argument("id", help="The id of the experiment_ware.")
+                                                  description="This command builds an binary.")
+    build_parser.add_argument("id", help="The ID of the binary.")
     build_parser.add_argument("-c", "--campaign-dir", help="The path to the campaign directory.",
                               default=".")
 
     _ = parser_ew_subparser.add_parser("run",
-                                       description="This command run an experiment_ware.")
+                                       description="This command runs an binary.")
 
 
 def _download_file(url, download_path):
+    """
+    Download a file from a given URL and save it to the specified path.
+
+    :param url: The URL of the file to download.
+    :param download_path: The path where the downloaded file will be saved.
+    :raises: Raises an HTTPError if the request fails.
+    """
     response = requests.get(url)
-    response.raise_for_status()  # Lance une exception si la requête n'a pas réussi
+    response.raise_for_status()
     with open(download_path, 'wb') as f:
         f.write(response.content)
 
 
 def _clone_repo(repo_url, clone_path):
+    """
+    Clone a git repository from the specified URL into the given path.
+
+    :param repo_url: The URL of the repository to clone.
+    :param clone_path: The path where the repository will be cloned.
+    :return: True if the repository was successfully cloned, False otherwise.
+    """
     if os.path.exists(clone_path):
         Repo.clone_from(repo_url, clone_path)
         return True
@@ -126,6 +176,12 @@ def _clone_repo(repo_url, clone_path):
 
 
 def _process_yaml_file(file_path, merged_dict):
+    """
+    Process a YAML file and add its content to a merged dictionary.
+
+    :param file_path: The path to the YAML file.
+    :param merged_dict: The dictionary where the processed data will be added.
+    """
     with open(file_path, 'r') as file:
         data = yaml.safe_load(file)
         if 'name' in data:
@@ -135,6 +191,14 @@ def _process_yaml_file(file_path, merged_dict):
 
 
 def _handle_line(line, cache_dir):
+    """
+    Handle a line from the input file, determining whether it is a URL, a git repository, or a directory,
+    and perform the appropriate action.
+
+    :param line: The line to handle, which could be a URL, a git repository, or a directory path.
+    :param cache_dir: The directory where files or repositories will be cached.
+    :return: The path to the processed resource (file or directory).
+    """
     line = line.strip()
     if line.endswith('.yaml'):
         if line.startswith('http://') or line.startswith('https://'):
@@ -143,21 +207,27 @@ def _handle_line(line, cache_dir):
             _download_file(line, download_path)
             return download_path
         else:
-            return line  # Chemin local au fichier YAML
+            return line  # Local path to the YAML file
     elif line.endswith('.git'):
         repo_name = os.path.basename(urlparse(line).path).replace('.git', '')
         clone_path = os.path.join(cache_dir, repo_name)
         _clone_repo(line, clone_path)
-        return clone_path  # Chemin du dépôt cloné
+        return clone_path  # Path to the cloned repository
     elif os.path.isdir(line):
         return line
     else:
-        loguru.logger.error(f"Invalid path or url: {line}")
+        loguru.logger.error(f"Invalid path or URL: {line}")
 
 
 def _update_cache(input_file):
+    """
+    Update the cache by processing URLs and paths from the input file.
+
+    :param input_file: The path to the input file containing URLs and paths.
+    :return: A dictionary with the merged data from the processed files.
+    """
     merged_dict = {}
-    loguru.logger.info(f"Updating cache with urls and paths from {input_file}")
+    loguru.logger.info(f"Updating cache with URLs and paths from {input_file}")
     with open(input_file, 'r', encoding='utf-8') as yaml_stream:
         urls = yaml.load(yaml_stream, Loader=yaml.FullLoader)
         for u in urls["urls"]:
@@ -178,6 +248,11 @@ def _update_cache(input_file):
 
 
 def list_command(args):
+    """
+    List the available binaries, either globally or locally, depending on the arguments.
+
+    :param args: The arguments provided to the command, which determine the scope of the listing.
+    """
     table = Table(title="Binary List" + (" (Global)" if args["global"] else " (Local)"))
 
     if args["global"] and (args["force_update"] or not os.path.exists(get_cache_ew_cache_file())):
@@ -214,6 +289,11 @@ def list_command(args):
 
 
 def add(args):
+    """
+    Add a binary to the campaign based on the specified ID and version.
+
+    :param args: The arguments provided to the command, which include the binary ID and version.
+    """
     loguru.logger.info(f"Add binary with id {args['name']} and version {args['ew_version']}")
     with open(get_cache_ew_cache_file(), 'r') as f:
         result = yaml.safe_load(f)
@@ -276,6 +356,11 @@ def add(args):
 
 
 def build(args):
+    """
+    Build the specified binary using its ID.
+
+    :param args: The arguments provided to the command, which include the binary ID.
+    """
     solver_id = args.get("id")
     campaign_dir = args.get("campaign_dir")
     solver_path = os.path.join(campaign_dir, METRICS_DIR_EXPERIMENT_WARE, solver_id)
@@ -301,16 +386,21 @@ def build(args):
 
 
 def repo(args):
+    """
+    Manage the binary repository sources.
+
+    :param args: The arguments provided to the command, which specify actions such as adding or removing repositories.
+    """
     with open(get_cache_ew_config_file(), 'r', encoding='utf-8') as yaml_stream:
         urls = yaml.load(yaml_stream, Loader=yaml.FullLoader)
         if 'url' in args and args['url'] is not None:
-            loguru.logger.info(f"Adding a new source for experiment_ware:  {args['url']}")
+            loguru.logger.info(f"Adding a new source for binary: {args['url']}")
             urls["urls"].append(args['url'])
             with open(get_cache_ew_config_file(), 'w') as file:
                 yaml.dump(urls, file)
             show_source_ew(urls)
         elif 'remove' in args and args['remove'] is not None:
-            loguru.logger.info(f"Removing source for experiment_ware with id: {args['remove']}")
+            loguru.logger.info(f"Removing source for binary with id: {args['remove']}")
             urls["urls"].pop(args['remove'] - 1)
             with open(get_cache_ew_config_file(), 'w') as file:
                 yaml.dump(urls, file)
@@ -320,7 +410,12 @@ def repo(args):
 
 
 def show_source_ew(urls):
-    table = Table(title="List of source of binaries")
+    """
+    Display the list of sources for binaries.
+
+    :param urls: The dictionary containing the list of URLs or paths to be displayed.
+    """
+    table = Table(title="List of sources for binaries")
     table.add_column("Path or URL", justify="right")
     for u in urls["urls"]:
         table.add_row(u)
@@ -339,6 +434,8 @@ MAP_COMMAND = {
 def manage_command(args):
     """
     Manage the command for the binary subcommand.
+
+    :param args: The arguments provided to the command, which determine the specific action to execute.
     """
     subcommand = args['subcommand']
     MAP_COMMAND.get(subcommand, unknown_command)(args)
