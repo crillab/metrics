@@ -29,15 +29,16 @@ This module provides various classes for parsing different types of files
 containing the output of experiment-wares produced during a campaign, to
 extract the data they contain.
 """
-
+import re
 from json import load as load_json
 from typing import Any, Optional, TextIO
 from xml.etree.ElementTree import Element, parse as load_xml
 
+from loguru import logger
+
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfiguration
 from metrics.scalpel.utils import CsvConfiguration, CsvReader
-from loguru import logger
 
 
 class CampaignOutputParser:
@@ -294,6 +295,8 @@ class RawCampaignOutputParser(CampaignOutputParser):
         while True:
             try:
                 line = next(iter_lines)
+                ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+                line = ansi_escape.sub('', line.rstrip())
                 self._parse_line(line.rstrip())
             except StopIteration:
                 break
