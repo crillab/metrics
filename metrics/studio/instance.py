@@ -1,5 +1,4 @@
 import abc
-import json
 import os
 import shutil
 import ssl
@@ -86,7 +85,7 @@ class XCSPDownloader(Downloader):
         else:
             for y in alive_it(self._year):
                 if not os.path.exists(os.path.join(self._root_input_set, "instancesXCSP" + str(y)[2:])):
-                    InstanceDownloader(XCSP_URL[str(y)], self._root_input_set).download()
+                    InstanceDownloader(XCSP_URL[str(y)][0], self._root_input_set).download(rename=XCSP_URL[str(y)][1])
 
 
 class XCSPFilter:
@@ -94,13 +93,14 @@ class XCSPFilter:
         self._filter_df = None
         self._xcsp_cache = xcsp_cache
         self._xcsp_metadata = xcsp_metadata
-        self._root_input_set = root_input_set
+        self._root_input_set = os.path.join(arguments.get("campaign_dir"), root_input_set)
         self._types = ['cop', 'csp', 'minicsp', 'minicop'] if arguments.get("types") == "all" else [
             arguments.get("types")]
         self._no_global_constraint = arguments.get("no_global_constraint")
         self._excluded = arguments.get("exclude") or []
         self._included = arguments.get("include") or []
         self._year = arguments.get("year")
+        self._year = self._year if self._year != -1 else XCSP_URL.keys()
 
     def filter(self) -> 'XCSPFilter':
         loguru.logger.info("Filtering XCSP instances...")
