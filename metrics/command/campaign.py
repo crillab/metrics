@@ -22,12 +22,16 @@ import os.path
 import sys
 
 import loguru
+import sysrsync
+from rich.console import Console
+from rich.table import Table
 
 from metrics.common.util import unknown_command
 from metrics.scalpel import CampaignParserListener
 from metrics.scalpel.config import ScalpelConfigurationLoader
 from metrics.scalpel.config.configsaver import ScalpelConfigurationWrapperSaverDecorator
-from metrics.studio.campaign import CampaignBuilder
+from metrics.studio.campaign import CampaignBuilder, CampaignModel
+from metrics.studio.constant import METRICS_DIR_CONFIG
 from metrics.studio.scalpelcli import CLIScalpelConfigurationWrapper
 
 
@@ -115,8 +119,11 @@ def fill_parser(subparser) -> None:
 
 
 def upload(args):
-    pass
-
+    loguru.logger.info("Upload campaign")
+    campaign_builder = CampaignBuilder()
+    c = campaign_builder.load_current_campaign()
+    sysrsync.run(source=os.getcwd(), destination=c.campaign_dir, destination_ssh=c.ssh_hostname,
+                 sync_source_contents=False, options=args["rsync_options"])
 
 def submit(args):
     pass
@@ -131,7 +138,17 @@ def status(args):
 
 
 def list(args):
-    pass
+    table = Table(title="Campaign List")
+    table.add_column("ID", justify="right")
+    table.add_column("Name", justify="right")
+    table.add_column("Date", justify="right")
+    table.add_column("Local Directory", justify="right")
+    table.add_column("Status", justify="right")
+    loguru.logger.debug(list(CampaignModel.select()))
+    for c in CampaignModel.select():
+        table.add_row(str(c.id), c.name, str(c.date), c.local_directory, c.status)
+    console = Console()
+    console.print(table)
 
 
 def config(args):
