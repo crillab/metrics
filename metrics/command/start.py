@@ -47,13 +47,15 @@ def fill_parser(subparser):
                                      default=os.getcwd())
     parser_command_init.add_argument('-t', '--title',
                                      help='specifies the title for this campaign. By default the title is the name of '
-                                          'the root directory.',
-                                     default=os.getcwd().split('/')[-1])
+                                          'the root directory.')
+    parser_command_init.add_argument('--no-shell', action='store_true')
 
 
 def manage_command(arguments: Dict[str, Any]):
     init_metrics()
     campaign = CampaignBuilder(arguments['root_directory'])
+    if arguments.get("title") is None:
+        arguments["title"] = arguments["root_directory"].split('/')[-1]
     campaign.update_vars(arguments)
     campaign.create_directories()
     campaign.install()
@@ -64,4 +66,5 @@ def manage_command(arguments: Dict[str, Any]):
     campaign.add_scripts()
     campaign.add_run_solver()
     campaign.register()
-    campaign.shell()
+    if not arguments['no_shell']:
+        campaign.shell()
