@@ -9,11 +9,10 @@ INSTANCE="$2"
 SOLVER_NAME="$3"
 SOLVER_VERSION="$4"
 SOLVER_DIR="$5"
-#COMMAND_PREFIX="$6"
-#EXECUTABLE="$7"
-shift 5
+OUTPUT_DIR="$6"
+shift 6
 # Load modules
-source "$EW_DIR/scripts/include/load_modules_jobs.sh"
+source "$EW_DIR/include/load_modules_jobs.sh"
 
 # Execute before script
 source $EW_DIR/$SOLVER_DIR/before.sh
