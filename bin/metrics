@@ -26,30 +26,22 @@
 This script automates the analysis of a campaign of experiments with Metrics.
 """
 import importlib
-import os
 import pkgutil
 import sys
 from argparse import ArgumentParser
 from typing import Any, Dict, Tuple
 
 import loguru
-import peewee
-import sysrsync
-from paramiko.client import SSHClient
 from pyfiglet import Figlet
-from rich.console import Console
-from rich.table import Table
 
 import metrics
-from metrics.common.util import walk_through_files
-from metrics.studio.campaign import CampaignModel
-from metrics.studio.constant import METRICS_DIR_EXPERIMENTS
 
 ALIAS_COMMANDS = {
     "c": "campaign",
     "camp": "campaign",
     "solver": "experiment-ware",
     "ew": "experiment-ware",
+    "s": "experiment-ware",
     "b": "binary",
     "n": "notebook",
     "jupyter": "notebook",
@@ -130,142 +122,69 @@ def version() -> None:
     print('it under the terms of the GNU Lesser General Public License.')
 
 
+# def campaign_init(args):
+#     loguru.logger.info("Init campaign...")
+#     campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
+#     c = campaign_builder.build()
+#     c.save()
+#
+#
+# def campaign_upload(args):
+#     loguru.logger.info("Upload campaign")
+#     campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
+#     c = campaign_builder.build()
+#     sysrsync.run(source=os.getcwd(),
+#                  destination=c.campaign_dir, destination_ssh=c.ssh_hostname,
+#                  sync_source_contents=False, options=args["rsync_options"])
+#
+#
+# def campaign_download(args):
+#     loguru.logger.info("Download experiments")
+#     campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
+#     c = campaign_builder.build()
+#     sysrsync.run(source=os.path.join(c.campaign_dir, METRICS_DIR_EXPERIMENTS),
+#                  destination=os.getcwd(), source_ssh=c.ssh_hostname,
+#                  sync_source_contents=False, options=args["rsync_options"])
+#
+#
+# def campaign_submit(args):
+#     campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
+#     c = campaign_builder.build()
+#
+#     instances = collect(args)
+#     ews = experiment_wares_collect(args)
+#     campaign_upload(args)
+#
+#     client = SSHClient()
+#     client.load_system_host_keys()
+#     client.connect(c.ssh_hostname)
+#     for instance in instances:
+#         for ew in ews:
+#             stdin, stdout, stderr = client.exec_command('')
 
-def collect(arguments):
-    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
-    c = campaign_builder.build()
-    remote_campaign_directory = arguments.get("campaign_directory") or c.campaign_dir
-    if remote_campaign_directory is None:
-        loguru.logger.error(
-            "Remote campaign file not found. You must specify the 'campaign-dir' option or initialise the campaign "
-            "with 'metrics campaign init'. ")
-        sys.exit(1)
-    loguru.logger.info(f"Collecting instances with extension(s) '{','.join(arguments['extensions'])}'.")
-    with open('./input_set/jobs.lst', 'w') as f:
-        files = []
-        for file in walk_through_files("./input_set", file_extensions=arguments["extensions"]):
-            files.append(os.path.join(remote_campaign_directory, file.replace('./', '')))
-    return files
-
-
-
-
-def campaign_init(args):
-    loguru.logger.info("Init campaign...")
-    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
-    c = campaign_builder.build()
-    c.save()
-
-
-def campaign_upload(args):
-    loguru.logger.info("Upload campaign")
-    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
-    c = campaign_builder.build()
-    sysrsync.run(source=os.getcwd(),
-                 destination=c.campaign_dir, destination_ssh=c.ssh_hostname,
-                 sync_source_contents=False, options=args["rsync_options"])
-
-
-def campaign_download(args):
-    loguru.logger.info("Download experiments")
-    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
-    c = campaign_builder.build()
-    sysrsync.run(source=os.path.join(c.campaign_dir, METRICS_DIR_EXPERIMENTS),
-                 destination=os.getcwd(), source_ssh=c.ssh_hostname,
-                 sync_source_contents=False, options=args["rsync_options"])
-
-
-def campaign_submit(args):
-    campaign_builder = CampaignFactory.campaign_builder(args, "campaign.yml")
-    c = campaign_builder.build()
-
-    instances = collect(args)
-    ews = experiment_wares_collect(args)
-    campaign_upload(args)
-
-    client = SSHClient()
-    client.load_system_host_keys()
-    client.connect(c.ssh_hostname)
-    for instance in instances:
-        for ew in ews:
-            stdin, stdout, stderr = client.exec_command('')
-
-
-def campaign_cancel(args):
-    pass
-
-
-def campaign_status(args):
-    pass
-
-
-def campaign_register(args):
-    try:
-        m = CampaignModel.create(name=args["name"], local_directory=args["dir"])
-        m.save()
-    except peewee.IntegrityError as e:
-        loguru.logger.error(f"Campaign with the path {args['dir']} already exists.")
-
-
-def campaign_list():
-    table = Table(title="Campaign List")
-    table.add_column("ID", justify="right")
-    table.add_column("Name", justify="right")
-    table.add_column("Date", justify="right")
-    table.add_column("Local Directory", justify="right")
-    table.add_column("Status", justify="right")
-    loguru.logger.debug(list(CampaignModel.select()))
-    for c in CampaignModel.select():
-        table.add_row(str(c.id), c.name, str(c.date), c.local_directory, c.status)
-    console = Console()
-    console.print(table)
-
-
-def campaign(args):
-    command = args['subcommand']
-    loguru.logger.debug(command)
-    if command == "init":
-        campaign_init(args)
-    elif command == "upload":
-        campaign_upload(args)
-    elif command == "download":
-        campaign_download(args)
-    elif command == "submit":
-        campaign_submit(args)
-    elif command == "status":
-        campaign_status(args)
-    elif command == "cancel":
-        campaign_cancel(args)
-    elif command == "register":
-        campaign_register(args)
-    elif command == "list":
-        campaign_list()
-    else:
-        loguru.logger.error(f"'{command}' is not a valid subcommand of 'campaigns'.")
-
-
-def experiment_wares_collect(args):
-    files = []
-    for file in os.listdir("./experiment_wares"):
-        f = os.path.join("./experiment_wares", file)
-        if os.path.isdir(f):
-            continue
-        if os.access(f, os.X_OK):
-            files.append(f)
-    loguru.logger.debug(files)
-    return files
-
-
-def experiment_wares(args):
-    command = args['subcommand']
-    if command == "collect":
-        results = experiment_wares_collect(args)
-        table = Table(title="Experiment Ware List")
-        table.add_column("Name", justify="right")
-        for ew in results:
-            table.add_row(ew)
-        console = Console()
-        console.print(table)
+#
+# def experiment_wares_collect(args):
+#     files = []
+#     for file in os.listdir("./experiment_wares"):
+#         f = os.path.join("./experiment_wares", file)
+#         if os.path.isdir(f):
+#             continue
+#         if os.access(f, os.X_OK):
+#             files.append(f)
+#     loguru.logger.debug(files)
+#     return files
+#
+#
+# def experiment_wares(args):
+#     command = args['subcommand']
+#     if command == "collect":
+#         results = experiment_wares_collect(args)
+#         table = Table(title="Experiment Ware List")
+#         table.add_column("Name", justify="right")
+#         for ew in results:
+#             table.add_row(ew)
+#         console = Console()
+#         console.print(table)
 
 
 ################
@@ -302,9 +221,3 @@ if __name__ == '__main__':
         except TypeError as e:
             loguru.logger.error(f"Command '{command}' not found.")
             loguru.logger.error(e)
-    # elif command == 'instances':
-    #     instances(args)
-    # elif command == 'campaigns':
-    #     campaign(args)
-    # elif command == "experiment-wares":
-    #     experiment_wares(args)
