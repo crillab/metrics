@@ -15,7 +15,8 @@ XCSP_URL = {
     "2018": ("https://www.cril.univ-artois.fr/~lecoutre/compets/instancesXCSP18.zip", "instancesXCSP18"),
     "2019": ("https://www.cril.univ-artois.fr/~lecoutre/compets/instancesXCSP19.zip", "instancesXCSP19"),
     "2022": ("https://www.cril.univ-artois.fr/~lecoutre/compets/instancesXCSP22.zip", "instancesXCSP22"),
-    "2023": ("https://www.cril.univ-artois.fr/~lecoutre/compets/instancesXCSP23.zip", "instancesXCSP23")
+    "2023": ("https://www.cril.univ-artois.fr/~lecoutre/compets/instancesXCSP23.zip", "instancesXCSP23"),
+    "2024": ("https://www.cril.univ-artois.fr/~lecoutre/compets/instancesXCSP24.zip", "instancesXCSP24"),
 }
 
 
@@ -89,7 +90,7 @@ class XCSPDownloader(Downloader):
 
 
 class XCSPFilter:
-    def __init__(self, xcsp_cache, xcsp_metadata, arguments, root_input_set="./input_set"):
+    def __init__(self, xcsp_cache, xcsp_metadata, arguments, root_input_set="input_set"):
         self._filter_df = None
         self._xcsp_cache = xcsp_cache
         self._xcsp_metadata = xcsp_metadata
@@ -110,6 +111,7 @@ class XCSPFilter:
             for y in self._year:
                 tmp = pd.read_json(os.path.join(self._xcsp_metadata, t + str(y)[2:] + ".json"))
                 tmp["type"] = t
+                tmp["year"] = y
                 dfs.append(tmp)
         df = pd.concat(dfs, ignore_index=True)
 
@@ -146,6 +148,8 @@ class XCSPFilter:
 
     def copy(self) -> None:
         loguru.logger.info("Copy selected instances to input_set directory...")
-        for file in self._filter_df['instance'].values:
-            shutil.copyfile(os.path.join(self._xcsp_cache, file),
+        for index, row in self._filter_df.iterrows():
+            file = row["instance"]
+            year = row["year"]
+            shutil.copyfile(os.path.join(self._xcsp_cache, XCSP_URL[str(year)][1], file),
                             os.path.join(self._root_input_set, file.split(os.path.sep)[-1]))
