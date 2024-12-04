@@ -12,9 +12,12 @@ pyparsing
 pyyaml
 tenacity
 peewee
-gbd-tool
+gbd-tools
 GitPython
 awesome-slugify
 alive-progress
 sysrsync
 requests
+rich
+platformdirs
+paramiko
