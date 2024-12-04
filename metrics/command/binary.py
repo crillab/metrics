@@ -142,9 +142,6 @@ def fill_parser(subparser) -> None:
     build_parser.add_argument("-c", "--campaign-dir", help="The path to the campaign directory.",
                               default=".")
 
-    _ = parser_ew_subparser.add_parser("run",
-                                       description="This command runs an binary.")
-
 
 def _download_file(url, download_path):
     """
@@ -277,13 +274,14 @@ def list_command(args):
         result = {}
         loguru.logger.info(f"List binaries available locally.")
         for d in os.listdir(os.path.join(args.get("campaign_dir"), METRICS_DIR_EXPERIMENT_WARE)):
-            if os.path.isdir(os.path.join(args.get("campaign_dir"), METRICS_DIR_EXPERIMENT_WARE, d)):
+            if os.path.isdir(os.path.join(args.get("campaign_dir"), METRICS_DIR_EXPERIMENT_WARE, d)) and d not in [
+                "include", "bin"]:
                 result[d] = {"id": os.path.join(args.get("campaign_dir"), METRICS_DIR_EXPERIMENT_WARE, d),
                              "versions": [{"version": os.path.basename(d).split(".")[-1], "alias": []}]}
 
     for k, v in result.items():
         for vv in v["versions"]:
-            table.add_row(str(v["id"]), k, vv["version"], ",".join(vv["alias"]))
+            table.add_row(str(v["id"]), k, vv["version"], ",".join(vv["alias"]) if "alias" in vv else "")
     console = Console()
     console.print(table)
 
@@ -314,7 +312,7 @@ def add(args):
             cloned_repo = Repo.clone_from(solver_configuration["git"],
                                           solver_path)
             version_configuration = [v for v in solver_configuration["versions"] if
-                                     v["version"] == version or version in v["alias"]]
+                                     v["version"] == version or ("alias" in v and version in v["alias"])]
             if len(version_configuration) == 0:
                 loguru.logger.error(
                     f"Version {version} not found for binary with id {solver_configuration['id']}.")
@@ -324,21 +322,22 @@ def add(args):
                     f"Version {version} is not unique for binary with id {solver_configuration['id']}.")
                 sys.exit(1)
             version_configuration = version_configuration[0]
+            loguru.logger.info(f"Checkout to {version_configuration['git_tag']}")
             cloned_repo.git.checkout(version_configuration["git_tag"])
             loguru.logger.info(
                 f"Binary with id {solver_configuration['id']} and version {version} added to campaign.")
             loguru.logger.info(f"Path: {solver_path}")
             loguru.logger.info(f"Use `metrics binary build {solver_id}` to build the binary.")
 
-            if not os.path.exists(os.path.join(solver_path, BUILD_SH) and "build_command" in solver_configuration and
-                                  solver_configuration["build_command"] is not None):
+            if not os.path.exists(os.path.join(solver_path, BUILD_SH)) and "build_command" in solver_configuration and \
+                    solver_configuration["build_command"] is not None:
                 with open(os.path.join(solver_path, BUILD_SH), 'w') as f:
                     f.write("#!/bin/bash\n")
                     f.write(f'{solver_configuration["build_command"]}\n')
             if not os.path.exists(os.path.join(solver_path, EXEC_SH)):
                 template_builder = BinaryBuilder(solver_path)
                 template_builder.add_executable(version_configuration["executable"])
-                template_builder.add_command_prefix(solver_configuration.get("command_prefix"))
+                template_builder.add_command_prefix(solver_configuration.get("command_line_prefix"))
                 template_builder.add_parameters(solver_configuration["command_line"],
                                                 solver_configuration.get("always_include_options"))
                 template_builder.build("exec.template.sh", EXEC_SH)
