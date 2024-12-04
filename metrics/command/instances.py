@@ -55,8 +55,7 @@ def fill_parser(subparser):
     ## command collect of instances
 
     parser_command_instances_collect = parser_command_instances_subcommands.add_parser('collect')
-    parser_command_instances_collect.add_argument("--extensions", help="Extension file to collect", nargs="+",
-                                                  default=["xml", "xml.lzma"])
+    parser_command_instances_collect.add_argument("--extensions", help="Extension file to collect", nargs="*")
     parser_command_instances_collect.add_argument("-c", "--campaign-dir", help="The path to the campaign directory.",
                                                   default=".")
     # parser_command_instances_collect.add_argument("--campaign-directory",
@@ -101,13 +100,11 @@ def collect(arguments):
     all_files = []
     loguru.logger.info("Collecting instances...")
     with ChangeDirectory(os.path.join(arguments.get("campaign_dir"), METRICS_DIR_INPUT_SET)):
-        for extension in arguments["extensions"]:
-            for file in walk_through_files(".", [extension]):
-                loguru.logger.info(f"Collecting {file}...")
-                # 'category': os.path.dirname(file).split('/')[-1],
-                all_files.append(
-                    {'problem': os.path.basename(file).split(".")[0],
-                     'model_data_file': os.path.join(METRICS_DIR_INPUT_SET, os.path.basename(file))})
+        for file in walk_through_files(".", arguments["extensions"] if arguments["extensions"] is not None else []):
+            loguru.logger.info(f"Collecting {file}...")
+            all_files.append(
+                {'problem': os.path.basename(file).split(".")[0],
+                 'model': os.path.join(METRICS_DIR_INPUT_SET, os.path.basename(file)), 'data_file': ""})
         df = pd.DataFrame(all_files)
         df.to_csv("instances.csv", index=False, sep=',')
 
