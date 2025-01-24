@@ -109,6 +109,7 @@ class LinePlot(Plot):
                  show_marker=True,
                  color_map=None,
                  style_map=None,
+                 name_map=None,
                  legend_location=Position.RIGHT,
                  legend_offset=(0, 0),
                  ncol_legend=1,
@@ -126,13 +127,16 @@ class LinePlot(Plot):
 
         for name, series in df.items():
             style = PlotStyle()
+            n = name
             if name in color_map:
                 style.color = color_map[name]
             if name in style_map:
                 style.line_type = style_map[name]
+            if name_map is not None and name in name_map:
+                n = name_map[name]
             if show_marker:
                 style.marker_shape = MarkerShape.CIRCLE
-            self._plot.plot(x=series.index, y=series, label=name, style=style)
+            self._plot.plot(x=series.index, y=series, label=n, style=style)
 
         if legend_location is not None:
             self._legend(legend_location, legend_offset, ncol_legend)
@@ -152,6 +156,7 @@ class CDFPlot(Plot):
                  show_marker=True,
                  color_map=None,
                  style_map=None,
+                 name_map=None,
                  legend_location=Position.RIGHT,
                  legend_offset=(0, 0),
                  ncol_legend=1,
@@ -169,14 +174,17 @@ class CDFPlot(Plot):
 
         for name, series in df.items():
             style = PlotStyle()
+            n = name
             if name in color_map:
                 style.color = color_map[name]
             if name in style_map:
                 style.line_type = style_map[name]
+            if name_map is not None and name in name_map:
+                n = name_map[name]
             if show_marker:
                 style.marker_shape = MarkerShape.CIRCLE
             y = series.index / n_inputs if normalized else series.index
-            self._plot.plot(x=series, y=y, label=name, style=style)
+            self._plot.plot(x=series, y=y, label=n, style=style)
 
         if legend_location is not None:
             self._legend(legend_location, legend_offset, ncol_legend)

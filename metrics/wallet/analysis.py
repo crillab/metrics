@@ -30,19 +30,18 @@ from __future__ import annotations
 import math
 import pickle
 import warnings
+from itertools import product, combinations
+from types import SimpleNamespace
 from typing import List
 
-from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot, BarPlot
-
-from pandas import DataFrame
-from itertools import product, combinations
 import pandas as pd
 from deprecated import deprecated
-from types import SimpleNamespace
+from pandas import DataFrame
 
-from metrics.core.model import Campaign
 from metrics.core.constants import *
+from metrics.core.model import Campaign
 from metrics.scalpel import read_campaign
+from metrics.wallet.plot import LinePlot, CDFPlot, ScatterPlot, BoxPlot, BarPlot
 
 warnings.formatwarning = lambda msg, *args, **kwargs: str(msg) + '\n'
 
@@ -1024,7 +1023,6 @@ class OverviewOptiAnalysis(BasicAnalysis):
         return plot.show()
 
 
-
 def get_as_list(l, index):
     if isinstance(l, list):
         return l[index]
@@ -1245,7 +1243,8 @@ class DecisionAnalysis(BasicAnalysis):
 
         return plot.show()
 
-    def cdf_plot(self, cumulated=False, cdf_col=EXPERIMENT_CPU_TIME, **kwargs: dict):
+    def cdf_plot(self, cumulated=False, cdf_col=EXPERIMENT_CPU_TIME,
+                 **kwargs: dict):
         """
         By default, the cdf plot draws its graphic by using the cpu_time of the results: you are
         free to change this
