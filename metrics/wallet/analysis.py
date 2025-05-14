@@ -1155,7 +1155,7 @@ class DecisionAnalysis(BasicAnalysis):
         if missing:
             raise ValueError(f'Some columns are missing: {missing}')
 
-    def stat_table(self, par=[1, 2, 10], **kwargs):
+    def stat_table(self, par=[1, 2, 10], name_map = None, **kwargs):
         """
         The statistic table allows to show a global overview of the results: number of solved
         inputs, time, etc.
@@ -1175,6 +1175,9 @@ class DecisionAnalysis(BasicAnalysis):
             stats[STAT_TABLE_COMMON_COUNT] = stats[STAT_TABLE_COMMON_SUM] = 0
         stats[STAT_TABLE_UNCOMMON_COUNT] = stats[STAT_TABLE_COUNT] - stats[STAT_TABLE_COMMON_COUNT]
         stats[STAT_TABLE_TOTAL] = len(self.inputs)
+
+        if name_map is not None:
+            stats = stats.rename(index=name_map)
 
         return export_data_frame(
             data_frame=stats.sort_values([STAT_TABLE_COUNT, STAT_TABLE_SUM],

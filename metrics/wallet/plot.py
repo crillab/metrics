@@ -124,6 +124,7 @@ class LinePlot(Plot):
 
         color_map = dict() if color_map is None else color_map
         style_map = dict() if style_map is None else style_map
+        name_map = dict() if name_map is None else name_map
 
         for name, series in df.items():
             style = PlotStyle()
@@ -132,7 +133,7 @@ class LinePlot(Plot):
                 style.color = color_map[name]
             if name in style_map:
                 style.line_type = style_map[name]
-            if name_map is not None and name in name_map:
+            if name in name_map:
                 n = name_map[name]
             if show_marker:
                 style.marker_shape = MarkerShape.CIRCLE
@@ -171,6 +172,7 @@ class CDFPlot(Plot):
 
         color_map = dict() if color_map is None else color_map
         style_map = dict() if style_map is None else style_map
+        name_map = dict() if name_map is None else name_map
 
         for name, series in df.items():
             style = PlotStyle()
@@ -179,7 +181,7 @@ class CDFPlot(Plot):
                 style.color = color_map[name]
             if name in style_map:
                 style.line_type = style_map[name]
-            if name_map is not None and name in name_map:
+            if name in name_map:
                 n = name_map[name]
             if show_marker:
                 style.marker_shape = MarkerShape.CIRCLE
